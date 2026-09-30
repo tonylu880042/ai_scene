@@ -1,0 +1,174 @@
+{
+ "templates": {
+  "beach_flat": {
+   "Path3D": {
+    "hill_height": 6,
+    "bend": 0.6
+   },
+   "Foliage": {
+    "fence_every": 99,
+    "trees_per_chunk": 10,
+    "rocks_per_chunk": 4,
+    "flower_patches": 2
+   },
+   "Buildings": {
+    "hut_spacing": 0,
+    "farm_spacing": 5000
+   }
+  },
+  "seaside_town": {
+   "Path3D": {
+    "hill_height": 10,
+    "bend": 0.8
+   },
+   "Foliage": {
+    "fence_every": 5,
+    "trees_per_chunk": 12,
+    "rocks_per_chunk": 3,
+    "flower_patches": 3
+   },
+   "Buildings": {
+    "hut_spacing": 0,
+    "farm_spacing": 2500
+   }
+  },
+  "rolling_coast": {
+   "Path3D": {
+    "hill_height": 32,
+    "bend": 1.0
+   },
+   "Foliage": {
+    "fence_every": 3,
+    "trees_per_chunk": 14,
+    "rocks_per_chunk": 3,
+    "flower_patches": 4
+   },
+   "Buildings": {
+    "hut_spacing": 0,
+    "farm_spacing": 700
+   }
+  },
+  "summit": {
+   "Path3D": {
+    "hill_height": 45,
+    "bend": 1.2,
+    "inland_slope": 0.3,
+    "alpine_start": 320,
+    "alpine_range": 250
+   },
+   "Foliage": {
+    "fence_every": 8,
+    "trees_per_chunk": 8,
+    "rocks_per_chunk": 6,
+    "flower_patches": 2
+   },
+   "Buildings": {
+    "hut_spacing": 0,
+    "farm_spacing": 3000,
+    "summit_lookout": true
+   }
+  },
+  "endurance": {
+   "Path3D": {
+    "hill_height": 24,
+    "bend": 1.0
+   },
+   "Foliage": {
+    "fence_every": 4,
+    "trees_per_chunk": 12,
+    "rocks_per_chunk": 3,
+    "flower_patches": 3
+   },
+   "Buildings": {
+    "hut_spacing": 0,
+    "farm_spacing": 900
+   }
+  }
+ },
+ "courses": {
+  "recovery_walk": {
+   "template": "beach_flat",
+   "tod": [
+    0.45,
+    0.975
+   ]
+  },
+  "walk_run": {
+   "template": "beach_flat",
+   "tod": [
+    0.45,
+    0.975
+   ]
+  },
+  "speed_lab": {
+   "template": "beach_flat",
+   "tod": [
+    0.45,
+    0.975
+   ]
+  },
+  "power_walk": {
+   "template": "seaside_town",
+   "tod": [
+    0.45,
+    0.975
+   ]
+  },
+  "five_k_ready": {
+   "template": "seaside_town",
+   "tod": [
+    0.45,
+    0.975
+   ]
+  },
+  "fat_burn": {
+   "template": "rolling_coast",
+   "tod": [
+    0.45,
+    0.975
+   ]
+  },
+  "glute_blast": {
+   "template": "rolling_coast",
+   "tod": [
+    0.45,
+    0.975
+   ]
+  },
+  "rolling_hills": {
+   "template": "rolling_coast",
+   "tod": [
+    0.45,
+    0.975
+   ]
+  },
+  "summit": {
+   "template": "summit",
+   "tod": [
+    0.45,
+    0.975
+   ]
+  },
+  "endurance_60": {
+   "template": "endurance",
+   "tod": [
+    0.45,
+    0.975
+   ]
+  },
+  "endurance_75": {
+   "template": "endurance",
+   "tod": [
+    0.45,
+    0.975
+   ]
+  },
+  "endurance_90": {
+   "template": "endurance",
+   "tod": [
+    0.45,
+    0.975
+   ]
+  }
+ }
+}

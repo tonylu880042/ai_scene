@@ -1,0 +1,227 @@
+[gd_scene load_steps=31 format=3]
+
+[ext_resource type="PackedScene" path="res://Player.tscn" id="1"]
+[ext_resource type="Script" path="res://coastal_path.gd" id="2"]
+[ext_resource type="Shader" path="res://ocean_water.gdshader" id="3"]
+[ext_resource type="Script" path="res://FoliageSpawner.gd" id="4"]
+[ext_resource type="Script" path="res://hud.gd" id="5"]
+[ext_resource type="Script" path="res://mountain_ring.gd" id="6"]
+[ext_resource type="Script" path="res://Buildings.gd" id="7"]
+[ext_resource type="Texture2D" path="res://assets/textures/asphalt_02_diff.jpg" id="t_ad"]
+[ext_resource type="Texture2D" path="res://assets/textures/asphalt_02_nor.jpg" id="t_an"]
+[ext_resource type="Texture2D" path="res://assets/textures/asphalt_02_rough.jpg" id="t_ar"]
+[ext_resource type="Texture2D" path="res://assets/textures/coast_sand_01_diff.jpg" id="t_sd"]
+[ext_resource type="Texture2D" path="res://assets/textures/coast_sand_01_nor.jpg" id="t_sn"]
+[ext_resource type="Texture2D" path="res://assets/textures/coast_sand_01_rough.jpg" id="t_sr"]
+[ext_resource type="Texture2D" path="res://assets/textures/aerial_grass_rock_diff.jpg" id="t_gd"]
+[ext_resource type="Texture2D" path="res://assets/textures/aerial_grass_rock_nor.jpg" id="t_gn"]
+[ext_resource type="Texture2D" path="res://assets/textures/aerial_grass_rock_rough.jpg" id="t_gr"]
+
+[sub_resource type="FastNoiseLite" id="noise_a"]
+seed = 1
+frequency = 0.02
+
+[sub_resource type="FastNoiseLite" id="noise_b"]
+seed = 7
+frequency = 0.03
+
+[sub_resource type="NoiseTexture2D" id="ntex_a"]
+seamless = true
+as_normal_map = true
+bump_strength = 6.0
+noise = SubResource("noise_a")
+
+[sub_resource type="NoiseTexture2D" id="ntex_b"]
+seamless = true
+as_normal_map = true
+bump_strength = 6.0
+noise = SubResource("noise_b")
+
+[sub_resource type="ShaderMaterial" id="sea_mat"]
+shader = ExtResource("3")
+shader_parameter/normal_a = SubResource("ntex_a")
+shader_parameter/normal_b = SubResource("ntex_b")
+
+[sub_resource type="PlaneMesh" id="sea_mesh"]
+size = Vector2(2000, 2000)
+subdivide_width = 499
+subdivide_depth = 499
+
+[sub_resource type="CylinderShape3D" id="island_shape"]
+radius = 210.0
+height = 1.0
+
+[sub_resource type="StandardMaterial3D" id="road_mat"]
+albedo_texture = ExtResource("t_ad")
+roughness_texture = ExtResource("t_ar")
+normal_enabled = true
+normal_texture = ExtResource("t_an")
+uv1_scale = Vector3(0.3, 0.3, 0.3)
+uv1_triplanar = true
+uv1_world_triplanar = true
+
+[sub_resource type="StandardMaterial3D" id="grass_mat"]
+albedo_color = Color(0.55, 0.85, 0.35, 1)
+albedo_texture = ExtResource("t_gd")
+roughness_texture = ExtResource("t_gr")
+normal_enabled = true
+normal_texture = ExtResource("t_gn")
+uv1_scale = Vector3(0.15, 0.15, 0.15)
+uv1_triplanar = true
+uv1_world_triplanar = true
+
+[sub_resource type="StandardMaterial3D" id="sand_mat"]
+albedo_texture = ExtResource("t_sd")
+roughness_texture = ExtResource("t_sr")
+normal_enabled = true
+normal_texture = ExtResource("t_sn")
+uv1_scale = Vector3(0.2, 0.2, 0.2)
+uv1_triplanar = true
+uv1_world_triplanar = true
+
+[sub_resource type="CylinderMesh" id="beach_mesh"]
+top_radius = 205.0
+bottom_radius = 265.0
+height = 4.0
+material = SubResource("sand_mat")
+
+[sub_resource type="CylinderMesh" id="island_mesh"]
+top_radius = 196.0
+bottom_radius = 196.0
+height = 1.0
+material = SubResource("grass_mat")
+
+[sub_resource type="PhysicalSkyMaterial" id="sky_mat"]
+rayleigh_coefficient = 3.0
+mie_coefficient = 0.002
+mie_eccentricity = 0.85
+turbidity = 6.0
+ground_color = Color(0.45, 0.6, 0.7, 1)
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("sky_mat")
+
+[sub_resource type="Environment" id="env"]
+background_mode = 2
+sky = SubResource("sky")
+ambient_light_source = 3
+ambient_light_energy = 1.4
+tonemap_mode = 2
+glow_enabled = true
+adjustment_enabled = true
+adjustment_saturation = 1.15
+adjustment_contrast = 1.05
+adjustment_enabled = true
+adjustment_saturation = 1.15
+adjustment_contrast = 1.05
+fog_enabled = true
+fog_light_color = Color(0.62, 0.75, 0.9, 1)
+fog_density = 0.0012
+fog_aerial_perspective = 0.8
+fog_sky_affect = 0.4
+fog_sun_scatter = 0.15
+
+[node name="Main" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-17, 55, 0)
+light_color = Color(1, 0.86, 0.68, 1)
+light_energy = 1.5
+light_angular_distance = 0.6
+shadow_enabled = true
+shadow_blur = 2.0
+directional_shadow_max_distance = 120.0
+
+[node name="Sea" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.3, 0)
+mesh = SubResource("sea_mesh")
+surface_material_override/0 = SubResource("sea_mat")
+
+[node name="MountainsFar" type="MeshInstance3D" parent="."]
+script = ExtResource("6")
+inner_radius = 840.0
+span = 260.0
+max_height = 230.0
+random_seed = 11
+color_low = Color(0.42, 0.52, 0.6, 1)
+color_high = Color(0.6, 0.68, 0.78, 1)
+
+[node name="MountainsMid" type="MeshInstance3D" parent="."]
+script = ExtResource("6")
+inner_radius = 680.0
+span = 260.0
+max_height = 170.0
+random_seed = 5
+color_low = Color(0.3, 0.44, 0.42, 1)
+color_high = Color(0.45, 0.56, 0.6, 1)
+
+[node name="MountainsNear" type="MeshInstance3D" parent="."]
+script = ExtResource("6")
+inner_radius = 520.0
+span = 260.0
+max_height = 110.0
+random_seed = 3
+color_low = Color(0.16, 0.3, 0.22, 1)
+color_high = Color(0.3, 0.42, 0.34, 1)
+
+[node name="Beach" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.6, 0)
+mesh = SubResource("beach_mesh")
+
+[node name="Island" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Island"]
+mesh = SubResource("island_mesh")
+
+[node name="Shape" type="CollisionShape3D" parent="Island"]
+shape = SubResource("island_shape")
+
+[node name="Path3D" type="Path3D" parent="."]
+script = ExtResource("2")
+
+[node name="PathFollow3D" type="PathFollow3D" parent="Path3D"]
+
+[node name="Roadway" type="CSGPolygon3D" parent="."]
+polygon = PackedVector2Array(-2.3, -1.5, -2.3, 0, 2.2, 0, 2.2, 0.25, 2.5, 0.25, 2.5, -1.5)
+mode = 2
+path_node = NodePath("../Path3D")
+path_interval_type = 0
+path_interval = 1.0
+path_rotation = 2
+path_local = false
+path_joined = true
+use_collision = true
+material = SubResource("road_mat")
+
+[node name="Verge" type="CSGPolygon3D" parent="."]
+polygon = PackedVector2Array(-6, -1.5, -6, -1, -2.3, 0, -2.3, -1.5)
+mode = 2
+path_node = NodePath("../Path3D")
+path_interval_type = 0
+path_interval = 1.0
+path_rotation = 2
+path_local = false
+path_joined = true
+use_collision = true
+material = SubResource("grass_mat")
+
+[node name="Player" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 187.5, 1, 0)
+pacer_path = NodePath("../Path3D/PathFollow3D")
+start_auto = true
+
+[node name="Foliage" type="Node3D" parent="."]
+script = ExtResource("4")
+path_node = NodePath("../Path3D")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("5")
+player_path = NodePath("../Player")
+
+[node name="Buildings" type="Node3D" parent="."]
+script = ExtResource("7")
+path_node = NodePath("../Path3D")

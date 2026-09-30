@@ -1,0 +1,48 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="PackedScene" path="res://Player.tscn" id="1"]
+[ext_resource type="Script" path="res://coastal_path.gd" id="2"]
+
+[sub_resource type="StandardMaterial3D" id="road_mat"]
+albedo_color = Color(0.45, 0.45, 0.47, 1)
+roughness = 0.9
+
+[sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("sky_mat")
+
+[sub_resource type="Environment" id="env"]
+background_mode = 2
+sky = SubResource("sky")
+ambient_light_source = 3
+
+[node name="Stage02" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.5, 0.866025, 0, -0.866025, 0.5, 0, 10, 0)
+shadow_enabled = true
+
+[node name="Path3D" type="Path3D" parent="."]
+script = ExtResource("2")
+
+[node name="PathFollow3D" type="PathFollow3D" parent="Path3D"]
+
+[node name="Roadway" type="CSGPolygon3D" parent="."]
+polygon = PackedVector2Array(-4.5, 1.2, -1.7, 0, 1.5, 0, 1.5, 0.25, 1.8, 0.25, 1.8, -0.6, -4.5, -0.6)
+mode = 2
+path_node = NodePath("../Path3D")
+path_interval_type = 0
+path_interval = 1.0
+path_rotation = 2
+path_local = false
+path_joined = true
+use_collision = true
+material = SubResource("road_mat")
+
+[node name="Player" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 98.4, 1, 0)
+pacer_path = NodePath("../Path3D/PathFollow3D")
