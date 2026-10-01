@@ -7,6 +7,7 @@ uniform sampler2D grass_d : source_color, repeat_enable, filter_linear_mipmap;
 uniform sampler2D grass_n : hint_normal, repeat_enable, filter_linear_mipmap;
 uniform sampler2D rock_d : source_color, repeat_enable, filter_linear_mipmap;
 uniform sampler2D rock_n : hint_normal, repeat_enable, filter_linear_mipmap;
+uniform float dirt_strength = 1.0;
 uniform vec3 grass_tint : source_color = vec3(0.55, 0.90, 0.30);
 uniform vec3 grass_tint_dry : source_color = vec3(0.78, 0.82, 0.38);  // sun-bleached patches
 uniform vec3 rock_tint : source_color = vec3(0.5, 0.5, 0.5);  // neutral grey granite (the source rock is pale and warm)
@@ -36,6 +37,7 @@ void fragment() {
 	float dry = smoothstep(0.35, 0.65, texture(grass_d, wp.xz * 0.004 + 0.3).r);
 	g *= mix(grass_tint, grass_tint_dry, dry * 0.7) * mix(0.8, 1.25, patch);
 	vec3 low_d = mix(texture(sand_d, uv).rgb, g, COLOR.r);
+	low_d = mix(low_d, texture(sand_d, uv * 1.6).rgb * 0.8, COLOR.b * dirt_strength);  // worn dirt along the trail edge
 	vec3 low_n = mix(texture(sand_n, uv).rgb, texture(grass_n, uv * 0.75).rgb, COLOR.r);
 	vec3 rk = tri(rock_d, wp, wn, uv_scale * 0.5);
 	rk = vec3(dot(rk, vec3(0.3, 0.59, 0.11))) * rock_tint;  // desaturated: grey granite

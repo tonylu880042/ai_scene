@@ -10,6 +10,9 @@ extends MeshInstance3D
 @export var random_seed := 3
 @export var color_low := Color(0.3, 0.42, 0.38)
 @export var color_high := Color(0.5, 0.55, 0.6)
+@export var snow_line := 2.0          # fraction of max height above which peaks turn to snow (2 = no snow)
+@export var snow_color := Color(0.96, 0.97, 1.0)
+@export var no_fog := false           # stay crisp instead of fading into the distance fog (fades out in mist instead)
 
 func _ready() -> void:
 	var noise := FastNoiseLite.new()
@@ -34,7 +37,8 @@ func _ready() -> void:
 			var c := grid[(i + 1) * (rings + 1) + j + 1]
 			var d := grid[i * (rings + 1) + j + 1]
 			for v in [a, b, c, a, c, d]:
-				st.set_color(color_low.lerp(color_high, clampf(v.y / max_height, 0.0, 1.0)))
+				var t := clampf(v.y / max_height, 0.0, 1.0)
+				st.set_color(color_low.lerp(color_high, t).lerp(snow_color, smoothstep(snow_line, snow_line + 0.12, t)))
 				st.add_vertex(v)
 	st.generate_normals()
 	mesh = st.commit()
@@ -42,5 +46,16 @@ func _ready() -> void:
 	mat.vertex_color_use_as_albedo = true
 	mat.roughness = 1.0
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	if no_fog:
+		mat.disable_fog = true
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material_override = mat
 	cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+func _process(_d: float) -> void:
+	if not no_fog:
+		return
+	var env := get_viewport().world_3d.environment
+	if env:  # fade with the mist so the peaks vanish in white-outs
+		var a := 1.0 - smoothstep(0.0012, 0.005, env.fog_density)
+		(material_override as StandardMaterial3D).albedo_color.a = lerpf(0.05, 1.0, a)

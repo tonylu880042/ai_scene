@@ -10,9 +10,9 @@ def save(url, path):
     open(path, "wb").write(get(url))
 
 MODELS = ["island_tree_02", "grass_medium_01", "fern_02", "celandine_01", "periwinkle_plant",
-          "dandelion_01", "boulder_01", "namaqualand_boulder_03", "dutch_ship_medium"]
+          "dandelion_01", "boulder_01", "namaqualand_boulder_03", "dutch_ship_medium", "fir_sapling", "pine_sapling_small"]
 TEXTURES = ["asphalt_02", "coast_sand_01", "aerial_grass_rock", "brown_planks_09",
-            "beige_wall_001", "clay_roof_tiles", "rock_boulder_dry"]
+            "beige_wall_001", "clay_roof_tiles", "rock_boulder_dry", "rocky_trail"]
 
 for m in MODELS:
     g = json.loads(get(f"https://api.polyhaven.com/files/{m}"))["gltf"]["1k"]["gltf"]

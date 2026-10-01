@@ -3,3 +3,7 @@ assets/
 video/
 recordings/
 .DS_Store
+runway/
+export/
+player_web/verify/
+node_modules/

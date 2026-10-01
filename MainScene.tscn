@@ -1,4 +1,4 @@
-[gd_scene load_steps=31 format=3]
+[gd_scene load_steps=32 format=3]
 
 [ext_resource type="PackedScene" path="res://Player.tscn" id="1"]
 [ext_resource type="Script" path="res://route.gd" id="2"]
@@ -20,6 +20,7 @@
 [ext_resource type="Texture2D" path="res://assets/textures/aerial_grass_rock_diff.jpg" id="t_gd"]
 [ext_resource type="Texture2D" path="res://assets/textures/aerial_grass_rock_nor.jpg" id="t_gn"]
 [ext_resource type="Texture2D" path="res://assets/textures/aerial_grass_rock_rough.jpg" id="t_gr"]
+[ext_resource type="Script" path="res://track_exporter.gd" id="99"]
 
 [sub_resource type="FastNoiseLite" id="noise_a"]
 seed = 1
@@ -229,3 +230,7 @@ path_node = NodePath("../Path3D")
 script = ExtResource("11")
 path_node = NodePath("../Path3D")
 player_path = NodePath("../Player")
+
+[node name="TrackExporter" type="Node" parent="."]
+script = ExtResource("99")
+scene_name = "coast"

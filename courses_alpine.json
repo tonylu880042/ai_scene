@@ -1,0 +1,204 @@
+{
+ "templates": {
+  "alpine_ridge": {
+   "Path3D": {
+    "hill_height": 38,
+    "inland_slope": 0.2,
+    "side_slope": 0.3
+   },
+   "Foliage": {
+    "trees_per_chunk": 2,
+    "rocks_per_chunk": 5,
+    "flower_patches": 5,
+    "fence_every": 4
+   },
+   "Props": {
+    "hut": true
+   }
+  },
+  "alpine_forest": {
+   "Path3D": {
+    "hill_height": 45,
+    "inland_slope": 0.25,
+    "side_slope": 0.35
+   },
+   "Foliage": {
+    "trees_per_chunk": 5,
+    "rocks_per_chunk": 6,
+    "flower_patches": 4,
+    "fence_every": 8
+   },
+   "Props": {
+    "hut": false
+   }
+  },
+  "alpine_climb": {
+   "Path3D": {
+    "hill_height": 55,
+    "inland_slope": 0.3,
+    "side_slope": 0.45,
+    "alpine_start": 640,
+    "alpine_range": 250
+   },
+   "Foliage": {
+    "trees_per_chunk": 2,
+    "rocks_per_chunk": 12,
+    "flower_patches": 3,
+    "fence_every": 6
+   },
+   "Props": {
+    "hut": true
+   }
+  },
+  "alpine_endurance": {
+   "Path3D": {
+    "hill_height": 45,
+    "inland_slope": 0.25,
+    "side_slope": 0.35
+   },
+   "Foliage": {
+    "trees_per_chunk": 3,
+    "rocks_per_chunk": 8,
+    "flower_patches": 4,
+    "fence_every": 5
+   },
+   "Props": {
+    "hut": true
+   }
+  }
+ },
+ "courses": {
+  "recovery_walk": {
+   "template": "alpine_ridge",
+   "tod": [
+    0.3,
+    0.45
+   ],
+   "fog": [
+    0.0004,
+    0.004
+   ]
+  },
+  "walk_run": {
+   "template": "alpine_ridge",
+   "tod": [
+    0.3,
+    0.5
+   ],
+   "fog": [
+    0.0004,
+    0.004
+   ]
+  },
+  "speed_lab": {
+   "template": "alpine_ridge",
+   "tod": [
+    0.3,
+    0.55
+   ],
+   "fog": [
+    0.0004,
+    0.005
+   ]
+  },
+  "power_walk": {
+   "template": "alpine_forest",
+   "tod": [
+    0.3,
+    0.55
+   ],
+   "fog": [
+    0.0005,
+    0.006
+   ]
+  },
+  "five_k_ready": {
+   "template": "alpine_forest",
+   "tod": [
+    0.3,
+    0.6
+   ],
+   "fog": [
+    0.0005,
+    0.006
+   ]
+  },
+  "rolling_hills": {
+   "template": "alpine_forest",
+   "tod": [
+    0.3,
+    0.65
+   ],
+   "fog": [
+    0.0005,
+    0.007
+   ]
+  },
+  "fat_burn": {
+   "template": "alpine_climb",
+   "tod": [
+    0.3,
+    0.55
+   ],
+   "fog": [
+    0.0005,
+    0.007
+   ]
+  },
+  "glute_blast": {
+   "template": "alpine_climb",
+   "tod": [
+    0.3,
+    0.6
+   ],
+   "fog": [
+    0.0005,
+    0.007
+   ]
+  },
+  "summit": {
+   "template": "alpine_climb",
+   "tod": [
+    0.3,
+    0.6
+   ],
+   "fog": [
+    0.0005,
+    0.009
+   ]
+  },
+  "endurance_60": {
+   "template": "alpine_endurance",
+   "tod": [
+    0.3,
+    0.75
+   ],
+   "fog": [
+    0.0005,
+    0.007
+   ]
+  },
+  "endurance_75": {
+   "template": "alpine_endurance",
+   "tod": [
+    0.3,
+    0.8
+   ],
+   "fog": [
+    0.0005,
+    0.007
+   ]
+  },
+  "endurance_90": {
+   "template": "alpine_endurance",
+   "tod": [
+    0.3,
+    0.88
+   ],
+   "fog": [
+    0.0005,
+    0.007
+   ]
+  }
+ }
+}

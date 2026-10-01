@@ -1,0 +1,227 @@
+[gd_scene load_steps=25 format=3]
+
+[ext_resource type="PackedScene" path="res://Player.tscn" id="1"]
+[ext_resource type="Script" path="res://route.gd" id="2"]
+[ext_resource type="Script" path="res://FoliageSpawner.gd" id="4"]
+[ext_resource type="Script" path="res://hud.gd" id="5"]
+[ext_resource type="Script" path="res://mountain_ring.gd" id="6"]
+[ext_resource type="Script" path="res://FollowPlayer.gd" id="8"]
+[ext_resource type="Script" path="res://course_setup.gd" id="9"]
+[ext_resource type="Script" path="res://Gates.gd" id="11"]
+[ext_resource type="Script" path="res://AlpineProps.gd" id="12"]
+[ext_resource type="Shader" path="res://alpine_sky.gdshader" id="13"]
+[ext_resource type="Shader" path="res://cloud_sea.gdshader" id="14"]
+[ext_resource type="Script" path="res://track_exporter.gd" id="99"]
+
+[sub_resource type="FastNoiseLite" id="cloud_noise"]
+seed = 4
+frequency = 0.012
+
+[sub_resource type="NoiseTexture2D" id="cloud_tex"]
+seamless = true
+noise = SubResource("cloud_noise")
+
+[sub_resource type="FastNoiseLite" id="big_noise"]
+seed = 12
+frequency = 0.006
+
+[sub_resource type="NoiseTexture2D" id="big_tex"]
+seamless = true
+noise = SubResource("big_noise")
+
+[sub_resource type="FastNoiseLite" id="detail_noise"]
+seed = 30
+frequency = 0.03
+
+[sub_resource type="NoiseTexture2D" id="detail_tex"]
+seamless = true
+noise = SubResource("detail_noise")
+
+[sub_resource type="ShaderMaterial" id="sky_mat"]
+shader = ExtResource("13")
+shader_parameter/cloud_tex = SubResource("cloud_tex")
+shader_parameter/cloud_cover = 0.5
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("sky_mat")
+radiance_size = 1
+
+[sub_resource type="Environment" id="env"]
+background_mode = 2
+sky = SubResource("sky")
+ambient_light_source = 3
+ambient_light_energy = 1.2
+tonemap_mode = 2
+glow_enabled = true
+adjustment_enabled = true
+adjustment_saturation = 1.12
+adjustment_contrast = 1.05
+fog_enabled = true
+fog_light_color = Color(0.66, 0.78, 0.92, 1)
+fog_density = 0.0005
+fog_aerial_perspective = 0.7
+fog_sky_affect = 0.25
+fog_sun_scatter = 0.1
+
+[sub_resource type="PlaneMesh" id="cloud_mesh"]
+size = Vector2(3200, 3200)
+subdivide_width = 399
+subdivide_depth = 399
+
+[sub_resource type="ShaderMaterial" id="cloud_mat"]
+shader = ExtResource("14")
+shader_parameter/big_tex = SubResource("big_tex")
+shader_parameter/detail_tex = SubResource("detail_tex")
+shader_parameter/amplitude = 62.0
+
+[sub_resource type="ShaderMaterial" id="cloud_mat2"]
+render_priority = 1
+shader = ExtResource("14")
+shader_parameter/big_tex = SubResource("big_tex")
+shader_parameter/detail_tex = SubResource("detail_tex")
+shader_parameter/amplitude = 48.0
+shader_parameter/big_scale = 0.0007
+shader_parameter/detail_scale = 0.0041
+shader_parameter/hole_level = 0.44
+shader_parameter/opacity = 0.9
+
+[sub_resource type="PlaneMesh" id="floor_mesh"]
+size = Vector2(9000, 9000)
+
+[sub_resource type="StandardMaterial3D" id="floor_mat"]
+albedo_color = Color(0.2, 0.3, 0.2, 1)
+roughness = 1.0
+
+[node name="Main" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-40, 200, 0)
+light_color = Color(1, 0.96, 0.9, 1)
+light_energy = 1.6
+light_angular_distance = 0.5
+shadow_enabled = true
+shadow_blur = 2.0
+directional_shadow_max_distance = 150.0
+
+[node name="CourseSetup" type="Node" parent="."]
+script = ExtResource("9")
+route_path = NodePath("../Path3D")
+sun_path = NodePath("../Sun")
+env_path = NodePath("../WorldEnvironment")
+player_path = NodePath("../Player")
+sea_path = NodePath("../CloudSea")
+extra_sea_paths = [NodePath("../CloudSea2")]
+courses_file = "res://courses_alpine.json"
+mist_enabled = true
+
+[node name="CloudSea" type="MeshInstance3D" parent="."]
+mesh = SubResource("cloud_mesh")
+surface_material_override/0 = SubResource("cloud_mat")
+cast_shadow = 0
+script = ExtResource("8")
+player_path = NodePath("../Player")
+snap = 8.0
+base_y = -17.0
+y_factor = 1.0
+
+[node name="CloudSea2" type="MeshInstance3D" parent="."]
+mesh = SubResource("cloud_mesh")
+surface_material_override/0 = SubResource("cloud_mat2")
+cast_shadow = 0
+script = ExtResource("8")
+player_path = NodePath("../Player")
+snap = 8.0
+base_y = -8.0
+y_factor = 1.0
+
+[node name="ValleyFloor" type="MeshInstance3D" parent="."]
+mesh = SubResource("floor_mesh")
+surface_material_override/0 = SubResource("floor_mat")
+script = ExtResource("8")
+player_path = NodePath("../Player")
+base_y = -260.0
+y_factor = 1.0
+
+[node name="Backdrop" type="Node3D" parent="."]
+script = ExtResource("8")
+player_path = NodePath("../Player")
+y_factor = 0.8
+base_y = -60.0
+
+[node name="MountainsNear" type="MeshInstance3D" parent="Backdrop"]
+script = ExtResource("6")
+inner_radius = 1300.0
+span = 700.0
+max_height = 750.0
+openness = 0.15
+random_seed = 21
+color_low = Color(0.14, 0.24, 0.13, 1)
+color_high = Color(0.46, 0.45, 0.43, 1)
+snow_line = 0.5
+no_fog = true
+
+[node name="MountainsFar" type="MeshInstance3D" parent="Backdrop"]
+script = ExtResource("6")
+inner_radius = 2100.0
+span = 900.0
+max_height = 1500.0
+openness = 0.1
+random_seed = 33
+color_low = Color(0.28, 0.36, 0.44, 1)
+color_high = Color(0.52, 0.56, 0.62, 1)
+snow_line = 0.3
+no_fog = true
+
+[node name="Path3D" type="Path3D" parent="."]
+script = ExtResource("2")
+alpine_trail = true
+sea_y = -300.0
+start_height = 0.0
+bend = 1.0
+
+[node name="PathFollow3D" type="PathFollow3D" parent="Path3D"]
+
+[node name="Player" parent="." instance=ExtResource("1")]
+pacer_path = NodePath("../Path3D/PathFollow3D")
+start_auto = true
+
+[node name="Foliage" type="Node3D" parent="."]
+script = ExtResource("4")
+path_node = NodePath("../Path3D")
+player_path = NodePath("../Player")
+min_dist = 2.3
+max_dist = 45.0
+spruce = true
+fir_models = true
+lamps = false
+conifer_ratio = 1.0
+conifer_scale = Vector2(8.0, 13.0)
+tree_view_distance = 180.0
+rock_scale_mult = 2.2
+fence_offset = 2.6
+logwall_every = 100000
+grass_per_mesh = 250
+meadow_clumps = 4500
+tree_min_dist = 5.0
+
+[node name="Props" type="Node3D" parent="."]
+script = ExtResource("12")
+path_node = NodePath("../Path3D")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("5")
+player_path = NodePath("../Player")
+route_path = NodePath("../Path3D")
+gates_path = NodePath("../Gates")
+
+[node name="Gates" type="Node3D" parent="."]
+script = ExtResource("11")
+path_node = NodePath("../Path3D")
+player_path = NodePath("../Player")
+
+[node name="TrackExporter" type="Node" parent="."]
+script = ExtResource("99")
+scene_name = "alpine"

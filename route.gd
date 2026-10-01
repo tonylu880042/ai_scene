@@ -20,12 +20,20 @@ extends Path3D
 @export var inland_slope := 0.35     # how steeply the inland side rises (summit: mountainside)
 @export var alpine_start := 99999.0  # altitude above sea (m) where grass gives way to bare rock
 @export var alpine_range := 200.0    # ... and how far above that the vegetation has fully thinned out
+@export_group("Alpine trail")
+@export var alpine_trail := false    # narrow hillside trail (cross-slope terrain, no sea) instead of the coastal road
+@export var trail_half := 0.8        # half-width of the dirt trail (m)
+@export var side_slope := 0.35       # steepness of the downhill side of the trail
+@export var trail_texture := "rocky_trail"
+@export_group("")
 @export var quit_at_end := false
 @export var random_seed := 5
 
 const ROW := 2.0           # metres between cross-sections
 const CHUNK_ROWS := 25
-const LAND_U: Array[float] = [-120.0, -60.0, -30.0, -18.0, -12.0]   # inland offsets (right of road)
+const LAND_U_COAST: Array[float] = [-120.0, -60.0, -30.0, -18.0, -12.0]   # inland offsets (right of road)
+const LAND_U_ALPINE: Array[float] = [-150.0, -80.0, -40.0, -20.0, -10.0, -4.0, -2.0]
+const OUT_ALPINE: Array[float] = [3.0, 12.0, 40.0, 100.0, 180.0]          # downhill columns beyond the lip
 
 var speed := 0.0           # m/s
 var length := 0.0
@@ -38,6 +46,9 @@ var _cu: Array[PackedFloat32Array] = []  # per row: column offsets u (left posit
 var _cy: Array[PackedFloat32Array] = []  # ... heights
 var _ck: Array[float] = []               # ... sand->grass blend (per row)
 var _cr: Array[PackedFloat32Array] = []  # ... rock blend per column
+var _land_u: Array[float] = LAND_U_COAST
+var _ni := 5    # inland columns before the road
+var _no := 5    # seaward strips after the road edge
 var _noise := FastNoiseLite.new()
 var start_time := 0.0      # seconds into the course to start from (--start-min=)
 var start_offset := 0.0    # ... as metres along the route
@@ -62,22 +73,34 @@ func _ready() -> void:
 	_t = start_time
 	_n = ceili(length / ROW) + 1
 	_noise.seed = random_seed
+	if alpine_trail:
+		road_left = trail_half
+		road_right = trail_half
+		_land_u = LAND_U_ALPINE
+		grass_bank = true
+	_ni = _land_u.size()
+	_no = 1 + (OUT_ALPINE.size() if alpine_trail else 4)
 	_build_centreline()
 	_build_columns()
 	var road_mat := StandardMaterial3D.new()
-	road_mat.albedo_texture = load("res://assets/textures/asphalt_02_diff.jpg")
-	road_mat.roughness_texture = load("res://assets/textures/asphalt_02_rough.jpg")
+	var road_tex := trail_texture if alpine_trail else "asphalt_02"
+	road_mat.albedo_texture = load("res://assets/textures/%s_diff.jpg" % road_tex)
+	road_mat.roughness_texture = load("res://assets/textures/%s_rough.jpg" % road_tex)
 	road_mat.normal_enabled = true
-	road_mat.normal_texture = load("res://assets/textures/asphalt_02_nor.jpg")
+	road_mat.normal_texture = load("res://assets/textures/%s_nor.jpg" % road_tex)
 	road_mat.uv1_triplanar = true
 	road_mat.uv1_world_triplanar = true
-	road_mat.uv1_scale = Vector3.ONE * 0.3
+	road_mat.uv1_scale = Vector3.ONE * (0.45 if alpine_trail else 0.3)
+	if alpine_trail:
+		road_mat.albedo_color = Color(0.68, 0.64, 0.6)  # the source trail texture is pinkish
 	_line_mat.albedo_color = Color(0.93, 0.93, 0.9)
 	_line_mat.roughness = 0.7
 	var terrain_mat := ShaderMaterial.new()
 	terrain_mat.shader = load("res://terrain.gdshader")
 	for k in ["sand_d", "sand_n", "grass_d", "grass_n", "rock_d", "rock_n"]:
 		var f := "coast_sand_01" if k.begins_with("sand") else ("aerial_grass_rock" if k.begins_with("grass") else "rock_boulder_dry")
+		if alpine_trail and k.begins_with("sand"):
+			f = trail_texture  # the "sand" slot is the dirt patch along the trail edge
 		terrain_mat.set_shader_parameter(k, load("res://assets/textures/%s_%s.jpg" % [f, "diff" if k.ends_with("d") else "nor"]))
 	for i0 in range(0, _n - 1, CHUNK_ROWS):
 		_chunk(i0, mini(i0 + CHUNK_ROWS, _n - 1), road_mat, terrain_mat)
@@ -107,6 +130,8 @@ func _build_centreline() -> void:
 	for i in _n:
 		var s := i * ROW
 		var h := bend * (0.7 * sin(s / 500.0) + 0.35 * sin(s / 220.0 + 1.0))  # gentle bends, min radius ~330 m
+		if alpine_trail:
+			h = bend * (0.9 * sin(s / 260.0) + 0.5 * sin(s / 110.0 + 1.0))  # winding trail, min radius ~125 m
 		var f := Vector3(cos(h), 0, sin(h))
 		_pos.append(p)
 		_left.append(Vector3(f.z, 0, -f.x))
@@ -127,24 +152,39 @@ func _build_columns() -> void:
 		var shoulder := h - 0.03
 		var us := PackedFloat32Array()
 		var ys := PackedFloat32Array()
-		for u in LAND_U:
+		for u in _land_u:
 			var a := absf(u) - road_right
 			var q := wp + _left[i] * u
 			us.append(u)
 			var hills := _noise.get_noise_2d(q.x * 0.006, q.z * 0.006) + 0.35 * _noise.get_noise_2d(q.x * 0.017 + 500.0, q.z * 0.017)
-			ys.append(shoulder + inland_slope * a + hills * hill_height * smoothstep(10.0, 50.0, absf(u)))  # rolling land beside the road
+			if alpine_trail:
+				var y := shoulder + inland_slope * a + hills * hill_height * smoothstep(3.0, 40.0, absf(u))
+				ys.append(maxf(y, shoulder + 0.08 * a))  # never a gully beside the trail
+			else:
+				ys.append(shoulder + inland_slope * a + hills * hill_height * smoothstep(10.0, 50.0, absf(u)))  # rolling land beside the road
 		us.append(-road_right)
 		ys.append(shoulder)
 		us.append(road_left)
 		ys.append(shoulder)
-		var w := clampf(alt * 2.2, bank_run if grass_bank else 20.0, 260.0)  # horizontal run from the shoulder down to the sea
-		var k := smoothstep(2.0, 8.0, alt)
-		var lip := lerpf(bank_lip if grass_bank else 14.0, 5.0, k)  # flat shoulder: wide on the beach (huts), narrow on cliffs
-		us.append(lip)
-		ys.append(shoulder)
-		for f in [0.2, 0.5, 0.8, 1.0]:
-			us.append(lip + w * f)
-			ys.append(lerpf(shoulder, sea_y - 0.5, f * f * (3.0 - 2.0 * f)))
+		if alpine_trail:
+			var lip := road_left + 0.9
+			us.append(lip)
+			ys.append(shoulder)
+			for d in OUT_ALPINE:
+				var q := wp + _left[i] * (lip + d)
+				var hills := _noise.get_noise_2d(q.x * 0.006, q.z * 0.006) + 0.35 * _noise.get_noise_2d(q.x * 0.017 + 500.0, q.z * 0.017)
+				var y := shoulder - side_slope * d + hills * hill_height * smoothstep(10.0, 80.0, d)
+				us.append(lip + d)
+				ys.append(minf(y, shoulder - 0.12 * d - 0.3 * maxf(d - 30.0, 0.0)))  # falls away below the cloud layer
+		else:
+			var w := clampf(alt * 2.2, bank_run if grass_bank else 20.0, 260.0)  # horizontal run from the shoulder down to the sea
+			var k := smoothstep(2.0, 8.0, alt)
+			var lip := lerpf(bank_lip if grass_bank else 14.0, 5.0, k)  # flat shoulder: wide on the beach (huts), narrow on cliffs
+			us.append(lip)
+			ys.append(shoulder)
+			for f in [0.2, 0.5, 0.8, 1.0]:
+				us.append(lip + w * f)
+				ys.append(lerpf(shoulder, sea_y - 0.5, f * f * (3.0 - 2.0 * f)))
 		var rs := PackedFloat32Array()
 		for y in ys:
 			rs.append(smoothstep(alpine_start, alpine_start + 0.6 * alpine_range, y - sea_y))
@@ -153,9 +193,12 @@ func _build_columns() -> void:
 		_cr.append(rs)
 		_ck.append(smoothstep(2.0, 8.0, alt))
 
-# terrain vertex colour: r = sand(0)->grass(1), g = rock amount
+# terrain vertex colour: r = sand(0)->grass(1), g = rock amount, b = trail dirt (alpine only)
 func _col(i: int, j: int) -> Color:
-	return Color(1.0 if (j < 6 or grass_bank) else _ck[i], _cr[i][j], 0.0)
+	var dirt := 0.0
+	if alpine_trail:
+		dirt = 1.0 - smoothstep(0.0, 2.6, absf(_cu[i][j]) - trail_half)
+	return Color(1.0 if (j <= _ni or grass_bank) else _ck[i], _cr[i][j], dirt)
 
 
 func _pt(i: int, j: int) -> Vector3:
@@ -163,7 +206,7 @@ func _pt(i: int, j: int) -> Vector3:
 	q.y = _cy[i][j]
 	return q
 
-# columns 0..5 = inland strip (far -> road edge), 6..11 = seaward strip (road edge -> sea)
+# columns 0.._ni = inland (far -> road edge), _ni+1.. = seaward (road edge -> sea/valley)
 func _chunk(i0: int, i1: int, road_mat: Material, terrain_mat: Material) -> void:
 	var road := SurfaceTool.new()
 	var terrain := SurfaceTool.new()
@@ -183,13 +226,16 @@ func _chunk(i0: int, i1: int, road_mat: Material, terrain_mat: Material) -> void
 		var marks: Array = [[road_left - 0.45, road_left - 0.3, true], [-3.4, -3.25, true], [-road_right + 0.3, -road_right + 0.45, true]]
 		if i % 3 == 0:
 			marks.append([-6.4, -6.25, true])  # dashed centre line: one 2 m dash every 6 m
+		if alpine_trail:
+			marks = []
 		for m in marks:
 			var up := Vector3(0, 0.012, 0)
 			var la: float = m[0]
 			var lb: float = m[1]
 			for v in [_pos[p] + _left[p] * la, _pos[p] + _left[p] * lb, _pos[i] + _left[i] * lb, _pos[p] + _left[p] * la, _pos[i] + _left[i] * lb, _pos[i] + _left[i] * la]:
 				line.add_vertex(v + up)
-		for j in [0, 1, 2, 3, 4, 6, 7, 8, 9, 10]:  # strips: 0-4 inland (j..j+1), 6-10 seaward
+		var strips: Array = range(_ni) + range(_ni + 1, _ni + 1 + _no)  # inland strips, then seaward strips
+		for j in strips:
 			var a := _pt(p, j)
 			var b := _pt(p, j + 1)
 			var c := _pt(i, j + 1)
@@ -239,12 +285,14 @@ func ground_y(s: float, u: float) -> float:
 	var ys := _cy[i]
 	if u <= road_left and u >= -road_right:
 		return _pos[i].y
-	var lo := 0 if u < 0.0 else 6
-	for j in range(lo, lo + 5):
-		if u <= us[j + 1] or j == lo + 4:
+	var lo := 0 if u < 0.0 else _ni + 1
+	var cnt := _ni if u < 0.0 else _no
+	for j in range(lo, lo + cnt):
+		var inside := u >= us[j] and u <= us[j + 1] if u < 0.0 else u <= us[j + 1]
+		if inside or j == lo + cnt - 1:
 			var t := clampf(inverse_lerp(us[j], us[j + 1], u), 0.0, 1.0)
 			return lerpf(ys[j], ys[j + 1], t)
-	return ys[lo + 5]
+	return ys[lo + cnt]
 
 # centre line as (x, z) every `step` metres, for the HUD minimap
 func map_points(step: float = 10.0) -> PackedVector2Array:
@@ -263,10 +311,10 @@ func water_edge_u(s: float) -> float:
 	var i := int(_row(s).x)
 	var us := _cu[i]
 	var ys := _cy[i]
-	for j in range(6, 11):
+	for j in range(_ni + 1, _ni + 1 + _no):
 		if ys[j + 1] <= sea_y + 0.2:
 			return lerpf(us[j], us[j + 1], clampf(inverse_lerp(ys[j], ys[j + 1], sea_y + 0.2), 0.0, 1.0))
-	return us[11]
+	return us[_ni + _no]
 
 func sea_grass(s: float) -> bool:  # true where the seaward side is grassy cliff rather than beach
 	return _ck[int(_row(s).x)] > 0.5

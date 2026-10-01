@@ -30,6 +30,15 @@ const MODEL := "res://assets/models/%s/%s_1k.gltf"
 @export var shore_rocks := 120       # dark riprap boulders along the waterline (low, sheltered sections)
 @export var conifer_ratio := 0.6     # share of trees that are dark conifers
 @export var conifer_scale := Vector2(0.5, 1.0)
+@export var spruce := false          # alpine spruces (tiered dark cones) instead of the leafy harbour trees
+@export var tree_cluster := 5         # fir_models: saplings per tree spot
+@export var fir_tint := Color(0.5, 0.6, 0.46)  # darkens the scanned fir/pine foliage
+@export var fir_models := false      # real Poly Haven fir/pine saplings (scaled up) instead of the procedural spruces
+@export var lamps := true            # street lamps along the inland road edge
+@export var rock_scale_mult := 1.0   # alpine: bigger boulders
+@export var meadow_clumps := 0       # per chunk: cheap procedural grass clumps that fill the meadow (0 = off)
+@export var clump_view := 90.0
+@export var clump_scale := Vector2(0.35, 0.8)
 @export_group("Scale jitter")
 @export var grass_scale := Vector2(2.5, 4.0)
 @export var fern_scale := Vector2(1.0, 1.8)
@@ -44,6 +53,7 @@ var _flowers: Array[Mesh]
 var _rocks_big: Array[Mesh]
 var _rocks_small: Array[Mesh]
 var _blobs: Array[Mesh]
+var _clump: Mesh
 var _log := CylinderMesh.new()
 var _lamp: Mesh
 var _post := BoxMesh.new()
@@ -76,12 +86,31 @@ func _ready() -> void:
 	_log.height = 1.15
 	_log.radial_segments = 6
 	_log.material = wood_dark
-	for k in 5:
-		_blobs.append(_make_tree(k < 3, 11 + k))
+	if fir_models:
+		_blobs.append_array(_meshes("fir_sapling", ["fir_sapling_a", "fir_sapling_b", "fir_sapling_c"]))
+		_blobs.append_array(_meshes("pine_sapling_small", ["sapling_small_a", "sapling_small_b", "sapling_small_c"]))
+		for m in _blobs:  # deeper green: multiply the scanned foliage/trunk materials
+			for s in m.get_surface_count():
+				var tm := m.surface_get_material(s).duplicate() as StandardMaterial3D
+				tm.albedo_color = fir_tint
+				m.surface_set_material(s, tm)
+	else:
+		for k in 5:
+			_blobs.append(_make_spruce(21 + k) if spruce else _make_tree(k < 3, 11 + k))
+	if meadow_clumps > 0:
+		_clump = _make_clump()
 	_lamp = _make_lamp()
-	for m in _rocks_big + _rocks_small:  # dark grey riprap instead of the orange source texture
+	var grey := {}
+	for m in _rocks_big + _rocks_small:  # grey granite: the source rock texture is orange, so desaturate it
 		var rm := m.surface_get_material(0).duplicate() as StandardMaterial3D
-		rm.albedo_color = Color(0.5, 0.5, 0.55)
+		var src := rm.albedo_texture
+		if not grey.has(src):
+			var img := src.get_image()
+			img.decompress()
+			img.convert(Image.FORMAT_L8)
+			grey[src] = ImageTexture.create_from_image(img)
+		rm.albedo_texture = grey[src]
+		rm.albedo_color = Color(0.62, 0.62, 0.64)
 		m.surface_set_material(0, rm)
 	_post.size = Vector3(0.12, 1.1, 0.12)
 	_post.material = wood
@@ -140,16 +169,26 @@ func _spawn(idx: int) -> void:  # coroutine: one mesh type per frame to avoid hi
 			await get_tree().process_frame
 			if not is_instance_valid(holder):
 				return
+	if meadow_clumps > 0:
+		_multimesh(holder, rng, s0, origin, _clump, int(meadow_clumps * veg), clump_scale, clump_view)
+		await get_tree().process_frame
+		if not is_instance_valid(holder):
+			return
 	for i in (trees_per_chunk if veg > 0.6 else 0):
-		var tree := MeshInstance3D.new()
 		var pine := rng.randf() < conifer_ratio
-		tree.mesh = _blobs[rng.randi() % _blobs.size()] if pine else _trees[0]
-		tree.position = _spot(rng, s0 + rng.randf() * chunk_length, tree_min_dist)
-		tree.rotation.y = rng.randf() * TAU
+		var spot := _spot(rng, s0 + rng.randf() * chunk_length, tree_min_dist)
 		var sr := conifer_scale if pine else tree_scale
-		tree.scale = Vector3.ONE * rng.randf_range(sr.x, sr.y)
-		tree.visibility_range_end = tree_view_distance
-		holder.add_child(tree)
+		var n := tree_cluster if (pine and fir_models) else 1  # saplings are sparse, so a stand of a few reads as one full tree
+		for k in n:
+			var tree := MeshInstance3D.new()
+			tree.mesh = _blobs[rng.randi() % _blobs.size()] if pine else _trees[0]
+			var off := Vector3(rng.randf_range(-2.6, 2.6), 0, rng.randf_range(-2.6, 2.6)) if k > 0 else Vector3.ZERO
+			tree.position = spot + off
+			tree.rotation.y = rng.randf() * TAU
+			var sc := rng.randf_range(sr.x, sr.y) * (1.0 if k == 0 else rng.randf_range(0.7, 0.95))
+			tree.scale = Vector3(sc * rng.randf_range(1.0, 1.25), sc, sc * rng.randf_range(1.0, 1.25))
+			tree.visibility_range_end = tree_view_distance
+			holder.add_child(tree)
 	await get_tree().process_frame
 	if not is_instance_valid(holder):
 		return
@@ -162,9 +201,10 @@ func _spawn(idx: int) -> void:  # coroutine: one mesh type per frame to avoid hi
 	_fence(holder, idx, s0, origin)
 	_logwall(holder, idx, s0, origin)
 	_shore_rocks(holder, rng, s0, origin)
-	_roadside(holder, s0, origin)
+	if lamps:
+		_roadside(holder, s0, origin)
 
-func _multimesh(holder: Node3D, rng: RandomNumberGenerator, s0: float, origin: Vector3, mesh: Mesh, count: int, scale_range: Vector2) -> void:
+func _multimesh(holder: Node3D, rng: RandomNumberGenerator, s0: float, origin: Vector3, mesh: Mesh, count: int, scale_range: Vector2, vis := -1.0) -> void:
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.mesh = mesh
@@ -177,7 +217,7 @@ func _multimesh(holder: Node3D, rng: RandomNumberGenerator, s0: float, origin: V
 	var mmi := MultiMeshInstance3D.new()
 	mmi.multimesh = mm
 	mmi.position = origin
-	mmi.visibility_range_end = view_distance
+	mmi.visibility_range_end = view_distance if vis < 0.0 else vis
 	holder.add_child(mmi)
 
 func _new_mm(mesh: Mesh, count: int) -> MultiMesh:
@@ -216,7 +256,7 @@ func _flower_patches(holder: Node3D, rng: RandomNumberGenerator, s0: float, orig
 		_add_mm(holder, mm, origin, view_distance * 0.7)
 
 func _rocks(holder: Node3D, rng: RandomNumberGenerator, s0: float, origin: Vector3, mult: float) -> void:
-	for set: Array in [[_rocks_big, rocks_per_chunk, Vector2(0.6, 1.6)], [_rocks_small, rocks_per_chunk + 2, Vector2(0.25, 0.6)]]:
+	for set: Array in [[_rocks_big, rocks_per_chunk, Vector2(0.6, 1.6) * rock_scale_mult], [_rocks_small, rocks_per_chunk + 2, Vector2(0.25, 0.6) * rock_scale_mult]]:
 		for m: Mesh in set[0]:
 			var mm := _new_mm(m, int(set[1] * mult))
 			for i in mm.instance_count:
@@ -364,5 +404,94 @@ func _make_lamp() -> Mesh:  # pole + arm toward the road (-X = travel-left) + la
 	mat.albedo_color = Color(0.55, 0.57, 0.6)
 	mat.metallic = 0.4
 	mat.roughness = 0.5
+	m.surface_set_material(0, mat)
+	return m
+
+# alpine spruce: many drooping, jagged-edged branch tiers (star-shaped rings hanging from each tier's tip),
+# dark green with lighter tips; a dark underside disc per tier hides the see-through gap.
+func _make_spruce(seed_: int) -> Mesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var trunk := CylinderMesh.new()
+	trunk.top_radius = 0.14
+	trunk.bottom_radius = 0.3
+	trunk.height = 4.0
+	trunk.radial_segments = 6
+	_add_arrays(st, trunk.get_mesh_arrays(), Vector3(0, 2.0, 0), Vector3.ONE, 0, func(_v, _h, _t): return Color(0.2, 0.14, 0.09))
+	var tiers := rng.randi_range(10, 13)
+	var height := rng.randf_range(12.0, 17.0)
+	var rmax := rng.randf_range(2.7, 3.4)
+	var n := 14
+	var dark := Color(0.015, 0.06, 0.025)
+	var mid := Color(0.05, 0.14, 0.04)
+	var tip := Color(0.12, 0.26, 0.07)
+	for k in tiers:
+		var t := float(k) / (tiers - 1)
+		var y0 := 1.8 + t * (height - 2.6)
+		var r := rmax * pow(1.0 - t, 0.85) * rng.randf_range(0.9, 1.08) + 0.35
+		var h := lerpf(3.2, 1.6, t)
+		var apex := Vector3(0, y0 + h, 0)
+		var ring: Array[Vector3] = []
+		for i in n:
+			var a := TAU * i / n + rng.randf_range(-0.12, 0.12)
+			var rr := r * (0.68 if i % 2 == 0 else 1.08) * rng.randf_range(0.9, 1.1)  # alternating long/short branches
+			ring.append(Vector3(cos(a) * rr, y0 - 0.55 * rr / rmax * 1.4 - rng.randf_range(0.0, 0.25), sin(a) * rr))  # branch tips droop
+		var centre := Vector3(0, y0 - 0.15, 0)
+		for i in n:
+			var p0 := ring[i]
+			var p1 := ring[(i + 1) % n]
+			var lum := rng.randf_range(0.0, 1.0)
+			st.set_color(tip.lerp(mid, 0.3 + 0.4 * lum))
+			st.add_vertex(apex)
+			st.set_color(mid.lerp(dark, 0.35 + 0.4 * lum))
+			st.add_vertex(p1)
+			st.set_color(mid.lerp(dark, 0.35 + 0.4 * lum))
+			st.add_vertex(p0)
+			st.set_color(dark)  # underside
+			st.add_vertex(centre)
+			st.add_vertex(p0)
+			st.add_vertex(p1)
+	st.generate_normals()
+	var m := st.commit()
+	var mat := StandardMaterial3D.new()
+	mat.vertex_color_use_as_albedo = true
+	mat.albedo_texture = load("res://assets/textures/aerial_grass_rock_diff.jpg")  # needle-like speckle
+	mat.uv1_triplanar = true
+	mat.uv1_scale = Vector3.ONE * 0.9
+	mat.albedo_color = Color(1.5, 1.5, 1.3)
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mat.roughness = 1.0
+	m.surface_set_material(0, mat)
+	return m
+
+# meadow grass clump: a fan of tapered blades (dark base -> light tip), bending outward
+func _make_clump() -> Mesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 77
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	st.set_normal(Vector3.UP)
+	for i in 16:
+		var a := rng.randf() * TAU
+		var r := rng.randf_range(0.0, 0.22)
+		var base := Vector3(cos(a) * r, 0.0, sin(a) * r)
+		var h := rng.randf_range(0.4, 0.85)
+		var lean := Vector3(cos(a), 0.0, sin(a)) * h * rng.randf_range(0.15, 0.5)
+		var side := Vector3(-sin(a), 0.0, cos(a)) * 0.032
+		var g := rng.randf_range(0.0, 1.0)
+		var root_c := Color(0.04, 0.13, 0.02)
+		var tip_c := Color(0.18, 0.38, 0.06).lerp(Color(0.32, 0.50, 0.10), g)
+		st.set_color(root_c)
+		st.add_vertex(base - side)
+		st.add_vertex(base + side)
+		st.set_color(tip_c)
+		st.add_vertex(base + lean + Vector3(0, h, 0))
+	var m := st.commit()
+	var mat := StandardMaterial3D.new()
+	mat.vertex_color_use_as_albedo = true
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mat.roughness = 1.0
 	m.surface_set_material(0, mat)
 	return m
