@@ -11,6 +11,7 @@ def save(url, path):
 
 MODELS = ["island_tree_02", "grass_medium_01", "fern_02", "celandine_01", "periwinkle_plant",
           "dandelion_01", "boulder_01", "namaqualand_boulder_03", "dutch_ship_medium", "fir_sapling", "pine_sapling_small"]
+HDRIS = [("kloofendal_48d_partly_cloudy_puresky", "8k")]  # alpine scene sky (hdri_sky.gdshader), ~75 MB
 TEXTURES = ["asphalt_02", "coast_sand_01", "aerial_grass_rock", "brown_planks_09",
             "beige_wall_001", "clay_roof_tiles", "rock_boulder_dry", "rocky_trail"]
 
@@ -26,3 +27,7 @@ for t in TEXTURES:
     for key, suffix in [("Diffuse", "diff"), ("nor_gl", "nor"), ("Rough", "rough")]:
         save(f[key]["1k"]["jpg"]["url"], f"assets/textures/{t}_{suffix}.jpg")
     print("texture", t)
+for name, res in HDRIS:
+    url = json.loads(get(f"https://api.polyhaven.com/files/{name}"))["hdri"][res]["hdr"]["url"]
+    save(url, f"assets/hdri/{name}_{res}.hdr")
+    print("hdri", name, res)
