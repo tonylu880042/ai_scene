@@ -12,6 +12,10 @@ extends Node
 @export var courses_file := "res://courses.json"
 @export var mist_enabled := false     # episodic mist / white-out from the course json "fog": [base, extra]
 @export var sun_left_deg := Vector2(20.0, 65.0)  # sun azimuth left of the run direction: low sun .. high sun
+@export_group("HDRI sky")
+@export var hdri_sky := false          # sky is hdri_sky.gdshader: fixed sun elevation from the photo, sky yawed to match
+@export var hdri_sun_u := 0.5952       # panorama u of the photographed sun
+@export var hdri_sun_elev := 48.0      # its elevation (deg)
 
 var _route: Route
 var _sun: DirectionalLight3D
@@ -59,12 +63,18 @@ func _update() -> void:
 		return
 	var p := lerpf(_tod.x, _tod.y, clampf(_route.clock() / (_route.total_minutes * 60.0), 0.0, 1.0))
 	var elev := 4.0 + 46.0 * sin(p * PI)
+	if hdri_sky:
+		elev = hdri_sun_elev  # the photo has one sun; keep the light where the sun is in the sky
 	# sun azimuth is measured from the run direction, so a low sun stays in front-left (in view)
 	var left := _route.left_at(_route.curve.get_closest_offset(_route.to_local(_player.global_position)))
 	var fwd := Vector3(-left.z, 0.0, left.x)
 	var alpha := deg_to_rad(lerpf(sun_left_deg.x, sun_left_deg.y, smoothstep(4.0, 35.0, elev)))
 	var sd := Basis(Vector3.UP, alpha) * fwd  # direction toward the sun (horizontal)
 	_sun.rotation_degrees = Vector3(-elev, rad_to_deg(atan2(sd.x, sd.z)), 0.0)
+	if hdri_sky:
+		var to_sun := _sun.global_transform.basis.z
+		var sky_mat := _env.sky.sky_material as ShaderMaterial
+		sky_mat.set_shader_parameter("yaw", (hdri_sun_u - 0.5) * TAU - atan2(to_sun.x, -to_sun.z))
 	if _sea_mat:
 		_sea_mat.set_shader_parameter("sun_dir", _sun.global_transform.basis.z)
 	for m in _extra_mats:

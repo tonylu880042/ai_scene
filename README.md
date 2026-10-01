@@ -23,3 +23,10 @@ Keys: Tab auto/manual run, WASD + mouse in manual mode, F1 hide HUD, F11 fullscr
 - `stage_0*.tscn`, `MainScene_island.tscn`, `coastal_path.gd` are earlier prototype stages kept for reference.
 
 Assets: Poly Haven (CC0).
+
+## Alpine scene extras
+- Real backdrop terrain: `python3 tools/fetch_real_terrain.py` (default: Jungfrau region, 24 km). Attribution
+  required: elevation from AWS Terrain Tiles (https://registry.opendata.aws/terrain-tiles/, see its source
+  attributions); orthophoto (c) swisstopo (SWISSIMAGE).
+- HDRI sky: Poly Haven `kloofendal_48d_partly_cloudy_puresky` (CC0), 8K `.hdr` in `assets/hdri/`.
+- Film-quality recording: `EXPORT_EXTRA=--hq tools/export_course.sh alpine summit 10 2`.

@@ -9,7 +9,10 @@
 [ext_resource type="Script" path="res://course_setup.gd" id="9"]
 [ext_resource type="Script" path="res://Gates.gd" id="11"]
 [ext_resource type="Script" path="res://AlpineProps.gd" id="12"]
-[ext_resource type="Shader" path="res://alpine_sky.gdshader" id="13"]
+[ext_resource type="Shader" path="res://hdri_sky.gdshader" id="13"]
+[ext_resource type="Texture2D" path="res://assets/hdri/kloofendal_48d_partly_cloudy_puresky_8k.hdr" id="15"]
+[ext_resource type="Script" path="res://render_quality.gd" id="16"]
+[ext_resource type="Script" path="res://real_terrain.gd" id="17"]
 [ext_resource type="Shader" path="res://cloud_sea.gdshader" id="14"]
 [ext_resource type="Script" path="res://track_exporter.gd" id="99"]
 
@@ -39,8 +42,9 @@ noise = SubResource("detail_noise")
 
 [sub_resource type="ShaderMaterial" id="sky_mat"]
 shader = ExtResource("13")
-shader_parameter/cloud_tex = SubResource("cloud_tex")
-shader_parameter/cloud_cover = 0.5
+shader_parameter/pano = ExtResource("15")
+shader_parameter/energy = 1.0
+shader_parameter/horizon_fill = 1.0
 
 [sub_resource type="Sky" id="sky"]
 sky_material = SubResource("sky_mat")
@@ -51,11 +55,12 @@ background_mode = 2
 sky = SubResource("sky")
 ambient_light_source = 3
 ambient_light_energy = 1.2
-tonemap_mode = 2
+tonemap_mode = 4
 glow_enabled = true
 adjustment_enabled = true
-adjustment_saturation = 1.12
-adjustment_contrast = 1.05
+adjustment_saturation = 1.25
+adjustment_contrast = 1.12
+tonemap_exposure = 1.15
 fog_enabled = true
 fog_light_color = Color(0.66, 0.78, 0.92, 1)
 fog_density = 0.0005
@@ -116,6 +121,7 @@ sea_path = NodePath("../CloudSea")
 extra_sea_paths = [NodePath("../CloudSea2")]
 courses_file = "res://courses_alpine.json"
 mist_enabled = true
+hdri_sky = true
 
 [node name="CloudSea" type="MeshInstance3D" parent="."]
 mesh = SubResource("cloud_mesh")
@@ -145,7 +151,18 @@ player_path = NodePath("../Player")
 base_y = -260.0
 y_factor = 1.0
 
+[node name="RealBackdrop" type="Node3D" parent="."]
+script = ExtResource("8")
+player_path = NodePath("../Player")
+y_factor = 1.0
+
+[node name="RealTerrain" type="MeshInstance3D" parent="RealBackdrop"]
+script = ExtResource("17")
+hole_radius = 2600.0
+rotation_deg = 180.0
+
 [node name="Backdrop" type="Node3D" parent="."]
+visible = false
 script = ExtResource("8")
 player_path = NodePath("../Player")
 y_factor = 0.8
@@ -225,3 +242,8 @@ player_path = NodePath("../Player")
 [node name="TrackExporter" type="Node" parent="."]
 script = ExtResource("99")
 scene_name = "alpine"
+
+[node name="RenderQuality" type="Node" parent="."]
+script = ExtResource("16")
+env_path = NodePath("../WorldEnvironment")
+sun_path = NodePath("../Sun")
