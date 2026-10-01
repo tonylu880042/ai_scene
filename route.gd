@@ -25,6 +25,12 @@ extends Path3D
 @export var trail_half := 0.8        # half-width of the dirt trail (m)
 @export var side_slope := 0.35       # steepness of the downhill side of the trail
 @export var trail_texture := "rocky_trail"
+@export var width_jitter := 0.32     # trail half-width varies by this fraction (worn wider / pinched narrower)
+@export var edge_blend := 0.7        # metres of ragged dirt-to-grass blend outside the trail edge
+@export var groove_depth := 0.06     # worn groove: centre lower than the edges (m)
+@export var bump_amp := 0.025        # small surface bumps on the trail (m)
+@export var wiggle := 1.0            # small irregular left/right meanders on top of the big bends
+@export var micro_relief := 0.35     # short rises and dips along the trail (m), on top of the course grade
 @export_group("")
 @export var quit_at_end := false
 @export var random_seed := 5
@@ -46,6 +52,8 @@ var _cu: Array[PackedFloat32Array] = []  # per row: column offsets u (left posit
 var _cy: Array[PackedFloat32Array] = []  # ... heights
 var _ck: Array[float] = []               # ... sand->grass blend (per row)
 var _cr: Array[PackedFloat32Array] = []  # ... rock blend per column
+var _hl := PackedFloat32Array()          # alpine: per-row trail half-width to the left
+var _hr := PackedFloat32Array()          # ... and to the right
 var _land_u: Array[float] = LAND_U_COAST
 var _ni := 5    # inland columns before the road
 var _no := 5    # seaward strips after the road edge
@@ -81,6 +89,7 @@ func _ready() -> void:
 	_ni = _land_u.size()
 	_no = 1 + (OUT_ALPINE.size() if alpine_trail else 4)
 	_build_centreline()
+	_build_widths()
 	_build_columns()
 	var road_mat := StandardMaterial3D.new()
 	var road_tex := trail_texture if alpine_trail else "asphalt_02"
@@ -102,8 +111,16 @@ func _ready() -> void:
 		if alpine_trail and k.begins_with("sand"):
 			f = trail_texture  # the "sand" slot is the dirt patch along the trail edge
 		terrain_mat.set_shader_parameter(k, load("res://assets/textures/%s_%s.jpg" % [f, "diff" if k.ends_with("d") else "nor"]))
+	var surface_mat: Material = road_mat
+	if alpine_trail:  # ragged worn trail blended into the meadow, same grass maths as terrain.gdshader
+		var tm := ShaderMaterial.new()
+		tm.shader = load("res://trail.gdshader")
+		for k in ["dirt_d", "dirt_n", "grass_d", "grass_n", "gravel_d"]:
+			var f2: String = {"dirt": trail_texture, "grass": "aerial_grass_rock", "gravel": "coast_sand_01"}[k.split("_")[0]]
+			tm.set_shader_parameter(k, load("res://assets/textures/%s_%s.jpg" % [f2, "diff" if k.ends_with("d") else "nor"]))
+		surface_mat = tm
 	for i0 in range(0, _n - 1, CHUNK_ROWS):
-		_chunk(i0, mini(i0 + CHUNK_ROWS, _n - 1), road_mat, terrain_mat)
+		_chunk(i0, mini(i0 + CHUNK_ROWS, _n - 1), surface_mat, terrain_mat)
 
 func _process(delta: float) -> void:
 	_t += delta
@@ -132,8 +149,12 @@ func _build_centreline() -> void:
 		var h := bend * (0.7 * sin(s / 500.0) + 0.35 * sin(s / 220.0 + 1.0))  # gentle bends, min radius ~330 m
 		if alpine_trail:
 			h = bend * (0.9 * sin(s / 260.0) + 0.5 * sin(s / 110.0 + 1.0))  # winding trail, min radius ~125 m
+			h += wiggle * (0.18 * _noise.get_noise_1d(s * 0.02) + 0.06 * _noise.get_noise_1d(s * 0.09 + 100.0))  # irregular meanders
 		var f := Vector3(cos(h), 0, sin(h))
-		_pos.append(p)
+		if alpine_trail:
+			_pos.append(p + Vector3(0, micro_relief * _noise.get_noise_1d(s * 0.05 + 300.0), 0))  # short rises / dips
+		else:
+			_pos.append(p)
 		_left.append(Vector3(f.z, 0, -f.x))
 		var target := float(info_at(s / speed)["incline"]) / 100.0 * grade_scale
 		g += (target - g) * minf(1.0, ROW / 20.0)  # ~20 m to ease between grades
@@ -144,6 +165,43 @@ func _build_centreline() -> void:
 		c.add_point(Vector3(q.x, 0.0, q.z))  # flat: baked offsets == horizontal distance s, heights come from pos_at()
 	curve = c
 
+func _build_widths() -> void:
+	_hl.resize(_n)
+	_hr.resize(_n)
+	for i in _n:
+		var s := i * ROW
+		var base := road_left
+		if alpine_trail:
+			_hl[i] = clampf(trail_half * (1.0 + width_jitter * _noise.get_noise_1d(s * 0.025 + 700.0)) + 0.08 * _noise.get_noise_1d(s * 0.17 + 40.0), 0.6, 1.15)
+			_hr[i] = clampf(trail_half * (1.0 + width_jitter * _noise.get_noise_1d(s * 0.025 + 1900.0)) + 0.08 * _noise.get_noise_1d(s * 0.17 + 90.0), 0.6, 1.15)
+		else:
+			_hl[i] = base
+			_hr[i] = road_right
+
+# outer edge of the walkable/blend surface at row i (u > 0 left, u < 0 right)
+func _edge(i: int, left: bool) -> float:
+	return (_hl[i] if left else _hr[i]) + (edge_blend if alpine_trail else 0.0)
+
+# trail surface height at row i, lateral u: worn groove + small bumps, meeting the terrain shoulder at the edge
+func _road_y(i: int, u: float) -> float:
+	var h := _pos[i].y
+	if not alpine_trail:
+		return h
+	var half := _hl[i] if u >= 0.0 else _hr[i]
+	var e := half + edge_blend
+	var a := absf(u)
+	var groove := -groove_depth * (1.0 - pow(minf(a / half, 1.0), 2.0))
+	var outer := lerpf(0.0, -0.03, smoothstep(half, e, a))
+	var q := _pos[i] + _left[i] * u
+	var bumps := bump_amp * _noise.get_noise_2d(q.x * 0.9 + 50.0, q.z * 0.9) * (1.0 - smoothstep(half * 0.8, e, a))
+	return h + groove + outer + bumps
+
+func half_left(s: float) -> float:
+	return _hl[int(_row(s).x)]
+
+func half_right(s: float) -> float:
+	return _hr[int(_row(s).x)]
+
 func _build_columns() -> void:
 	for i in _n:
 		var wp := _pos[i]
@@ -152,8 +210,12 @@ func _build_columns() -> void:
 		var shoulder := h - 0.03
 		var us := PackedFloat32Array()
 		var ys := PackedFloat32Array()
+		var er := _edge(i, false)
+		var el := _edge(i, true)
 		for u in _land_u:
-			var a := absf(u) - road_right
+			if alpine_trail and u > -er - 0.5:
+				u = -er - 0.5  # keep inland columns outside the (variable) trail band
+			var a := absf(u) - er
 			var q := wp + _left[i] * u
 			us.append(u)
 			var hills := _noise.get_noise_2d(q.x * 0.006, q.z * 0.006) + 0.35 * _noise.get_noise_2d(q.x * 0.017 + 500.0, q.z * 0.017)
@@ -162,12 +224,12 @@ func _build_columns() -> void:
 				ys.append(maxf(y, shoulder + 0.08 * a))  # never a gully beside the trail
 			else:
 				ys.append(shoulder + inland_slope * a + hills * hill_height * smoothstep(10.0, 50.0, absf(u)))  # rolling land beside the road
-		us.append(-road_right)
-		ys.append(shoulder)
-		us.append(road_left)
-		ys.append(shoulder)
+		us.append(-er)
+		ys.append(_road_y(i, -er) if alpine_trail else shoulder)
+		us.append(el)
+		ys.append(_road_y(i, el) if alpine_trail else shoulder)
 		if alpine_trail:
-			var lip := road_left + 0.9
+			var lip := el + 0.2
 			us.append(lip)
 			ys.append(shoulder)
 			for d in OUT_ALPINE:
@@ -196,8 +258,6 @@ func _build_columns() -> void:
 # terrain vertex colour: r = sand(0)->grass(1), g = rock amount, b = trail dirt (alpine only)
 func _col(i: int, j: int) -> Color:
 	var dirt := 0.0
-	if alpine_trail:
-		dirt = 1.0 - smoothstep(0.0, 2.6, absf(_cu[i][j]) - trail_half)
 	return Color(1.0 if (j <= _ni or grass_bank) else _ck[i], _cr[i][j], dirt)
 
 
@@ -216,12 +276,15 @@ func _chunk(i0: int, i1: int, road_mat: Material, terrain_mat: Material) -> void
 	terrain.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for i in range(i0 + 1, i1 + 1):
 		var p := i - 1
-		var rl_a := _pos[p] + _left[p] * road_left  # road corners, flat across
-		var rr_a := _pos[p] - _left[p] * road_right
-		var rl_b := _pos[i] + _left[i] * road_left
-		var rr_b := _pos[i] - _left[i] * road_right
-		for v in [rr_a, rl_a, rl_b, rr_a, rl_b, rr_b]:
-			road.add_vertex(v)
+		if alpine_trail:
+			_trail_strip(road, p, i)
+		else:
+			var rl_a := _pos[p] + _left[p] * road_left  # road corners, flat across
+			var rr_a := _pos[p] - _left[p] * road_right
+			var rl_b := _pos[i] + _left[i] * road_left
+			var rr_b := _pos[i] - _left[i] * road_right
+			for v in [rr_a, rl_a, rl_b, rr_a, rl_b, rr_b]:
+				road.add_vertex(v)
 		# painted markings: seaward edge line, solid line by the kerb, centre dashes, inland edge line
 		var marks: Array = [[road_left - 0.45, road_left - 0.3, true], [-3.4, -3.25, true], [-road_right + 0.3, -road_right + 0.45, true]]
 		if i % 3 == 0:
@@ -266,6 +329,32 @@ func _chunk(i0: int, i1: int, road_mat: Material, terrain_mat: Material) -> void
 	tm.material_override = terrain_mat
 	add_child(tm)
 
+# one row-pair of the alpine trail: TRAIL_COLS columns from the right blend edge to the left blend edge.
+# UV.x = u / half-width on that side (|UV.x| <= 1 on the walked surface), UV.y = distance along the route.
+const TRAIL_COLS := 10
+func _trail_strip(st: SurfaceTool, p: int, i: int) -> void:
+	var rows := [p, i]
+	var pts := []
+	for r in rows:
+		var er := _edge(r, false)
+		var el := _edge(r, true)
+		var row := []
+		for k in TRAIL_COLS + 1:
+			var t := float(k) / TRAIL_COLS
+			var u := lerpf(-er, el, t)
+			var v := _pos[r] + _left[r] * u
+			v.y = _road_y(r, u)
+			row.append([v, Vector2(u / (_hl[r] if u >= 0.0 else _hr[r]), r * ROW)])
+		pts.append(row)
+	for k in TRAIL_COLS:
+		var a = pts[0][k]
+		var b = pts[0][k + 1]
+		var c = pts[1][k + 1]
+		var d = pts[1][k]
+		for v in [a, b, c, a, c, d]:
+			st.set_uv(v[1])
+			st.add_vertex(v[0])
+
 func _row(s: float) -> Vector2:  # (row index, fraction)
 	var f := clampf(s / ROW, 0.0, _n - 1.001)
 	return Vector2(floorf(f), f - floorf(f))
@@ -283,8 +372,8 @@ func ground_y(s: float, u: float) -> float:
 	var i := int(_row(s).x)
 	var us := _cu[i]
 	var ys := _cy[i]
-	if u <= road_left and u >= -road_right:
-		return _pos[i].y
+	if u <= _edge(i, true) and u >= -_edge(i, false):
+		return _road_y(i, u)
 	var lo := 0 if u < 0.0 else _ni + 1
 	var cnt := _ni if u < 0.0 else _no
 	for j in range(lo, lo + cnt):

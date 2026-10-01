@@ -54,6 +54,7 @@ var _rocks_big: Array[Mesh]
 var _rocks_small: Array[Mesh]
 var _blobs: Array[Mesh]
 var _clump: Mesh
+var _root_mesh: Mesh
 var _log := CylinderMesh.new()
 var _lamp: Mesh
 var _post := BoxMesh.new()
@@ -149,6 +150,9 @@ func _meshes(model: String, keys: Array) -> Array[Mesh]:
 func _spot(rng: RandomNumberGenerator, s: float, dmin: float) -> Vector3:
 	var side := 1.0 if rng.randf() < 0.5 and _route.sea_grass(s) else -1.0
 	var u := side * lerpf(dmin, max_dist, pow(rng.randf(), 1.6))  # denser near the road
+	if spruce:  # alpine: plants may crowd right up to the (variable-width) trail edge, but not onto it
+		var edge := (_route.half_left(s) if side > 0.0 else _route.half_right(s)) + 0.2
+		u = side * maxf(absf(u), edge + rng.randf() * 0.4)
 	var p := _route.pos_at(s) + _route.left_at(s) * u
 	p.y = _route.ground_y(s, u)
 	return p
@@ -198,6 +202,8 @@ func _spawn(idx: int) -> void:  # coroutine: one mesh type per frame to avoid hi
 	if not is_instance_valid(holder):
 		return
 	_rocks(holder, rng, s0, origin, 1.0 + (1.0 - veg) * 3.0)
+	if spruce:
+		_trail_debris(holder, rng, s0, origin)
 	_fence(holder, idx, s0, origin)
 	_logwall(holder, idx, s0, origin)
 	_shore_rocks(holder, rng, s0, origin)
@@ -237,6 +243,11 @@ func _add_mm(holder: Node3D, mm: MultiMesh, origin: Vector3, vis: float) -> void
 # instance i at route offset s, lateral u, with scale jitter and a little sink into the ground
 func _put(mm: MultiMesh, i: int, rng: RandomNumberGenerator, s: float, u: float, origin: Vector3, scale_range: Vector2, sink: float) -> void:
 	s = clampf(s, 0.0, _route.length)
+	var clear := 0.3 if spruce else 0.6  # bare verge beside the walking surface (alpine: grass may crowd the edge)
+	var hl := _route.half_left(s)
+	var hr := _route.half_right(s)
+	if u > -hr - clear and u < hl + clear:
+		u = (hl + clear) if u >= 0.0 else -(hr + clear)
 	var p := _route.pos_at(s) + _route.left_at(s) * u
 	p.y = _route.ground_y(s, u) - sink
 	var k := rng.randf_range(scale_range.x, scale_range.y)
@@ -256,11 +267,13 @@ func _flower_patches(holder: Node3D, rng: RandomNumberGenerator, s0: float, orig
 		_add_mm(holder, mm, origin, view_distance * 0.7)
 
 func _rocks(holder: Node3D, rng: RandomNumberGenerator, s0: float, origin: Vector3, mult: float) -> void:
-	for set: Array in [[_rocks_big, rocks_per_chunk, Vector2(0.6, 1.6) * rock_scale_mult], [_rocks_small, rocks_per_chunk + 2, Vector2(0.25, 0.6) * rock_scale_mult]]:
+	# [meshes, count, scale range, min distance from the centre line]: boulders keep clear of the walked line
+	for set: Array in [[_rocks_big, rocks_per_chunk, Vector2(0.6, 1.6) * rock_scale_mult, maxf(min_dist, 2.0 + 1.6 * rock_scale_mult)],
+			[_rocks_small, rocks_per_chunk + 2, Vector2(0.25, 0.6) * rock_scale_mult, maxf(min_dist, 1.2 + 0.6 * rock_scale_mult)]]:
 		for m: Mesh in set[0]:
 			var mm := _new_mm(m, int(set[1] * mult))
 			for i in mm.instance_count:
-				var u := (1.0 if rng.randf() < 0.5 and _route.sea_grass(s0) else -1.0) * rng.randf_range(min_dist, 28.0)  # never into the water
+				var u := (1.0 if rng.randf() < 0.5 and _route.sea_grass(s0) else -1.0) * rng.randf_range(set[3], 28.0)  # never into the water
 				_put(mm, i, rng, s0 + rng.randf() * chunk_length, u, origin, set[2], 0.15)
 			_add_mm(holder, mm, origin, 200.0)
 
@@ -466,32 +479,69 @@ func _make_spruce(seed_: int) -> Mesh:
 	m.surface_set_material(0, mat)
 	return m
 
-# meadow grass clump: a fan of tapered blades (dark base -> light tip), bending outward
+# meadow grass clump: a tuft of thin, tapered, curved blades (2 segments each). UV.y = height fraction,
+# used by grass.gdshader for wind bending and the root-to-tip colour ramp.
 func _make_clump() -> Mesh:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 77
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	st.set_normal(Vector3.UP)
-	for i in 16:
+	for i in 28:
 		var a := rng.randf() * TAU
-		var r := rng.randf_range(0.0, 0.22)
+		var r := rng.randf_range(0.0, 0.18)
 		var base := Vector3(cos(a) * r, 0.0, sin(a) * r)
-		var h := rng.randf_range(0.4, 0.85)
-		var lean := Vector3(cos(a), 0.0, sin(a)) * h * rng.randf_range(0.15, 0.5)
-		var side := Vector3(-sin(a), 0.0, cos(a)) * 0.032
-		var g := rng.randf_range(0.0, 1.0)
-		var root_c := Color(0.04, 0.13, 0.02)
-		var tip_c := Color(0.18, 0.38, 0.06).lerp(Color(0.32, 0.50, 0.10), g)
-		st.set_color(root_c)
-		st.add_vertex(base - side)
-		st.add_vertex(base + side)
-		st.set_color(tip_c)
-		st.add_vertex(base + lean + Vector3(0, h, 0))
+		var h := rng.randf_range(0.35, 0.9)
+		var out := Vector3(cos(a), 0.0, sin(a))
+		var lean := rng.randf_range(0.1, 0.45)
+		var side := Vector3(-sin(a), 0.0, cos(a)) * rng.randf_range(0.012, 0.022)
+		var mid := base + out * h * lean * 0.35 + Vector3(0, h * 0.55, 0)
+		var tip := base + out * h * lean + Vector3(0, h, 0)
+		for tri in [[base - side, 0.0, base + side, 0.0, mid + side * 0.7, 0.55], [base - side, 0.0, mid + side * 0.7, 0.55, mid - side * 0.7, 0.55], [mid - side * 0.7, 0.55, mid + side * 0.7, 0.55, tip, 1.0]]:
+			for k in 3:
+				st.set_uv(Vector2(0.5, tri[k * 2 + 1]))
+				st.add_vertex(tri[k * 2])
 	var m := st.commit()
-	var mat := StandardMaterial3D.new()
-	mat.vertex_color_use_as_albedo = true
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	mat.roughness = 1.0
+	var mat := ShaderMaterial.new()
+	mat.shader = load("res://grass.gdshader")
 	m.surface_set_material(0, mat)
 	return m
+
+# alpine: pebbles and the odd exposed root on the walked surface (no collision, partly sunk, never tall)
+@export var trail_pebbles := 45      # per chunk
+@export var trail_roots := 2         # per chunk
+func _trail_debris(holder: Node3D, rng: RandomNumberGenerator, s0: float, origin: Vector3) -> void:
+	for m in _rocks_small:
+		var mm := _new_mm(m, trail_pebbles)
+		for i in trail_pebbles:
+			var s := s0 + rng.randf() * chunk_length
+			var u := rng.randf_range(-_route.half_right(s), _route.half_left(s)) * 0.95
+			var p := _route.pos_at(s) + _route.left_at(s) * u
+			p.y = _route.ground_y(s, u) - 0.03
+			var k := rng.randf_range(0.03, 0.11)
+			var b := Basis(Vector3.UP, rng.randf() * TAU).rotated(Vector3.RIGHT, rng.randf_range(-0.4, 0.4)).scaled(Vector3(k, k * 0.6, k))
+			mm.set_instance_transform(i, Transform3D(b, p - origin))
+		_add_mm(holder, mm, origin, 60.0)
+	if _root_mesh == null:
+		var c := CapsuleMesh.new()
+		c.radius = 0.035
+		c.height = 1.0
+		c.radial_segments = 6
+		c.rings = 2
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = Color(0.24, 0.17, 0.11)
+		mat.roughness = 0.9
+		c.material = mat
+		_root_mesh = c
+	var rm := _new_mm(_root_mesh, trail_roots)
+	for i in trail_roots:
+		var s := s0 + rng.randf() * chunk_length
+		var p := _route.pos_at(s) + _route.left_at(s) * rng.randf_range(-0.3, 0.3)
+		p.y = _route.ground_y(s, 0.0) - 0.02
+		var len := (_route.half_left(s) + _route.half_right(s)) * rng.randf_range(0.6, 1.1)
+		var side := _route.left_at(s)
+		var b := Basis.looking_at(side.rotated(Vector3.UP, rng.randf_range(-0.5, 0.5)), Vector3.UP)
+		b = b * Basis(Vector3.RIGHT, PI * 0.5)  # capsule axis (Y) -> across the trail
+		b = b.scaled(Vector3(1.0, len, 1.0))
+		rm.set_instance_transform(i, Transform3D(b, p - origin))
+	_add_mm(holder, rm, origin, 60.0)

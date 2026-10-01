@@ -22,6 +22,8 @@ signal footstep(speed_ratio: float)  # emitted at each bob trough (foot strike)
 
 @export_group("Head Bob")
 @export var head_bob_enabled := false  # off = perfectly steady camera (footsteps still follow the cadence)
+@export var wander_amp := 0.0          # auto-run: slow sideways drift across the trail (m), like a real runner's line
+@export var breathe_amp := 0.0         # tiny vertical rise/fall at step rate (m) when head_bob is off; 0.008 is barely felt
 @export var step_freq_walk := 1.8   # steps per second
 @export var step_freq_run := 2.8
 @export var bob_y := 0.07           # vertical amplitude at run speed (m)
@@ -68,7 +70,14 @@ func _physics_process(delta: float) -> void:
 	if _auto:
 		var path: Path3D = pacer.get_parent()
 		pacer.progress = path.curve.get_closest_offset(path.to_local(global_position)) + lookahead
-		var d := pacer.global_position - global_position
+		var target := pacer.global_position
+		if wander_amp > 0.0 and path is Route:
+			var r := path as Route
+			var t := r.clock()
+			var lim := minf(r.half_left(pacer.progress), r.half_right(pacer.progress)) - 0.3
+			var u := clampf(wander_amp * (0.6 * sin(t * 0.11) + 0.4 * sin(t * 0.27 + 1.1)), -lim, lim)
+			target += r.left_at(pacer.progress) * u
+		var d := target - global_position
 		_yaw = atan2(-d.x, -d.z)
 
 	# smooth look
@@ -115,4 +124,6 @@ func _head_bob(delta: float, speed: float) -> void:
 	var stride := _phase * 0.5
 	if head_bob_enabled:
 		cam.position = _cam_rest + Vector3(cos(stride) * bob_x, sin(_phase) * bob_y, 0.0) * _bob_amp
+	elif breathe_amp > 0.0:
+		cam.position = _cam_rest + Vector3(0.0, sin(_phase) * breathe_amp * _bob_amp, 0.0)
 		cam.rotation.z = cos(stride) * deg_to_rad(roll_deg) * _bob_amp

@@ -23,6 +23,7 @@ var _keys := ["t", "s", "px", "py", "pz", "qx", "qy", "qz", "qw", "incline",
 var _t0 := -1.0
 var _course := ""
 var _markers := false
+var _done := false
 
 func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
@@ -38,6 +39,10 @@ func _ready() -> void:
 		set_process(false)
 		return
 	process_priority = 100000  # run after every other _process: pose/sun are final for the frame
+	# macOS stops drawing a window that is fully covered (occlusion), and the movie writer then repeats the last
+	# frame. Keep the recording window on top and visible for the whole export.
+	get_window().always_on_top = true
+	OS.low_processor_usage_mode = false
 	_route = get_node(route_path)
 	_sun = get_node(sun_path)
 	_cam = get_node(player_path).get_node("Camera3D")
@@ -67,6 +72,12 @@ func _process(_d: float) -> void:
 	if (_minutes > 0.0 and t - _t0 >= _minutes * 60.0 - 0.5 / fps) or t >= _route.total_minutes * 60.0:
 		_finish()
 
+# If the movie window is closed early, still write what was recorded so the clip stays usable.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST and not _dir.is_empty() and not _done and _c.has("t") and _c["t"].size() > 0:
+		print("TrackExporter: window closed early - writing partial export")
+		_finish()
+
 func _r(a: PackedFloat64Array, step: float) -> Array:
 	var out := []
 	out.resize(a.size())
@@ -80,6 +91,9 @@ func _write(fname: String, data) -> void:
 	f.close()
 
 func _finish() -> void:
+	if _done:
+		return
+	_done = true
 	set_process(false)
 	var n: int = _c["t"].size()
 	var fr := {}

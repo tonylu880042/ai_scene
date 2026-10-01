@@ -201,12 +201,14 @@ bend = 1.0
 [node name="Player" parent="." instance=ExtResource("1")]
 pacer_path = NodePath("../Path3D/PathFollow3D")
 start_auto = true
+wander_amp = 0.3
+breathe_amp = 0.008
 
 [node name="Foliage" type="Node3D" parent="."]
 script = ExtResource("4")
 path_node = NodePath("../Path3D")
 player_path = NodePath("../Player")
-min_dist = 2.3
+min_dist = 0.9
 max_dist = 45.0
 spruce = true
 fir_models = true
@@ -217,8 +219,9 @@ tree_view_distance = 180.0
 rock_scale_mult = 2.2
 fence_offset = 2.6
 logwall_every = 100000
-grass_per_mesh = 250
-meadow_clumps = 4500
+grass_per_mesh = 0
+meadow_clumps = 18000
+clump_scale = Vector2(0.5, 1.1)
 tree_min_dist = 5.0
 
 [node name="Props" type="Node3D" parent="."]

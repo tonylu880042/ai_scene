@@ -5,6 +5,8 @@ shader_type sky;
 uniform sampler2D pano : source_color, filter_linear, repeat_enable;
 uniform float yaw = 0.0;          // radians added to the world azimuth before sampling
 uniform float energy = 1.0;
+uniform float ambient_clamp = 3.0; // cap for the radiance/ambient pass: the photographed sun (tens of thousands x the sky)
+                                    // must not leak into ambient light - the DirectionalLight already provides the sun
 uniform float horizon_fill = 0.0;  // mix toward a flat haze colour below the horizon (pure-sky HDRIs are blank there)
 uniform vec3 haze : source_color = vec3(0.78, 0.84, 0.92);
 
@@ -14,5 +16,8 @@ void sky() {
 	vec2 uv = vec2(fract(az / TAU + 0.5), acos(clamp(d.y, -1.0, 1.0)) / PI);
 	vec3 c = texture(pano, uv).rgb * energy;
 	c = mix(c, haze * energy, horizon_fill * smoothstep(0.02, -0.15, d.y));
+	if (AT_CUBEMAP_PASS) {
+		c = min(c, vec3(ambient_clamp));
+	}
 	COLOR = c;
 }
