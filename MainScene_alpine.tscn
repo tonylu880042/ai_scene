@@ -14,6 +14,7 @@
 [ext_resource type="Script" path="res://render_quality.gd" id="16"]
 [ext_resource type="Script" path="res://real_terrain.gd" id="17"]
 [ext_resource type="Shader" path="res://cloud_sea.gdshader" id="14"]
+[ext_resource type="Shader" path="res://cloud_volume.gdshader" id="18"]
 [ext_resource type="Script" path="res://track_exporter.gd" id="99"]
 
 [sub_resource type="FastNoiseLite" id="cloud_noise"]
@@ -69,26 +70,21 @@ fog_sky_affect = 0.25
 fog_sun_scatter = 0.1
 
 [sub_resource type="PlaneMesh" id="cloud_mesh"]
-size = Vector2(3200, 3200)
-subdivide_width = 399
-subdivide_depth = 399
+size = Vector2(26000, 26000)
 
 [sub_resource type="ShaderMaterial" id="cloud_mat"]
-shader = ExtResource("14")
-shader_parameter/big_tex = SubResource("big_tex")
-shader_parameter/detail_tex = SubResource("detail_tex")
-shader_parameter/amplitude = 62.0
+shader = ExtResource("18")
 
 [sub_resource type="ShaderMaterial" id="cloud_mat2"]
 render_priority = 1
 shader = ExtResource("14")
-shader_parameter/big_tex = SubResource("big_tex")
-shader_parameter/detail_tex = SubResource("detail_tex")
-shader_parameter/amplitude = 48.0
-shader_parameter/big_scale = 0.0007
-shader_parameter/detail_scale = 0.0041
-shader_parameter/hole_level = 0.44
-shader_parameter/opacity = 0.9
+shader_parameter/swell = 12.0
+shader_parameter/billow_scale = 0.005
+shader_parameter/billow_depth = 40.0
+shader_parameter/billow_amp = 15.0
+shader_parameter/coverage = 0.32
+shader_parameter/opacity = 0.75
+shader_parameter/wind = 2.0
 
 [sub_resource type="PlaneMesh" id="floor_mesh"]
 size = Vector2(9000, 9000)
@@ -134,6 +130,7 @@ base_y = -17.0
 y_factor = 1.0
 
 [node name="CloudSea2" type="MeshInstance3D" parent="."]
+visible = false
 mesh = SubResource("cloud_mesh")
 surface_material_override/0 = SubResource("cloud_mat2")
 cast_shadow = 0
