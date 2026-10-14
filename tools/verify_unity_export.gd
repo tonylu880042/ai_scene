@@ -2,6 +2,8 @@ extends SceneTree
 # Rebuild an export_unity folder from its files only (glb tiles + prototypes + instance JSON + environment)
 # and render one frame from the start of the route, to check the export is complete and correctly placed.
 #   godot --path . --script tools/verify_unity_export.gd -- export_unity/test /tmp/out.png [s_metres]
+const VIEW_M := 400.0  # instances farther than this from the camera are not drawn
+
 func _initialize() -> void:
 	_run.call_deferred()
 
@@ -31,6 +33,10 @@ func _run() -> void:
 	for mi: MeshInstance3D in protos.find_children("*", "MeshInstance3D", true, false):
 		meshes[str(mi.name)] = mi.mesh
 		_vertex_colours(mi.mesh)
+	var route: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(dir.path_join("route.json")))
+	var s := int(a[2]) if a.size() > 2 else int(env["route_from_m"]) + 5
+	var p := Vector3(route["x"][s], route["y"][s] + 1.65, route["z"][s])
+	var q := Vector3(route["x"][s + 3], route["y"][s + 3] + 1.65, route["z"][s + 3])
 	var total := 0
 	for t in env["tiles"]:
 		world.add_child(_load_glb(dir.path_join(t["file"])))
@@ -43,11 +49,18 @@ func _run() -> void:
 			if mm.mesh == null:
 				push_error("missing prototype " + g["proto"])
 				continue
-			mm.instance_count = d.size() / 10
-			for i in mm.instance_count:
-				var k := i * 10
+			# only what a runtime would draw around the camera (Godot: tree_view_distance 300 m, grass less): drawing all
+			# 1800 scanned trees of a route (~1.5 G vertices) made Metal time out and return black frames
+			var view := 300.0 if mm.mesh.get_faces().size() > 60000 else VIEW_M
+			var xfs := []
+			for k in range(0, d.size(), 10):
+				if Vector2(d[k] - p.x, d[k + 2] - p.z).length() > view:
+					continue
 				var b := Basis(Quaternion(d[k + 3], d[k + 4], d[k + 5], d[k + 6])).scaled_local(Vector3(d[k + 7], d[k + 8], d[k + 9]))
-				mm.set_instance_transform(i, Transform3D(b, Vector3(d[k], d[k + 1], d[k + 2])))
+				xfs.append(Transform3D(b, Vector3(d[k], d[k + 1], d[k + 2])))
+			mm.instance_count = xfs.size()
+			for i in xfs.size():
+				mm.set_instance_transform(i, xfs[i])
 			var mmi := MultiMeshInstance3D.new()
 			mmi.multimesh = mm
 			world.add_child(mmi)
@@ -67,10 +80,6 @@ func _run() -> void:
 	e.tonemap_mode = Environment.TONE_MAPPER_AGX
 	we.environment = e
 	world.add_child(we)
-	var route: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(dir.path_join("route.json")))
-	var s := int(a[2]) if a.size() > 2 else int(env["route_from_m"]) + 5
-	var p := Vector3(route["x"][s], route["y"][s] + 1.65, route["z"][s])
-	var q := Vector3(route["x"][s + 3], route["y"][s + 3] + 1.65, route["z"][s + 3])
 	# the backdrop follows the runner (VirtualRunBackdrop.cs in Unity): x/z with the camera, y at the lake level
 	var s0 := int(env["route_from_m"])
 	if backdrop is Node3D:
@@ -81,7 +90,7 @@ func _run() -> void:
 	world.add_child(cam)
 	cam.look_at_from_position(p, q, Vector3.UP)
 	cam.current = true
-	print("verify: tiles ", env["tiles"].size(), ", prototypes ", meshes.size(), ", instances ", total)
+	print("verify: tiles ", env["tiles"].size(), ", prototypes ", meshes.size(), ", instances drawn ", total)
 	for i in 8:
 		await process_frame
 	await RenderingServer.frame_post_draw
