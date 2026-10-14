@@ -16,6 +16,9 @@ const MODEL := "res://assets/models/%s/%s_1k.gltf"
 @export_group("Density (per chunk)")
 @export var grass_per_mesh := 900    # for each of 4 grass variants
 @export var fern_per_mesh := 25      # for each of 2 fern variants
+@export var shrubs_per_mesh := 0     # for each variant of shrub_model (0 = off)
+@export var shrub_model := "shrub_02"
+@export var shrub_scale := Vector2(0.8, 1.6)
 @export var trees_per_chunk := 14
 @export var tree_min_dist := 14.0
 @export var tree_view_distance := 250.0
@@ -33,6 +36,7 @@ const MODEL := "res://assets/models/%s/%s_1k.gltf"
 @export var spruce := false          # alpine spruces (tiered dark cones) instead of the leafy harbour trees
 @export var tree_cluster := 5         # fir_models: saplings per tree spot
 @export var fir_tint := Color(0.5, 0.6, 0.46)  # darkens the scanned fir/pine foliage
+@export var blob_tint := Color(1, 1, 1)         # multiplies the procedural leafy/cypress trees (Mediterranean: dark olive)
 @export var fir_models := false      # real Poly Haven fir/pine saplings (scaled up) instead of the procedural spruces
 @export var lamps := true            # street lamps along the inland road edge
 @export var rock_scale_mult := 1.0   # alpine: bigger boulders
@@ -48,6 +52,7 @@ var _route: Route
 var _player: Node3D
 var _grass: Array[Mesh]
 var _ferns: Array[Mesh]
+var _shrubs: Array[Mesh]
 var _trees: Array[Mesh]
 var _flowers: Array[Mesh]
 var _rocks_big: Array[Mesh]
@@ -67,6 +72,8 @@ func _ready() -> void:
 	_player = get_node(player_path)
 	_grass = _meshes("grass_medium_01", ["tall_a", "tall_b", "tall_c", "small_b"])
 	_ferns = _meshes("fern_02", ["fern_02_a", "fern_02_d"])
+	if shrubs_per_mesh > 0:
+		_shrubs = _meshes(shrub_model, [shrub_model.get_slice("_", 0)])  # every mesh of the model
 	_trees = _meshes("island_tree_02", ["LOD0"])
 	_flowers.append_array(_meshes("celandine_01", ["celandine_01_a", "celandine_01_b", "celandine_01_e"]))
 	_flowers.append_array(_meshes("periwinkle_plant", ["plant_06", "plant_05"]))
@@ -153,6 +160,8 @@ func _spot(rng: RandomNumberGenerator, s: float, dmin: float) -> Vector3:
 	if spruce:  # alpine: plants may crowd right up to the (variable-width) trail edge, but not onto it
 		var edge := (_route.half_left(s) if side > 0.0 else _route.half_right(s)) + 0.2
 		u = side * maxf(absf(u), edge + rng.randf() * 0.4)
+	else:  # never on the road / path (sections can widen it with a car lane)
+		u = side * maxf(absf(u), (_route.half_left(s) if side > 0.0 else _route.half_right(s)) + 0.6)
 	var p := _route.pos_at(s) + _route.left_at(s) * u
 	p.y = _route.ground_y(s, u)
 	return p
@@ -166,19 +175,20 @@ func _spawn(idx: int) -> void:  # coroutine: one mesh type per frame to avoid hi
 	var s0 := idx * chunk_length
 	var origin := _route.pos_at(s0 + chunk_length * 0.5)
 	# alpine thinning: 1 = lush, -> 0 above the route's alpine_start (Summit): bare rock, no trees
-	var veg := clampf(1.0 - (origin.y - _route.sea_y - _route.alpine_start) / _route.alpine_range, 0.05, 1.0)
-	for set: Array in [[_grass, int(grass_per_mesh * veg), grass_scale], [_ferns, int(fern_per_mesh * veg), fern_scale]]:
+	var veg := clampf(1.0 - (origin.y - _route.water_level(s0 + chunk_length * 0.5) - _route.alpine_start) / _route.alpine_range, 0.05, 1.0)
+	var sm := float(_route.section_at(s0 + chunk_length * 0.5).get("trees", 1.0))  # scene section: village 0 .. olive terraces 1.6
+	for set: Array in [[_grass, int(grass_per_mesh * veg * sm), grass_scale], [_ferns, int(fern_per_mesh * veg * sm), fern_scale], [_shrubs, int(shrubs_per_mesh * veg * sm), shrub_scale]]:
 		for m: Mesh in set[0]:
 			_multimesh(holder, rng, s0, origin, m, set[1], set[2])
 			await get_tree().process_frame
 			if not is_instance_valid(holder):
 				return
 	if meadow_clumps > 0:
-		_multimesh(holder, rng, s0, origin, _clump, int(meadow_clumps * veg), clump_scale, clump_view)
+		_multimesh(holder, rng, s0, origin, _clump, int(meadow_clumps * veg * sm), clump_scale, clump_view)
 		await get_tree().process_frame
 		if not is_instance_valid(holder):
 			return
-	for i in (trees_per_chunk if veg > 0.6 else 0):
+	for i in (int(trees_per_chunk * sm) if veg > 0.6 else 0):
 		var pine := rng.randf() < conifer_ratio
 		var spot := _spot(rng, s0 + rng.randf() * chunk_length, tree_min_dist)
 		var sr := conifer_scale if pine else tree_scale
@@ -196,12 +206,12 @@ func _spawn(idx: int) -> void:  # coroutine: one mesh type per frame to avoid hi
 	await get_tree().process_frame
 	if not is_instance_valid(holder):
 		return
-	if veg > 0.5:
+	if veg > 0.5 and sm > 0.0:
 		_flower_patches(holder, rng, s0, origin)
 	await get_tree().process_frame
 	if not is_instance_valid(holder):
 		return
-	_rocks(holder, rng, s0, origin, 1.0 + (1.0 - veg) * 3.0)
+	_rocks(holder, rng, s0, origin, (1.0 + (1.0 - veg) * 3.0) * minf(sm, 1.0))
 	if spruce:
 		_trail_debris(holder, rng, s0, origin)
 	_fence(holder, idx, s0, origin)
@@ -218,7 +228,7 @@ func _multimesh(holder: Node3D, rng: RandomNumberGenerator, s0: float, origin: V
 	for i in count:
 		var pos := _spot(rng, s0 + rng.randf() * chunk_length, min_dist) - origin
 		var s := rng.randf_range(scale_range.x, scale_range.y)  # scale jitter
-		var basis := Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3(s * rng.randf_range(0.8, 1.2), s, s * rng.randf_range(0.8, 1.2)))
+		var basis := Basis(Vector3.UP, rng.randf() * TAU).scaled_local(Vector3(s * rng.randf_range(0.8, 1.2), s, s * rng.randf_range(0.8, 1.2)))
 		mm.set_instance_transform(i, Transform3D(basis, pos))
 	var mmi := MultiMeshInstance3D.new()
 	mmi.multimesh = mm
@@ -330,7 +340,7 @@ func _make_tree(tall: bool, seed_: int) -> Mesh:
 	var mat := StandardMaterial3D.new()
 	mat.vertex_color_use_as_albedo = true
 	mat.albedo_texture = load("res://assets/textures/aerial_grass_rock_diff.jpg")  # mottled leaf-like detail
-	mat.albedo_color = Color(1.7, 1.8, 1.4)
+	mat.albedo_color = Color(1.7, 1.8, 1.4) * blob_tint
 	mat.uv1_triplanar = true
 	mat.uv1_scale = Vector3.ONE * 0.45
 	mat.roughness = 1.0
@@ -519,7 +529,7 @@ func _trail_debris(holder: Node3D, rng: RandomNumberGenerator, s0: float, origin
 			var p := _route.pos_at(s) + _route.left_at(s) * u
 			p.y = _route.ground_y(s, u) - 0.03
 			var k := rng.randf_range(0.03, 0.11)
-			var b := Basis(Vector3.UP, rng.randf() * TAU).rotated(Vector3.RIGHT, rng.randf_range(-0.4, 0.4)).scaled(Vector3(k, k * 0.6, k))
+			var b := Basis(Vector3.UP, rng.randf() * TAU).rotated(Vector3.RIGHT, rng.randf_range(-0.4, 0.4)).scaled_local(Vector3(k, k * 0.6, k))
 			mm.set_instance_transform(i, Transform3D(b, p - origin))
 		_add_mm(holder, mm, origin, 60.0)
 	if _root_mesh == null:
@@ -542,6 +552,6 @@ func _trail_debris(holder: Node3D, rng: RandomNumberGenerator, s0: float, origin
 		var side := _route.left_at(s)
 		var b := Basis.looking_at(side.rotated(Vector3.UP, rng.randf_range(-0.5, 0.5)), Vector3.UP)
 		b = b * Basis(Vector3.RIGHT, PI * 0.5)  # capsule axis (Y) -> across the trail
-		b = b.scaled(Vector3(1.0, len, 1.0))
+		b = b.scaled_local(Vector3(1.0, len, 1.0))  # local: global scale shears, which glTF TRS cannot hold
 		rm.set_instance_transform(i, Transform3D(b, p - origin))
 	_add_mm(holder, rm, origin, 60.0)

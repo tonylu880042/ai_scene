@@ -13,6 +13,13 @@ func _load_glb(path: String) -> Node:
 		return Node3D.new()
 	return doc.generate_scene(st)
 
+func _vertex_colours(m: Mesh) -> void:  # glTF COLOR_0 multiplies base colour (Godot's importer leaves it off)
+	if m == null:
+		return
+	for si in m.get_surface_count():
+		if m.surface_get_format(si) & Mesh.ARRAY_FORMAT_COLOR and m.surface_get_material(si) is StandardMaterial3D:
+			(m.surface_get_material(si) as StandardMaterial3D).vertex_color_use_as_albedo = true
+
 func _run() -> void:
 	var a := OS.get_cmdline_user_args()
 	var dir := ProjectSettings.globalize_path("res://").path_join(a[0])
@@ -23,10 +30,7 @@ func _run() -> void:
 	var meshes := {}
 	for mi: MeshInstance3D in protos.find_children("*", "MeshInstance3D", true, false):
 		meshes[str(mi.name)] = mi.mesh
-		var m := mi.mesh
-		for si in m.get_surface_count():  # glTF COLOR_0 multiplies base colour (Godot's importer leaves it off)
-			if m.surface_get_format(si) & Mesh.ARRAY_FORMAT_COLOR and m.surface_get_material(si) is StandardMaterial3D:
-				(m.surface_get_material(si) as StandardMaterial3D).vertex_color_use_as_albedo = true
+		_vertex_colours(mi.mesh)
 	var total := 0
 	for t in env["tiles"]:
 		world.add_child(_load_glb(dir.path_join(t["file"])))
@@ -48,7 +52,12 @@ func _run() -> void:
 			mmi.multimesh = mm
 			world.add_child(mmi)
 			total += mm.instance_count
-	world.add_child(_load_glb(dir.path_join("backdrop.glb")))
+	var backdrop := _load_glb(dir.path_join("backdrop.glb"))
+	world.add_child(backdrop)
+	if FileAccess.file_exists(dir.path_join("water.glb")):
+		world.add_child(_load_glb(dir.path_join("water.glb")))
+	for mi: MeshInstance3D in world.find_children("*", "MeshInstance3D", true, false):  # tiles: COLOR_0 too
+		_vertex_colours(mi.mesh)
 	var we := WorldEnvironment.new()
 	var e := Environment.new()
 	e.background_mode = Environment.BG_COLOR
@@ -62,6 +71,10 @@ func _run() -> void:
 	var s := int(a[2]) if a.size() > 2 else int(env["route_from_m"]) + 5
 	var p := Vector3(route["x"][s], route["y"][s] + 1.65, route["z"][s])
 	var q := Vector3(route["x"][s + 3], route["y"][s + 3] + 1.65, route["z"][s + 3])
+	# the backdrop follows the runner (VirtualRunBackdrop.cs in Unity): x/z with the camera, y at the lake level
+	var s0 := int(env["route_from_m"])
+	if backdrop is Node3D:
+		(backdrop as Node3D).position = Vector3(p.x - route["x"][s0], route["water_y"][s] - route["water_y"][s0], p.z - route["z"][s0])
 	var cam := Camera3D.new()
 	cam.fov = 75.0
 	cam.far = 30000.0

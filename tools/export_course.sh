@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
-# Usage: tools/export_course.sh <coast|alpine> <course> <start_min> <minutes>
+# Usage: tools/export_course.sh <coast|alpine|garda> <course> <start_min> <minutes>
 # Env: CRF (default 26; the Godot output is very noisy, CRF 20 gives ~50 Mbit/s), EXPORT_EXTRA (e.g. --hq), EXPORT_SUFFIX
 # Output: export/<scene>_<course>_<startmin>m/{video.mp4,camera.json,route.json,occluder.glb}
 set -euo pipefail
 SCENE=${1:?scene coast|alpine}; COURSE=${2:?course}; START=${3:?start minute}; MIN=${4:?minutes}
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
-case $SCENE in coast) TSCN=res://MainScene.tscn;; alpine) TSCN=res://MainScene_alpine.tscn;; *) echo bad scene; exit 1;; esac
+case $SCENE in coast) TSCN=res://MainScene.tscn;; alpine) TSCN=res://MainScene_alpine.tscn;; garda) TSCN=res://MainScene_garda.tscn;; *) echo bad scene; exit 1;; esac
 OUT="$ROOT/export/${SCENE}_${COURSE}_${START}m${EXPORT_SUFFIX:-}"
 mkdir -p "$OUT"
+touch "$ROOT/export/.gdignore"  # keep Godot from importing the exports
 FR="$OUT/_frames"
 rm -rf "$FR"; mkdir -p "$FR"
 cd "$ROOT"

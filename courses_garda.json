@@ -1,0 +1,115 @@
+{
+ "templates": {
+  "garda_boardwalk": {
+   "Path3D": {
+    "hill_height": 40,
+    "inland_slope": 1.0
+   },
+   "Foliage": {
+    "trees_per_chunk": 20
+   },
+   "Props": {
+    "parapet_every": 5
+   }
+  },
+  "garda_cliff": {
+   "Path3D": {
+    "hill_height": 60,
+    "inland_slope": 1.3,
+    "bank_ratio": 0.6
+   },
+   "Foliage": {
+    "trees_per_chunk": 8
+   },
+   "Props": {
+    "parapet_every": 3
+   }
+  }
+ },
+ "courses": {
+  "recovery_walk": {
+   "template": "garda_boardwalk",
+   "tod": [
+    0.35,
+    0.6
+   ]
+  },
+  "power_walk": {
+   "template": "garda_boardwalk",
+   "tod": [
+    0.35,
+    0.6
+   ]
+  },
+  "walk_run": {
+   "template": "garda_boardwalk",
+   "tod": [
+    0.35,
+    0.6
+   ]
+  },
+  "fat_burn": {
+   "template": "garda_boardwalk",
+   "tod": [
+    0.35,
+    0.6
+   ]
+  },
+  "glute_blast": {
+   "template": "garda_cliff",
+   "tod": [
+    0.35,
+    0.6
+   ]
+  },
+  "rolling_hills": {
+   "template": "garda_boardwalk",
+   "tod": [
+    0.35,
+    0.6
+   ]
+  },
+  "five_k_ready": {
+   "template": "garda_boardwalk",
+   "tod": [
+    0.35,
+    0.6
+   ]
+  },
+  "speed_lab": {
+   "template": "garda_boardwalk",
+   "tod": [
+    0.35,
+    0.6
+   ]
+  },
+  "summit": {
+   "template": "garda_cliff",
+   "tod": [
+    0.35,
+    0.6
+   ]
+  },
+  "endurance_60": {
+   "template": "garda_boardwalk",
+   "tod": [
+    0.35,
+    0.6
+   ]
+  },
+  "endurance_75": {
+   "template": "garda_boardwalk",
+   "tod": [
+    0.35,
+    0.6
+   ]
+  },
+  "endurance_90": {
+   "template": "garda_boardwalk",
+   "tod": [
+    0.35,
+    0.6
+   ]
+  }
+ }
+}

@@ -52,9 +52,15 @@ func _ready() -> void:
 	_cam_rest = cam.position
 	_yaw = rotation.y
 	_auto = start_auto and pacer != null
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	if not _recording():
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+func _recording() -> bool:  # --write-movie: the desktop mouse must not steer the recorded camera
+	return not Engine.get_write_movie_path().is_empty()
 
 func _unhandled_input(e: InputEvent) -> void:
+	if _recording():
+		return
 	if e is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		_yaw -= e.relative.x * mouse_sensitivity
 		_pitch = clampf(_pitch - e.relative.y * mouse_sensitivity,

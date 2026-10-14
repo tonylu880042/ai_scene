@@ -7,6 +7,8 @@
 Sources (both free, attribution required - see player/scene credits):
   elevation  AWS Terrain Tiles (terrarium PNG, z12 ~26 m/px here)  https://registry.opendata.aws/terrain-tiles/
   imagery    swisstopo SWISSIMAGE WMTS (z14 ~6.6 m/px here)        (c) swisstopo, Federal Office of Topography
+             outside Switzerland: IMAGERY=s2 -> Sentinel-2 cloudless 2016 by EOX (CC BY 4.0, 10 m/px)
+             "Sentinel-2 cloudless - https://s2maps.eu by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016)"
 
 Writes assets/terrain/<name>_h.f32 (GRID x GRID float32 metres, row 0 = north), <name>_albedo.jpg, <name>.json."""
 import io, json, math, os, sys, urllib.request
@@ -16,7 +18,7 @@ from PIL import Image
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 name, lat, lon, size_km = (sys.argv[1:] + ["jungfrau", "46.5853", "7.9614", "24"][len(sys.argv) - 1:])[:4]
 lat, lon, size_m = float(lat), float(lon), float(size_km) * 1000.0
-GRID = 512        # height samples per side
+GRID = int(os.environ.get("GRID", 512))  # height samples per side
 ALBEDO = 4096     # orthophoto pixels per side
 UA = {"User-Agent": "Mozilla/5.0 (ai_scene terrain fetch)"}
 
@@ -62,7 +64,9 @@ print("elevation…")
 h = mosaic(12, "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png", GRID, terrarium)
 h.astype("<f4").tofile(f"{out}/{name}_h.f32")
 print("orthophoto…")
-img = mosaic(14, "https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg", ALBEDO, rgb)
+IMG_URL = {"swisstopo": "https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg",
+           "s2": "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless_3857/default/g/{z}/{y}/{x}.jpg"}[os.environ.get("IMAGERY", "swisstopo")]
+img = mosaic(14, IMG_URL, ALBEDO, rgb)
 img.save(f"{out}/{name}_albedo.jpg", quality=90)
 meta = {"name": name, "lat": lat, "lon": lon, "size_m": size_m, "grid": GRID,
         "min_m": float(h.min()), "max_m": float(h.max()), "centre_m": float(h[GRID // 2, GRID // 2])}

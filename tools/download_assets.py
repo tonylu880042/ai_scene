@@ -6,14 +6,23 @@ def get(u):
     return urllib.request.urlopen(urllib.request.Request(u, headers={"User-Agent": "Mozilla/5.0"})).read()
 
 def save(url, path):
+    if os.path.exists(path):  # re-runs only fetch what is missing
+        return
     os.makedirs(os.path.dirname(path), exist_ok=True)
     open(path, "wb").write(get(url))
 
 MODELS = ["island_tree_02", "grass_medium_01", "fern_02", "celandine_01", "periwinkle_plant",
-          "dandelion_01", "boulder_01", "namaqualand_boulder_03", "dutch_ship_medium", "fir_sapling", "pine_sapling_small"]
-HDRIS = [("kloofendal_48d_partly_cloudy_puresky", "8k")]  # alpine scene sky (hdri_sky.gdshader), ~75 MB
+          "dandelion_01", "boulder_01", "namaqualand_boulder_03", "dutch_ship_medium", "fir_sapling", "pine_sapling_small",
+          "shrub_02",
+          "planter_box_01", "potted_plant_02", "planter_pot_clay", "street_lamp_02", "outdoor_table_chair_set_01", "painted_wooden_bench",
+          "rock_face_01", "rock_face_02", "namaqualand_cliff_02"]  # garda limestone faces  # garda village props  # garda scrub on the cliff slopes
+HDRIS = [("kloofendal_48d_partly_cloudy_puresky", "8k"),  # alpine scene sky (hdri_sky.gdshader), ~75 MB
+         ("kloofendal_43d_clear_puresky", "4k")]          # garda scene sky (clear autumn day)
 TEXTURES = ["asphalt_02", "coast_sand_01", "aerial_grass_rock", "brown_planks_09",
-            "beige_wall_001", "clay_roof_tiles", "rock_boulder_dry", "rocky_trail"]
+            "beige_wall_001", "clay_roof_tiles", "rock_boulder_dry", "rocky_trail",
+            "wood_planks_grey", "stacked_stone_wall",  # garda boardwalk deck / dry-stone walls
+            "patterned_cobblestone", "clay_plaster", "concrete_pavement",
+            "painted_plaster_wall", "clay_roof_tiles_02"]  # garda house fronts / roofs  # garda lanes / house fronts / roadside path
 
 for m in MODELS:
     g = json.loads(get(f"https://api.polyhaven.com/files/{m}"))["gltf"]["1k"]["gltf"]

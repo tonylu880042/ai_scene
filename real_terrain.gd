@@ -9,6 +9,9 @@ extends MeshInstance3D
 @export var hole_depth := -600.0
 @export var rotation_deg := 0.0        # turn the real map relative to the route
 @export var height_offset := 0.0       # extra vertical shift (m)
+@export var anchor := Vector2.ZERO     # DEM-local point (m, x east / z south) kept under the runner, e.g. the real shore
+@export var sink_west_of := -INF       # sink everything west of this line (route.gd real_shore supplies that side): metres east
+@export var sink_axis_deg := 0.0       # ... of the DEM centre, measured across an axis with this compass bearing (lake's axis)
 
 var _mat: ShaderMaterial
 
@@ -28,7 +31,7 @@ func _ready() -> void:
 			var z := (r - (g - 1) * 0.5) * step
 			var d := sqrt(x * x + z * z)
 			var v := h[r * g + c] - c0 + height_offset
-			y[r * g + c] = lerpf(hole_depth, v, smoothstep(hole_radius * 0.75, hole_radius, d))
+			y[r * g + c] = lerpf(hole_depth, v, smoothstep(hole_radius * 0.75, hole_radius, d) * (1.0 if is_inf(sink_west_of) else smoothstep(sink_west_of - 300.0, sink_west_of, x * cos(deg_to_rad(sink_axis_deg)) + z * sin(deg_to_rad(sink_axis_deg)))))
 	var verts := PackedVector3Array()
 	var norms := PackedVector3Array()
 	var uvs := PackedVector2Array()
@@ -68,6 +71,7 @@ func _ready() -> void:
 	_mat.set_shader_parameter("albedo_tex", load(dir + terrain_name + "_albedo.jpg"))
 	material_override = _mat
 	rotation.y = deg_to_rad(rotation_deg)
+	position = -(Basis(Vector3.UP, rotation.y) * Vector3(anchor.x, 0.0, anchor.y))
 	cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	extra_cull_margin = 5000.0
 	var cam := get_viewport().get_camera_3d()

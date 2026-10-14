@@ -1,7 +1,7 @@
 extends SceneTree
 # Bake the alpine trail scene for one course into Unity-ready glTF (.glb) tiles. Scene only - no avatars.
 #
-#   godot --path . --script tools/export_unity.gd -- --course=summit [--out=export_unity/summit]
+#   godot --path . --script tools/export_unity.gd -- --course=summit [--out=export_unity/summit] [--scene=res://MainScene_garda.tscn]
 #         [--from-m=0] [--to-m=<course length>] [--tile-m=750] [--grass=0.15] [--flowers=0.35]
 #
 # Run WITH a window (not --headless): textures are read back from the GPU for embedding.
@@ -23,6 +23,7 @@ var _route: Route
 var _mat_cache := {}
 var _protos := {}        # source mesh instance id -> {"name", "mesh", "gpu"}
 var _proto_names := {}  # name -> true
+var _sheared := {}      # prototype names already warned about
 
 func _arg(k: String, d: String) -> String:
 	return A.get(k, d)
@@ -38,7 +39,8 @@ func _run() -> void:
 	var course := _arg("course", "summit")
 	var out := ProjectSettings.globalize_path("res://").path_join(_arg("out", "export_unity/" + course))
 	DirAccess.make_dir_recursive_absolute(out)
-	var scene: Node = (load(SCENE) as PackedScene).instantiate()
+	FileAccess.open(out.get_base_dir().path_join(".gdignore"), FileAccess.WRITE)  # keep Godot from importing the output
+	var scene: Node = (load(_arg("scene", SCENE)) as PackedScene).instantiate()
 	for n in ["HUD", "TrackExporter", "RenderQuality"]:
 		var node := scene.get_node_or_null(n)
 		if node:
@@ -143,7 +145,8 @@ func _run() -> void:
 		m.roughness = 1.0
 		copy.material_override = m
 		bd.add_child(copy)
-		copy.transform = Transform3D(rt.global_transform.basis, start)
+		# as at runtime: the backdrop follows the runner at the lake level, the terrain offset by its anchor
+		copy.transform = Transform3D(rt.global_transform.basis, Vector3(start.x, _route.water_level(from_m), start.z) + rt.position)
 	var sun := scene.get_node("Sun") as DirectionalLight3D
 	var sun_copy := DirectionalLight3D.new()
 	sun_copy.name = "Sun"
@@ -154,6 +157,21 @@ func _run() -> void:
 	_set_owner(bd, bd)
 	_export(bd, out.path_join("backdrop.glb"))
 	bd.free()
+
+	# --- lake: in Godot a plane follows the runner at Route.water_level (it differs per section, and rises with the
+	# course's climb), so the static scene gets a ribbon at that level from under the path out to WATER_OUT_M lakeward
+	var lake := scene.get_node_or_null("Lake") as MeshInstance3D
+	if lake:
+		var wn := Node3D.new()
+		wn.name = "water"
+		root.add_child(wn)
+		var wmi := MeshInstance3D.new()
+		wmi.name = "lake"
+		wmi.mesh = _water_mesh(from_m, to_m, lake.get_surface_override_material(0) as ShaderMaterial)
+		wn.add_child(wmi)
+		_set_owner(wn, wn)
+		_export(wn, out.path_join("water.glb"))
+		wn.free()
 
 	# --- environment, route, sky
 	var env := (scene.get_node("WorldEnvironment") as WorldEnvironment).environment
@@ -174,16 +192,64 @@ func _run() -> void:
 		"camera": {"height_m": 1.65, "fov_y_deg": 75.0, "far_m": 30000.0},
 		"cloud_sea": {"note": "ray-marched in Godot (cloud_volume.gdshader); recreate with a Unity volumetric cloud layer",
 			"top_below_runner_m": 17.0, "thickness_m": 120.0},
+		"backdrop": {"file": "backdrop.glb", "follows_runner": true, "placed_at_m": from_m,
+			"note": "placed for the route start; moves with the runner in x/z at the lake level (water_y) as in Godot - VirtualRunBackdrop.cs"},
+		"water": {"file": "water.glb" if lake else "", "note": "lake surface (material lake_water: replace with a Unity water shader); its height follows route.json water_y"},
+		"sea_y": _route.sea_y, "sea_side": "right" if _route.sea_right else "left",  # water plane level (coast / garda scenes)
 	}
 	var f := FileAccess.open(out.path_join("environment.json"), FileAccess.WRITE)
 	f.store_string(JSON.stringify(envd, "  "))
 	f.close()
 	_write_route(out.path_join("route.json"))
 	DirAccess.copy_absolute(ProjectSettings.globalize_path(sky_tex.resource_path), out.path_join("sky.hdr"))
-	for f2 in ["README_UNITY.md", "VirtualRunScatter.cs"]:
+	for f2 in ["README_UNITY.md", "VirtualRunScatter.cs", "VirtualRunBackdrop.cs"]:
 		DirAccess.copy_absolute(ProjectSettings.globalize_path("res://").path_join("tools/unity/" + f2), out.path_join(f2))
 	print("export_unity: done -> ", out)
 	quit()
+
+const WATER_OUT_M := 1500.0
+
+func _water_mesh(from_m: float, to_m: float, sm: ShaderMaterial) -> ArrayMesh:
+	var side := -1.0 if _route.sea_right else 1.0
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var rows := []
+	var s := from_m
+	while true:
+		var p := _route.pos_at(s)
+		var l := _route.left_at(s) * side
+		l = Vector3(l.x, 0.0, l.z).normalized()
+		var a := Vector3(p.x, _route.water_level(s), p.z)
+		rows.append([a, a + l * WATER_OUT_M])
+		if s >= to_m:
+			break
+		s = minf(s + 5.0, to_m)
+	for i in range(1, rows.size()):
+		var q := [rows[i - 1][0], rows[i - 1][1], rows[i][1], rows[i][0]]
+		var order := [0, 1, 2, 0, 2, 3]
+		if (q[1] - q[0]).cross(q[2] - q[0]).y < 0.0:  # Godot's front faces are clockwise seen from the normal side
+			order = [0, 2, 1, 0, 3, 2]
+		for k in order:
+			var w: Vector3 = q[k]
+			st.set_normal(Vector3.UP)
+			st.set_uv(Vector2(w.x, w.z) * 0.08)  # ocean_water.gdshader normal_scale
+			st.add_vertex(w)
+	st.index()
+	st.generate_tangents()
+	var m := StandardMaterial3D.new()
+	m.resource_name = "lake_water"
+	m.albedo_color = Color(0.03, 0.22, 0.42)
+	m.roughness = 0.12
+	if sm:
+		m.albedo_color = (sm.get_shader_parameter("deep_color") as Color) if sm.get_shader_parameter("deep_color") != null else m.albedo_color
+		m.roughness = sm.get_shader_parameter("water_roughness") if sm.get_shader_parameter("water_roughness") != null else m.roughness
+		var nt: Texture2D = sm.get_shader_parameter("normal_a")
+		if nt and nt.get_image():
+			m.normal_enabled = true
+			m.normal_texture = ImageTexture.create_from_image(nt.get_image())
+	var mesh := st.commit()
+	mesh.surface_set_material(0, m)
+	return mesh
 
 func _s_of(p: Vector3) -> float:
 	return _route.curve.get_closest_offset(_route.to_local(p))
@@ -217,6 +283,9 @@ func _prepare(tile: Node3D) -> Array:
 	var add := func(proto: Dictionary, xf: Transform3D) -> void:
 		var q := xf.basis.get_rotation_quaternion()
 		var sc := xf.basis.get_scale()
+		if not Basis(q).scaled_local(sc).is_equal_approx(xf.basis) and not _sheared.has(proto["name"]):
+			_sheared[proto["name"]] = true  # glTF / Unity keep rotation + scale only: a sheared basis comes out twisted
+			push_warning("export_unity: %s instances are sheared (use Basis.scaled_local)" % proto["name"])
 		if not groups.has(proto["name"]):
 			groups[proto["name"]] = []
 		groups[proto["name"]].append_array([snappedf(xf.origin.x, 0.001), snappedf(xf.origin.y, 0.001), snappedf(xf.origin.z, 0.001),
@@ -260,6 +329,7 @@ func _proto(mesh: Mesh, i: int) -> Dictionary:
 	while _proto_names.has(name):
 		name += "_b"
 	_proto_names[name] = true
+	_gltf_safe_mesh(m)
 	var d := {"name": name, "mesh": m, "gpu": mesh.get_faces().size() < 60000}
 	_protos[key] = d
 	return d
@@ -347,21 +417,235 @@ func _world_uv_mesh(src: Mesh, xf: Transform3D, uv_scale: float, split_trail: bo
 	return out
 
 func _convert_mesh_instance(mi: MeshInstance3D) -> void:
+	if mi.material_override is StandardMaterial3D:
+		mi.material_override = _gltf_safe(mi.material_override)
+	if mi.mesh:
+		_gltf_safe_mesh(mi.mesh)
 	var sm := mi.material_override as ShaderMaterial
 	if sm == null or sm.shader == null:
 		return
 	var path := sm.shader.resource_path.get_file()
 	var xf := mi.global_transform
 	if path == "trail.gdshader" or path == "terrain.gdshader":
-		var m := _world_uv_mesh(mi.mesh, xf, 0.2, path == "trail.gdshader")
+		var m := _terrain_mesh(mi.mesh, xf, sm) if path == "terrain.gdshader" else _world_uv_mesh(mi.mesh, xf, 0.2, true)
 		mi.material_override = null
 		mi.mesh = m
 		mi.global_transform = Transform3D.IDENTITY
 	else:
 		mi.material_override = _mat("meadow")
 
+# ---------------------------------------------------------------- terrain.gdshader -> plain glTF
+# Per triangle: grass, sand or rock material whose texture is only detail (normalised to a flat mean, rock greyed), with
+# box-projected world UVs. Per vertex COLOR_0 (glTF multiplies it into the base colour; keep glTFast's materials in
+# Unity): the shader's low-frequency terms - tints, dry patches, macro light/dark, limestone streaks and stains, the
+# orthophoto colour on the real mountains. Fine noise of the shader (grain, second scales) is not reproduced.
+const DETAIL_MEAN := 0.75  # mean of the normalised detail textures (headroom: vertex colours stay <= 1)
+var _tex_info_cache := {}
+
+func _sp(sm: ShaderMaterial, k: String, d: Variant) -> Variant:
+	var v: Variant = sm.get_shader_parameter(k)
+	return d if v == null else v
+
+func _lum(c: Color) -> float:
+	return c.r * 0.3 + c.g * 0.59 + c.b * 0.11
+
+# {small: 64 px linear image for low-frequency lookups, mean: linear mean colour, tex: normalised detail texture}
+func _tex_info(t: Texture2D, grey: bool) -> Dictionary:
+	var key := "%d_%s" % [t.get_instance_id(), grey]
+	if _tex_info_cache.has(key):
+		return _tex_info_cache[key]
+	var img := t.get_image()
+	if img.is_compressed():
+		img.decompress()
+	img.convert(Image.FORMAT_RGB8)
+	var small := img.duplicate() as Image
+	small.resize(64, 64, Image.INTERPOLATE_TRILINEAR)
+	small.convert(Image.FORMAT_RGBF)
+	var mean := Color(0, 0, 0)
+	for y in 64:
+		for x in 64:
+			var c := small.get_pixel(x, y).srgb_to_linear()
+			small.set_pixel(x, y, c)
+			mean += c / 4096.0
+	if grey:
+		var l := _lum(mean)
+		mean = Color(l, l, l)
+	if img.get_width() > 1024:
+		img.resize(1024, 1024, Image.INTERPOLATE_CUBIC)
+	for y in img.get_height():
+		for x in img.get_width():
+			var c := img.get_pixel(x, y).srgb_to_linear()
+			if grey:
+				var l := clampf(_lum(c) / mean.r, 0.6, 1.33) * DETAIL_MEAN
+				c = Color(l, l, l)
+			else:
+				c = Color(clampf(c.r / mean.r, 0.6, 1.33), clampf(c.g / mean.g, 0.6, 1.33), clampf(c.b / mean.b, 0.6, 1.33)) * DETAIL_MEAN
+			img.set_pixel(x, y, c.linear_to_srgb())
+	img.generate_mipmaps()
+	var d := {"small": small, "mean": mean, "tex": ImageTexture.create_from_image(img)}
+	_tex_info_cache[key] = d
+	return d
+
+func _samp(img: Image, uv: Vector2) -> Color:  # bilinear, repeating
+	var n := img.get_width()
+	var x := fposmod(uv.x, 1.0) * n - 0.5
+	var y := fposmod(uv.y, 1.0) * n - 0.5
+	var x0 := floori(x)
+	var y0 := floori(y)
+	var fx := x - x0
+	var fy := y - y0
+	var c00 := img.get_pixel(posmod(x0, n), posmod(y0, n))
+	var c10 := img.get_pixel(posmod(x0 + 1, n), posmod(y0, n))
+	var c01 := img.get_pixel(posmod(x0, n), posmod(y0 + 1, n))
+	var c11 := img.get_pixel(posmod(x0 + 1, n), posmod(y0 + 1, n))
+	return c00.lerp(c10, fx).lerp(c01.lerp(c11, fx), fy)
+
+func _terrain_mat(sm: ShaderMaterial, cls: String) -> StandardMaterial3D:
+	var key := "terrain_%s_%d" % [cls, sm.get_instance_id()]
+	if _mat_cache.has(key):
+		return _mat_cache[key]
+	var m := StandardMaterial3D.new()
+	m.resource_name = "terrain_" + cls
+	m.albedo_texture = _tex_info(sm.get_shader_parameter(cls + "_d"), cls == "rock")["tex"]
+	m.vertex_color_use_as_albedo = true
+	var nt: Texture2D = sm.get_shader_parameter(cls + "_n")
+	if nt:
+		m.normal_enabled = true
+		m.normal_texture = nt
+	m.roughness = 0.95
+	_mat_cache[key] = m
+	return m
+
+func _terrain_mesh(src: Mesh, xf: Transform3D, sm: ShaderMaterial) -> ArrayMesh:
+	var uvs: float = _sp(sm, "uv_scale", 0.2)
+	var g := _tex_info(sm.get_shader_parameter("grass_d"), false)
+	var sd := _tex_info(sm.get_shader_parameter("sand_d"), false)
+	var rk := _tex_info(sm.get_shader_parameter("rock_d"), true)
+	var tint: Color = (_sp(sm, "grass_tint", Color(0.55, 0.90, 0.30)) as Color).srgb_to_linear()
+	var tint_dry: Color = (_sp(sm, "grass_tint_dry", Color(0.78, 0.82, 0.38)) as Color).srgb_to_linear()
+	var rock_tint: Color = (_sp(sm, "rock_tint", Color(0.5, 0.5, 0.5)) as Color).srgb_to_linear()
+	var streaks: float = _sp(sm, "rock_streaks", 0.0)
+	var gain: float = _sp(sm, "ortho_gain", 1.5)
+	var dirt: float = _sp(sm, "dirt_strength", 1.0)
+	var scale := {"grass": uvs * 0.75, "sand": uvs, "rock": uvs * 0.5}
+	var out := ArrayMesh.new()
+	var groups := {}
+	for si in src.get_surface_count():
+		var arr := src.surface_get_arrays(si)
+		var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+		var nrm: PackedVector3Array = arr[Mesh.ARRAY_NORMAL]
+		var col: PackedColorArray = arr[Mesh.ARRAY_COLOR] if arr[Mesh.ARRAY_COLOR] else PackedColorArray()
+		var cu: Variant = arr[Mesh.ARRAY_CUSTOM0]
+		var idx: PackedInt32Array = arr[Mesh.ARRAY_INDEX] if arr[Mesh.ARRAY_INDEX] else PackedInt32Array()
+		# per vertex: world position, normal, rock weight, colour
+		var wp := PackedVector3Array()
+		var wn := PackedVector3Array()
+		var rw := PackedFloat32Array()
+		var vc := PackedColorArray()
+		wp.resize(v.size())
+		wn.resize(v.size())
+		rw.resize(v.size())
+		vc.resize(v.size())
+		for k in v.size():
+			var w := xf * v[k]
+			var n := (xf.basis * nrm[k]).normalized()
+			var c := col[k] if col.size() > 0 else Color(1, 0, 0, 1)
+			wp[k] = w
+			wn[k] = n
+			# grass: macro light/dark, sun-bleached patches, patchy light (terrain.gdshader terms, low frequencies only)
+			var mac := _lum(_samp(g["small"], Vector2(w.x, w.z) * uvs * 0.11))
+			var patch := _samp(g["small"], Vector2(w.x, w.z) * 0.009).g
+			var dry := smoothstep(0.35, 0.65, _samp(g["small"], Vector2(w.x, w.z) * 0.004 + Vector2(0.3, 0.3)).r)
+			var grass: Color = g["mean"] * (0.55 + mac * 1.7) * tint.lerp(tint_dry, dry * 0.7) * lerpf(0.8, 1.25, patch)
+			var low: Color = (sd["mean"] as Color).lerp(grass, c.r)
+			low = low.lerp(sd["mean"] * 0.8, c.b * dirt)
+			var rock: Color = rk["mean"] * rock_tint
+			if streaks > 0.0:
+				rock *= 0.6 + 0.8 * (rk["mean"] as Color).r  # close-up grain, on average
+				var streak := _samp(rk["small"], Vector2((w.x + w.z) * 0.015, w.y * 0.0015)).r
+				var stain := smoothstep(0.55, 0.75, _samp(rk["small"], Vector2(w.x, w.z) * 0.003 + Vector2(w.y * 0.004, 0.0)).g)
+				rock *= lerpf(1.0, lerpf(0.55, 1.2, streak), streaks)
+				rock = rock.lerp(rock * Color(1.15, 0.95, 0.75), stain * streaks)
+			rw[k] = maxf(c.g, smoothstep(0.35, 0.6, 1.0 - n.y) * c.a)
+			var alb := low.lerp(rock, rw[k])
+			var oa := 0.0
+			var oc := Color()
+			if cu is PackedByteArray and (cu as PackedByteArray).size() >= v.size() * 4:
+				var b: PackedByteArray = cu
+				oa = b[k * 4 + 3] / 255.0
+				if oa > 0.001:
+					oc = Color(b[k * 4] / 255.0, b[k * 4 + 1] / 255.0, b[k * 4 + 2] / 255.0) / oa
+			if oa > 0.001:  # real mountains: the photo's colour, the texture only as detail
+				var detail := clampf(_lum(alb) / 0.35, 0.6, 1.4)
+				alb = alb.lerp(oc * gain * detail, oa)
+			alb = alb / DETAIL_MEAN
+			vc[k] = Color(minf(alb.r, 1.0), minf(alb.g, 1.0), minf(alb.b, 1.0), 1.0)
+		var tri_count := (idx.size() if idx.size() > 0 else v.size()) / 3
+		for t in tri_count:
+			var ids := [t * 3, t * 3 + 1, t * 3 + 2]
+			if idx.size() > 0:
+				ids = [idx[t * 3], idx[t * 3 + 1], idx[t * 3 + 2]]
+			var r := (rw[ids[0]] + rw[ids[1]] + rw[ids[2]]) / 3.0
+			var gr := 1.0
+			if col.size() > 0:
+				gr = (col[ids[0]].r + col[ids[1]].r + col[ids[2]].r) / 3.0
+			var cls := "rock" if r > 0.5 else ("grass" if gr >= 0.5 else "sand")
+			if not groups.has(cls):
+				var st := SurfaceTool.new()
+				st.begin(Mesh.PRIMITIVE_TRIANGLES)
+				groups[cls] = st
+			var stg: SurfaceTool = groups[cls]
+			# box projection along the face's dominant axis (no stretching on cliffs)
+			var fn := (wp[ids[1]] - wp[ids[0]]).cross(wp[ids[2]] - wp[ids[0]]).abs()
+			var sc: float = scale[cls]
+			for k in ids:
+				var w := wp[k]
+				var uv := Vector2(w.x, w.z) if fn.y >= fn.x and fn.y >= fn.z else (Vector2(w.z, w.y) if fn.x >= fn.z else Vector2(w.x, w.y))
+				stg.set_normal(wn[k])
+				stg.set_color(vc[k])
+				stg.set_uv(uv * sc)
+				stg.add_vertex(w)
+	for cls in groups.keys():
+		var st: SurfaceTool = groups[cls]
+		st.generate_tangents()
+		st.commit(out)
+		out.surface_set_material(out.get_surface_count() - 1, _terrain_mat(sm, cls))
+	return out
+
+# glTF caps baseColorFactor at 1, but Godot materials brighten dim scans with albedo_color > 1 (stone x1.35, deck x1.7):
+# bake that gain into a copy of the albedo texture so Unity / Blender see the same brightness
+var _safe_cache := {}
+func _gltf_safe(m: Material) -> Material:
+	var sm := m as StandardMaterial3D
+	if sm == null:
+		return m
+	var c := sm.albedo_color
+	var k := maxf(c.r, maxf(c.g, c.b))
+	if k <= 1.001:
+		return m
+	if _safe_cache.has(sm):
+		return _safe_cache[sm]
+	var out := sm.duplicate() as StandardMaterial3D
+	out.albedo_color = Color(c.r / k, c.g / k, c.b / k, c.a)
+	if sm.albedo_texture:
+		var img := sm.albedo_texture.get_image()
+		if img.is_compressed():
+			img.decompress()
+		img.convert(Image.FORMAT_RGBA8)
+		img.adjust_bcs(k, 1.0, 1.0)
+		img.generate_mipmaps()
+		out.albedo_texture = ImageTexture.create_from_image(img)
+	_safe_cache[sm] = out
+	return out
+
+func _gltf_safe_mesh(mesh: Mesh) -> void:
+	for si in mesh.get_surface_count():
+		var mat := mesh.surface_get_material(si)
+		if mat is StandardMaterial3D:
+			mesh.surface_set_material(si, _gltf_safe(mat))
+
 func _write_route(path: String) -> void:
-	var d := {"version": 1, "step": 1.0, "length": _route.length, "s": [], "x": [], "y": [], "z": [], "half_left": [], "half_right": []}
+	var d := {"version": 1, "step": 1.0, "length": _route.length, "s": [], "x": [], "y": [], "z": [], "half_left": [], "half_right": [], "water_y": []}
 	for i in int(floor(_route.length)) + 1:
 		var p := _route.pos_at(float(i))
 		d["s"].append(i)
@@ -370,6 +654,7 @@ func _write_route(path: String) -> void:
 		d["z"].append(snappedf(p.z, 0.001))
 		d["half_left"].append(snappedf(_route.half_left(float(i)), 0.01))
 		d["half_right"].append(snappedf(_route.half_right(float(i)), 0.01))
+		d["water_y"].append(snappedf(_route.water_level(float(i)), 0.01))  # lake surface (varies per scene section)
 	var f := FileAccess.open(path, FileAccess.WRITE)
 	f.store_string(JSON.stringify(d))
 	f.close()
