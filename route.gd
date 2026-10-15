@@ -82,6 +82,7 @@ var _pr := PackedFloat32Array()          # coastal: walked path half-width to th
 var _slope := PackedFloat32Array()       # coastal: per-row multiplier of inland_slope (sections)
 var _sec_types := {}
 var _secs: Array = []
+var _landmarks: Array = []
 var _video_km := 1.0
 var _surf_mats := {}
 var _wy := PackedFloat32Array()          # per-row water level: sea_y, or (sections with "water_gap") that far below the path
@@ -223,6 +224,14 @@ func _load_sections() -> void:
 	_video_km = d["video_km"]
 	_sec_types = d["types"]
 	_secs = d["sections"]
+	_landmarks = d.get("landmarks", [])
+
+# one-off structures of the reference video ("landmarks": [[video_km, kind], ...]) as [[route offset s, kind], ...]
+func landmarks() -> Array:
+	var out := []
+	for e in _landmarks:
+		out.append([float(e[0]) / _video_km * length, e[1]])
+	return out
 
 # scene section at route offset s: the reference video's timeline (sections: [[video_km, type], ...]) stretched over
 # this course's length. Returns that type's settings plus "name"; empty without a sections file.

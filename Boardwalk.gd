@@ -5,6 +5,7 @@ extends Node3D
 #   parapet_fence  stone parapet with a green metal fence on top (olive terraces)
 #   lowwall        low dry-stone wall (lanes)
 #   blackrail      black metal railing with vertical bars (lanes above the lake)
+#   parapet        (inland) low rubble wall at the path edge, the section's road beyond it
 #   chainlink      (inland) low dry-stone wall with a green chain-link fence (olive groves)
 #   wall           retaining wall as tall as the inland one (walled alleys)
 #   parapet_lamps  low stone parapet and harbour lamps
@@ -38,6 +39,8 @@ var _stone := StandardMaterial3D.new()
 var _rubble := StandardMaterial3D.new()  # tall mortared rubble walls (Limone lanes, retaining walls)
 var _chain := StandardMaterial3D.new()   # green chain-link fence (olive groves)
 var _bars := StandardMaterial3D.new()    # vertical bars of the black lane railings
+var _portal := StandardMaterial3D.new()  # road tunnel portals and gallery (concrete)
+var _dark := StandardMaterial3D.new()    # tunnel interiors, openings in walls
 var _net := StandardMaterial3D.new()
 var _paint := StandardMaterial3D.new()    # vertex-coloured: fences, guardrails, lamps, windows, shutters, doors
 var _plaster := StandardMaterial3D.new()  # vertex-coloured house walls and stone trims
@@ -66,6 +69,11 @@ func _ready() -> void:
 	_stone.uv1_scale = Vector3.ONE * 0.6
 	_stone.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC  # walls are seen at grazing angles
 	_pbr(_rubble, "old_stone_wall", 0.4)
+	_pbr(_portal, "brushed_concrete", 1.0 / 3.0)
+	_portal.albedo_color = Color(0.92, 0.9, 0.86)
+	_dark.albedo_color = Color(0.03, 0.03, 0.03)
+	_dark.roughness = 1.0
+	_dark.cull_mode = BaseMaterial3D.CULL_DISABLED
 	_rubble.albedo_texture = _desat("old_stone_wall", 0.4)  # the scan is ochre; Limone's walls are grey-beige
 	_rubble.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var img := Image.create(64, 64, false, Image.FORMAT_RGBA8)  # diamond steel-rope mesh, one cell per 32 px
@@ -177,7 +185,7 @@ func _chunk(c: int) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = random_seed * 7919 + c
 	var sts := {}
-	for k in ["rails", "net", "chain", "bars", "stone", "rubble", "paint", "plaster", "roof", "glass", "wood", "shutter", "awning", "concrete"]:
+	for k in ["rails", "net", "chain", "bars", "portal", "dark", "stone", "rubble", "paint", "plaster", "roof", "glass", "wood", "shutter", "awning", "concrete"]:
 		sts[k] = SurfaceTool.new()
 		sts[k].begin(Mesh.PRIMITIVE_TRIANGLES)
 	var rails: SurfaceTool = sts["rails"]
@@ -247,10 +255,19 @@ func _chunk(c: int) -> void:
 			"guardrail":
 				_guardrail(paint, pp, p, lp, l, -prp - 0.15, -pr - 0.15, o)
 				_wall(rubble, sp, s, pp, p, lp, l, -hrp - 0.6, -hr - 0.6, -hrp, -hr, _height(sp, wh, -1.0), _height(s, wh, -1.0), o)
+			"parapet":  # low rubble wall between the path and the road behind it (the road's parapet)
+				_wall(rubble, sp, s, pp, p, lp, l, -prp - 0.5, -pr - 0.5, -prp, -pr, _height(sp, wh, -1.0), _height(s, wh, -1.0), o)
 			"chainlink":  # low dry-stone wall with a green chain-link fence on top, grass slope beyond
 				_wall(stone, sp, s, pp, p, lp, l, -hrp - 0.5, -hr - 0.5, -hrp, -hr, 0.5, 0.5, o)
 				_chainlink(sts, pp, p, lp, l, -hrp - 0.25, -hr - 0.25, 0.5, sp, s, o)
 	_flush_rail(rails, top)
+	_wall_openings(sts, c, s0, s1, o)
+	for lm in _route.landmarks():
+		if lm[0] >= s0 and lm[0] < s1:
+			match lm[1]:
+				"portal": _tunnel_portal(sts, lm[0], o)
+				"gallery": _gallery(sts, lm[0], o)
+				"passage": _passage(sts, lm[0], o)
 	_posts(holder, c, s0, s1, o)
 	var props := {}
 	for side in [1.0, -1.0]:
@@ -266,6 +283,8 @@ func _chunk(c: int) -> void:
 	_commit(holder, rubble, _rubble)
 	_commit(holder, sts["chain"], _chain, false)
 	_commit(holder, sts["bars"], _bars, false)
+	_commit(holder, sts["portal"], _portal)
+	_commit(holder, sts["dark"], _dark, false)
 	_commit(holder, paint, _paint)
 	_commit(holder, sts["plaster"], _plaster)
 	_commit(holder, sts["roof"], _roof)
@@ -337,6 +356,126 @@ func _blackrail(sts: Dictionary, pa: Vector3, pb: Vector3, la: Vector3, lb: Vect
 	for v in [[a + lo, sa, 0.0], [b + lo, sb, 0.0], [b + hi, sb, 1.0], [a + lo, sa, 0.0], [b + hi, sb, 1.0], [a + hi, sa, 1.0]]:
 		bars.set_uv(Vector2(v[1], v[2]))
 		bars.add_vertex(v[0])
+
+# --- arched openings (tunnel portals, road gallery, arched passages, openings in walls), built in the facade frame
+# (_frame_at): c = bottom centre of the opening, ax = across the opening, nrm = out of the face, all facade-local.
+# Opening: jambs up to the spring line hs, then a semicircle w wide.
+func _arch_pts(w: float, hs: float, angles: Array) -> Array:  # [inner 2D points] jamb bottom-left .. jamb bottom-right
+	var pts := [Vector2(-w * 0.5, 0.0)]
+	for a: float in angles:
+		pts.append(Vector2(cos(a), sin(a)) * w * 0.5 + Vector2(0.0, hs))
+	pts.append(Vector2(w * 0.5, 0.0))
+	return pts
+
+func _arch_angles(n: int, extra: Array = []) -> Array:
+	var a := []
+	for k in n + 1:
+		a.append(PI - PI * k / n)
+	a.append_array(extra)
+	a.sort()
+	a.reverse()
+	return a
+
+# _fquad for the arch builders: q / uv corner order flipped when needed so the winding agrees with nrm in world space
+# (the frame can be mirrored with the lake on the other side), as glTF consumers take the winding as the front
+func _aquad(st: SurfaceTool, q: Array, nrm: Vector3, uv: Array, col := Color(0, 0, 0, 0)) -> void:
+	var wn := _fx * nrm.x + Vector3.UP * nrm.y + _fn * nrm.z
+	if (_fp(q[1]) - _fp(q[0])).cross(_fp(q[2]) - _fp(q[0])).dot(wn) < 0.0:
+		q = [q[0], q[3], q[2], q[1]]
+		if not uv.is_empty():
+			uv = [uv[0], uv[3], uv[2], uv[1]]
+	_fquad(st, q, nrm, uv, col)
+
+# face W wide and H tall (bottom at c.y) around the opening: strips between the opening outline and the face's edge
+func _arch_face(st: SurfaceTool, c: Vector3, ax: Vector3, nrm: Vector3, wf: float, hf: float, w: float, hs: float, col := Color(0, 0, 0, 0)) -> void:
+	var corners := [atan2(hf - hs, -wf * 0.5), atan2(hf - hs, wf * 0.5)]  # so the strips reach the face's top corners
+	var inner := _arch_pts(w, hs, _arch_angles(12, corners))
+	var outer := []
+	for q: Vector2 in inner:
+		if q.y <= hs + 0.001 and absf(q.x) >= w * 0.5 - 0.001:  # jamb: straight out to the face's side
+			outer.append(Vector2(signf(q.x) * wf * 0.5, q.y))
+		else:  # arch: radially out from the arch centre to the face's edge
+			var d := (q - Vector2(0.0, hs)).normalized()
+			var t := minf(wf * 0.5 / maxf(absf(d.x), 0.0001), (hf - hs) / maxf(d.y, 0.0001))
+			outer.append(Vector2(0.0, hs) + d * t)
+	var p := func(v: Vector2) -> Vector3: return c + ax * v.x + Vector3.UP * v.y
+	for k in inner.size() - 1:
+		var q := [p.call(inner[k]), p.call(outer[k]), p.call(outer[k + 1]), p.call(inner[k + 1])]
+		_aquad(st, q, nrm, [inner[k], outer[k], outer[k + 1], inner[k + 1]], col)
+
+# inside of the opening (intrados) from depth d0 to d1 behind the face; cap closes the far end
+func _arch_tube(st: SurfaceTool, c: Vector3, ax: Vector3, nrm: Vector3, w: float, hs: float, d0: float, d1: float, cap: bool, col := Color(0, 0, 0, 0)) -> void:
+	var inner := _arch_pts(w, hs, _arch_angles(12))
+	var p := func(v: Vector2, d: float) -> Vector3: return c + ax * v.x + Vector3.UP * v.y - nrm * d
+	var run := 0.0
+	for k in inner.size() - 1:
+		var seg := (inner[k + 1] as Vector2).distance_to(inner[k])
+		var q := [p.call(inner[k], d0), p.call(inner[k], d1), p.call(inner[k + 1], d1), p.call(inner[k + 1], d0)]
+		var mid: Vector2 = ((inner[k] as Vector2) + (inner[k + 1] as Vector2)) * 0.5 - Vector2(0.0, hs)
+		var n := (ax * -mid.x + Vector3.UP * -mid.y).normalized()  # facing the opening's axis
+		_aquad(st, q, n, [Vector2(run, d0), Vector2(run, d1), Vector2(run + seg, d1), Vector2(run + seg, d0)], col)
+		run += seg
+	if cap:
+		var far := c - nrm * d1
+		for k in range(1, inner.size() - 1):  # fan from the jamb bottom
+			_aquad(st, [far + ax * inner[0].x, far + ax * (inner[k] as Vector2).x + Vector3.UP * (inner[k] as Vector2).y,
+					far + ax * (inner[k + 1] as Vector2).x + Vector3.UP * (inner[k + 1] as Vector2).y, far + ax * inner[0].x], nrm, [], col)
+
+# road tunnel portal where the section's road ends, facing the oncoming runner; the road runs on into the dark tube
+func _tunnel_portal(sts: Dictionary, s: float, o: Vector3) -> void:
+	_frame_at(s, o)
+	var uc := -(_route.path_right(s) + 4.5)  # the 9 m face starts at the path edge, around the section's road
+	var c := Vector3(0.0, 0.0, uc)
+	var ax := Vector3(0, 0, -1)  # across the road, seen from the runner
+	var nrm := Vector3(-1, 0, 0)  # facing back along the route
+	_arch_face(sts["portal"], c, ax, nrm, 9.0, 9.0, 7.0, 3.6)
+	_arch_tube(sts["portal"], c, ax, nrm, 7.0, 3.6, 0.0, 1.0, false)
+	_arch_tube(sts["dark"], c, ax, nrm, 7.0, 3.6, 1.0, 45.0, true)
+	_aquad(sts["dark"], [c + Vector3(1.0, 0.01, 3.5), c + Vector3(45.0, 0.01, 3.5), c + Vector3(45.0, 0.01, -3.5), c + Vector3(1.0, 0.01, -3.5)], Vector3.UP, [])
+
+# road gallery beside the path: a concrete wall with arched openings onto the dark road behind it
+func _gallery(sts: Dictionary, s: float, o: Vector3) -> void:
+	for k in 5:
+		var sk := s + k * 7.0
+		_frame_at(sk, o)
+		var c := Vector3(0.0, 0.0, -(_route.half_right(sk) + 0.7))
+		_arch_face(sts["portal"], c, Vector3(1, 0, 0), Vector3(0, 0, 1), 7.0, 8.0, 4.6, 3.4)
+		_arch_tube(sts["portal"], c, Vector3(1, 0, 0), Vector3(0, 0, 1), 4.6, 3.4, 0.0, 0.8, false)
+		_arch_tube(sts["dark"], c, Vector3(1, 0, 0), Vector3(0, 0, 1), 4.6, 3.4, 0.8, 6.0, true)
+
+# arched passage under a house spanning the lane (sottoportico): two arched faces and the vault between them
+func _passage(sts: Dictionary, s: float, o: Vector3) -> void:
+	_frame_at(s, o)
+	var hl := _route.half_left(s)
+	var hr := _route.half_right(s)
+	var w := hl + hr + 0.1
+	var c := Vector3(0.0, 0.0, (hl - hr) * 0.5)
+	var ax := Vector3(0, 0, -1)
+	var col := Color(0.9, 0.85, 0.76)
+	var depth := 6.0
+	_arch_face(sts["plaster"], c, ax, Vector3(-1, 0, 0), w + 2.0, 9.0, w, 2.1, col)
+	_arch_face(sts["plaster"], c + Vector3(depth, 0, 0), ax, Vector3(1, 0, 0), w + 2.0, 9.0, w, 2.1, col)
+	_arch_tube(sts["plaster"], c, ax, Vector3(-1, 0, 0), w, 2.1, 0.0, depth, false, col * 0.8)
+	var e := (w + 2.0) * 0.5
+	_aquad(sts["plaster"], [c + Vector3(0, 9, e), c + Vector3(depth, 9, e), c + Vector3(depth, 9, -e), c + Vector3(0, 9, -e)], Vector3.UP, [], col)  # roof slab
+	for side in [1.0, -1.0]:  # gable walls above the lane walls
+		_aquad(sts["plaster"], [c + Vector3(0, 0, side * e), c + Vector3(depth, 0, side * e), c + Vector3(depth, 9, side * e), c + Vector3(0, 9, side * e)],
+				Vector3(0, 0, side), [Vector2(0, 0), Vector2(depth, 0), Vector2(depth, 9), Vector2(0, 9)], col)
+
+# small arched openings along the inland retaining wall (sections "wall_arches": spacing in metres)
+func _wall_openings(sts: Dictionary, c: int, s0: float, s1: float, o: Vector3) -> void:
+	var sp := float(_route.section_at((s0 + s1) * 0.5).get("wall_arches", 0.0))
+	if sp <= 0.0:
+		return
+	var s := ceilf(s0 / sp) * sp
+	while s < s1:
+		var st: String = _styles(s, c)[1]
+		if st == "wall" or st == "parapet":
+			_frame_at(s, o)
+			var u := _route.half_right(s) if st == "wall" else _route.path_right(s)
+			var face := Vector3(0.0, 0.15, -u + 0.02)  # just proud of the wall face; top at 0.75 m
+			_arch_tube(sts["dark"], face, Vector3(1, 0, 0), Vector3(0, 0, 1), 0.7, 0.25, 0.0, 0.01, true)
+		s += sp
 
 # height of a wall at s within range h; with a gap threshold > -1, below it there is no wall (0)
 func _height(s: float, h: Vector2, gap: float) -> float:
