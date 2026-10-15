@@ -41,6 +41,10 @@ extends Path3D
 @export var trail_half := 0.8        # half-width of the dirt trail (m)
 @export var side_slope := 0.35       # steepness of the downhill side of the trail
 @export var trail_texture := "rocky_trail"
+@export var ground_texture := "aerial_grass_rock"  # the grass slot of terrain.gdshader / trail.gdshader (winter: snow)
+@export var gravel_texture := "coast_sand_01"      # trail.gdshader gravel patches (winter: icy ruts)
+@export var trail_params := {}       # trail.gdshader overrides, like terrain_params (tints, edge_noise, grass_islands)
+@export var berm_height := 0.0       # alpine trail: ploughed snow bank this high on both edges (m)
 @export var width_jitter := 0.32     # trail half-width varies by this fraction (worn wider / pinched narrower)
 @export var edge_blend := 0.7        # metres of ragged dirt-to-grass blend outside the trail edge
 @export var groove_depth := 0.06     # worn groove: centre lower than the edges (m)
@@ -157,7 +161,7 @@ func _ready() -> void:
 	var terrain_mat := ShaderMaterial.new()
 	terrain_mat.shader = load("res://shaders/terrain.gdshader")
 	for k in ["sand_d", "sand_n", "grass_d", "grass_n", "rock_d", "rock_n"]:
-		var f := "coast_sand_01" if k.begins_with("sand") else ("aerial_grass_rock" if k.begins_with("grass") else "rock_boulder_dry")
+		var f := "coast_sand_01" if k.begins_with("sand") else (ground_texture if k.begins_with("grass") else "rock_boulder_dry")
 		if alpine_trail and k.begins_with("sand"):
 			f = trail_texture  # the "sand" slot is the dirt patch along the trail edge
 		terrain_mat.set_shader_parameter(k, load("res://assets/textures/%s_%s.jpg" % [f, "diff" if k.ends_with("d") else "nor"]))
@@ -168,8 +172,10 @@ func _ready() -> void:
 		var tm := ShaderMaterial.new()
 		tm.shader = load("res://shaders/trail.gdshader")
 		for k in ["dirt_d", "dirt_n", "grass_d", "grass_n", "gravel_d"]:
-			var f2: String = {"dirt": trail_texture, "grass": "aerial_grass_rock", "gravel": "coast_sand_01"}[k.split("_")[0]]
+			var f2: String = {"dirt": trail_texture, "grass": ground_texture, "gravel": gravel_texture}[k.split("_")[0]]
 			tm.set_shader_parameter(k, load("res://assets/textures/%s_%s.jpg" % [f2, "diff" if k.ends_with("d") else "nor"]))
+		for k in trail_params:
+			tm.set_shader_parameter(k, trail_params[k])
 		surface_mat = tm
 	for i0 in range(0, _n - 1, CHUNK_ROWS):
 		_chunk(i0, mini(i0 + CHUNK_ROWS, _n - 1), surface_mat, terrain_mat)
@@ -452,6 +458,7 @@ func _build_columns() -> void:
 			var hills := _noise.get_noise_2d(q.x * 0.006, q.z * 0.006) + 0.35 * _noise.get_noise_2d(q.x * 0.017 + 500.0, q.z * 0.017)
 			if alpine_trail:
 				var y := shoulder + inland_slope * a + hills * hill_height * smoothstep(3.0, 40.0, absf(u))
+				y += berm_height * (0.5 + _rock.get_noise_1d(i * ROW * 0.07 + 50.0) * 0.5 + 0.5) * (1.0 - smoothstep(1.0, 3.5, a))  # ploughed snow bank, uneven
 				ys.append(maxf(y, shoulder + 0.08 * a))  # never a gully beside the trail
 			else:
 				var ledge := smoothstep(_cf[i], _cf[i] + 8.0, a) if _cliff[i] > 0.5 else 1.0  # cliff sections: a low ledge before the face
@@ -471,7 +478,7 @@ func _build_columns() -> void:
 		if alpine_trail:
 			var lip := el + 0.2
 			us.append(lip)
-			ys.append(shoulder)
+			ys.append(shoulder + berm_height * (0.5 + _rock.get_noise_1d(i * ROW * 0.07 + 90.0) * 0.5 + 0.5))
 			for d in OUT_ALPINE:
 				var q := wp + _left[i] * (lip + d)
 				var hills := _noise.get_noise_2d(q.x * 0.006, q.z * 0.006) + 0.35 * _noise.get_noise_2d(q.x * 0.017 + 500.0, q.z * 0.017)

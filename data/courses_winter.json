@@ -1,0 +1,163 @@
+{
+ "_about": "Winter valley run (video/winter mountain run.mp4, private reference): ploughed snow road through snowy fields, spruce/pine and birch woods and farms; low winter sun.",
+ "templates": {
+  "winter_valley": {
+   "Path3D": {
+    "hill_height": 30,
+    "inland_slope": 0.25,
+    "side_slope": 0.25
+   },
+   "Foliage": {
+    "trees_per_chunk": 6,
+    "rocks_per_chunk": 0,
+    "fence_every": 3
+   }
+  },
+  "winter_forest": {
+   "Path3D": {
+    "hill_height": 40,
+    "inland_slope": 0.3,
+    "side_slope": 0.3
+   },
+   "Foliage": {
+    "trees_per_chunk": 12,
+    "rocks_per_chunk": 0,
+    "fence_every": 8
+   }
+  }
+ },
+ "courses": {
+  "recovery_walk": {
+   "template": "winter_valley",
+   "tod": [
+    0.3,
+    0.4
+   ],
+   "fog": [
+    0.0003,
+    0.0008
+   ]
+  },
+  "walk_run": {
+   "template": "winter_valley",
+   "tod": [
+    0.3,
+    0.4
+   ],
+   "fog": [
+    0.0003,
+    0.0008
+   ]
+  },
+  "speed_lab": {
+   "template": "winter_valley",
+   "tod": [
+    0.3,
+    0.4
+   ],
+   "fog": [
+    0.0003,
+    0.0008
+   ]
+  },
+  "power_walk": {
+   "template": "winter_forest",
+   "tod": [
+    0.3,
+    0.4
+   ],
+   "fog": [
+    0.0003,
+    0.0008
+   ]
+  },
+  "five_k_ready": {
+   "template": "winter_forest",
+   "tod": [
+    0.3,
+    0.4
+   ],
+   "fog": [
+    0.0003,
+    0.0008
+   ]
+  },
+  "rolling_hills": {
+   "template": "winter_forest",
+   "tod": [
+    0.3,
+    0.4
+   ],
+   "fog": [
+    0.0003,
+    0.0008
+   ]
+  },
+  "fat_burn": {
+   "template": "winter_forest",
+   "tod": [
+    0.3,
+    0.4
+   ],
+   "fog": [
+    0.0003,
+    0.0008
+   ]
+  },
+  "glute_blast": {
+   "template": "winter_forest",
+   "tod": [
+    0.3,
+    0.4
+   ],
+   "fog": [
+    0.0003,
+    0.0008
+   ]
+  },
+  "summit": {
+   "template": "winter_forest",
+   "tod": [
+    0.3,
+    0.4
+   ],
+   "fog": [
+    0.0003,
+    0.0008
+   ]
+  },
+  "endurance_60": {
+   "template": "winter_valley",
+   "tod": [
+    0.3,
+    0.4
+   ],
+   "fog": [
+    0.0003,
+    0.0008
+   ]
+  },
+  "endurance_75": {
+   "template": "winter_valley",
+   "tod": [
+    0.3,
+    0.4
+   ],
+   "fog": [
+    0.0003,
+    0.0008
+   ]
+  },
+  "endurance_90": {
+   "template": "winter_valley",
+   "tod": [
+    0.3,
+    0.4
+   ],
+   "fog": [
+    0.0003,
+    0.0008
+   ]
+  }
+ }
+}

@@ -1,0 +1,225 @@
+[gd_scene load_steps=17 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="1"]
+[ext_resource type="Script" path="res://scripts/route.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/FoliageSpawner.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/hud.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/mountain_ring.gd" id="6"]
+[ext_resource type="Script" path="res://scripts/FollowPlayer.gd" id="8"]
+[ext_resource type="Script" path="res://scripts/course_setup.gd" id="9"]
+[ext_resource type="Script" path="res://scripts/Gates.gd" id="11"]
+[ext_resource type="Script" path="res://scripts/Buildings.gd" id="12"]
+[ext_resource type="Shader" path="res://shaders/hdri_sky.gdshader" id="13"]
+[ext_resource type="Texture2D" path="res://assets/hdri/kloppenheim_06_puresky_4k.hdr" id="15"]
+[ext_resource type="Script" path="res://scripts/render_quality.gd" id="16"]
+[ext_resource type="Script" path="res://scripts/track_exporter.gd" id="99"]
+
+[sub_resource type="ShaderMaterial" id="sky_mat"]
+shader = ExtResource("13")
+shader_parameter/pano = ExtResource("15")
+shader_parameter/energy = 1.0
+shader_parameter/horizon_fill = 1.0
+shader_parameter/haze = Color(0.82, 0.86, 0.92, 1)
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("sky_mat")
+radiance_size = 1
+
+[sub_resource type="Environment" id="env"]
+background_mode = 2
+sky = SubResource("sky")
+ambient_light_source = 3
+ambient_light_energy = 1.0
+tonemap_mode = 4
+glow_enabled = true
+adjustment_enabled = true
+adjustment_saturation = 1.25
+adjustment_contrast = 1.18
+tonemap_exposure = 1.05
+fog_enabled = true
+fog_light_color = Color(0.74, 0.82, 0.92, 1)
+fog_density = 0.00025
+fog_aerial_perspective = 0.7
+fog_sky_affect = 0.2
+fog_sun_scatter = 0.15
+
+[sub_resource type="PlaneMesh" id="floor_mesh"]
+size = Vector2(9000, 9000)
+
+[sub_resource type="StandardMaterial3D" id="floor_mat"]
+albedo_color = Color(0.86, 0.89, 0.93, 1)
+roughness = 1.0
+
+[node name="Main" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-7, 200, 0)
+light_color = Color(1, 0.86, 0.68, 1)
+light_energy = 1.7
+light_angular_distance = 0.5
+shadow_enabled = true
+shadow_blur = 2.0
+directional_shadow_max_distance = 150.0
+
+[node name="CourseSetup" type="Node" parent="."]
+script = ExtResource("9")
+route_path = NodePath("../Path3D")
+sun_path = NodePath("../Sun")
+env_path = NodePath("../WorldEnvironment")
+player_path = NodePath("../Player")
+courses_file = "res://data/courses_winter.json"
+sun_left_deg = Vector2(25, 35)
+hdri_sky = true
+hdri_sun_u = 0.6094
+hdri_sun_elev = 6.7
+
+[node name="ValleyFloor" type="MeshInstance3D" parent="."]
+mesh = SubResource("floor_mesh")
+surface_material_override/0 = SubResource("floor_mat")
+script = ExtResource("8")
+player_path = NodePath("../Player")
+base_y = -120.0
+y_factor = 1.0
+
+[node name="Backdrop" type="Node3D" parent="."]
+script = ExtResource("8")
+player_path = NodePath("../Player")
+y_factor = 0.8
+base_y = -60.0
+
+[node name="ValleySides" type="MeshInstance3D" parent="Backdrop"]
+script = ExtResource("6")
+inner_radius = 450.0
+span = 650.0
+max_height = 230.0
+openness = 0.0
+random_seed = 9
+color_low = Color(0.09, 0.12, 0.1, 1)
+color_high = Color(0.2, 0.24, 0.22, 1)
+snow_line = 0.55
+
+[node name="MountainsNear" type="MeshInstance3D" parent="Backdrop"]
+script = ExtResource("6")
+inner_radius = 1300.0
+span = 700.0
+max_height = 380.0
+openness = 0.15
+random_seed = 21
+color_low = Color(0.16, 0.2, 0.2, 1)
+color_high = Color(0.88, 0.9, 0.94, 1)
+snow_line = 0.35
+no_fog = true
+
+[node name="MountainsFar" type="MeshInstance3D" parent="Backdrop"]
+script = ExtResource("6")
+inner_radius = 2100.0
+span = 900.0
+max_height = 700.0
+openness = 0.1
+random_seed = 33
+color_low = Color(0.3, 0.36, 0.44, 1)
+color_high = Color(0.86, 0.9, 0.95, 1)
+snow_line = 0.25
+no_fog = true
+
+[node name="Path3D" type="Path3D" parent="."]
+script = ExtResource("2")
+alpine_trail = true
+sea_y = -300.0
+start_height = 0.0
+bend = 1.0
+trail_half = 1.85
+width_jitter = 0.05
+edge_blend = 0.5
+groove_depth = 0.03
+bump_amp = 0.01
+wiggle = 0.3
+micro_relief = 0.1
+hill_height = 30.0
+inland_slope = 0.25
+side_slope = 0.25
+trail_texture = "snow_01"
+ground_texture = "snow_02"
+gravel_texture = "asphalt_snow"
+berm_height = 0.5
+sections_file = "res://data/winter_sections.json"
+terrain_params = {
+"grass_tint": Color(0.83, 0.85, 0.88, 1),
+"grass_tint_dry": Color(0.86, 0.87, 0.9, 1),
+"rock_tint": Color(0.6, 0.6, 0.62, 1)
+}
+trail_params = {
+"dirt_tint": Color(0.9, 0.9, 0.93, 1),
+"grass_tint": Color(0.83, 0.85, 0.88, 1),
+"grass_tint_dry": Color(0.86, 0.87, 0.9, 1),
+"grass_islands": 0.0,
+"edge_noise": 0.3
+}
+
+[node name="PathFollow3D" type="PathFollow3D" parent="Path3D"]
+
+[node name="Player" parent="." instance=ExtResource("1")]
+pacer_path = NodePath("../Path3D/PathFollow3D")
+start_auto = true
+wander_amp = 0.3
+breathe_amp = 0.008
+
+[node name="Foliage" type="Node3D" parent="."]
+script = ExtResource("4")
+path_node = NodePath("../Path3D")
+player_path = NodePath("../Player")
+min_dist = 2.5
+max_dist = 45.0
+spruce = true
+snow_load = 0.6
+birches = true
+fir_models = false
+lamps = false
+conifer_ratio = 0.6
+conifer_scale = Vector2(0.8, 1.2)
+tree_view_distance = 180.0
+rocks_per_chunk = 0
+rock_scale_mult = 1.5
+fence_offset = 3.2
+fence_every = 3
+logwall_every = 100000
+grass_per_mesh = 0
+fern_per_mesh = 0
+shrubs_per_mesh = 0
+meadow_clumps = 0
+flower_patches = 0
+trail_pebbles = 0
+trail_roots = 0
+tree_min_dist = 5.0
+tree_scale = Vector2(0.8, 1.2)
+
+[node name="Buildings" type="Node3D" parent="."]
+script = ExtResource("12")
+path_node = NodePath("../Path3D")
+nordic = true
+farm_spacing = 110.0
+boat_sheds = 0
+ship_count = 0
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("5")
+player_path = NodePath("../Player")
+route_path = NodePath("../Path3D")
+gates_path = NodePath("../Gates")
+
+[node name="Gates" type="Node3D" parent="."]
+script = ExtResource("11")
+path_node = NodePath("../Path3D")
+player_path = NodePath("../Player")
+
+[node name="TrackExporter" type="Node" parent="."]
+script = ExtResource("99")
+scene_name = "winter"
+
+[node name="RenderQuality" type="Node" parent="."]
+script = ExtResource("16")
+env_path = NodePath("../WorldEnvironment")
+sun_path = NodePath("../Sun")

@@ -17,14 +17,16 @@ MODELS = ["island_tree_02", "grass_medium_01", "fern_02", "celandine_01", "periw
           "planter_box_01", "potted_plant_02", "planter_pot_clay", "street_lamp_02", "outdoor_table_chair_set_01", "painted_wooden_bench",
           "rock_face_01", "rock_face_02", "namaqualand_cliff_02"]  # garda limestone faces  # garda village props  # garda scrub on the cliff slopes
 HDRIS = [("kloofendal_48d_partly_cloudy_puresky", "8k"),  # alpine scene sky (hdri_sky.gdshader), ~75 MB
-         ("kloofendal_43d_clear_puresky", "4k")]          # garda scene sky (clear autumn day)
+         ("kloofendal_43d_clear_puresky", "4k"),          # garda scene sky (clear autumn day)
+         ("kloppenheim_06_puresky", "4k")]                # winter scene sky (low sun, scattered cloud)
 TEXTURES = ["asphalt_02", "coast_sand_01", "aerial_grass_rock", "brown_planks_09",
             "beige_wall_001", "clay_roof_tiles", "rock_boulder_dry", "rocky_trail",
             "wood_planks_grey", "stacked_stone_wall",  # garda boardwalk deck / dry-stone walls
             "patterned_cobblestone", "clay_plaster", "concrete_pavement",
             "painted_plaster_wall", "clay_roof_tiles_02",
             "old_stone_wall",  # garda tall rubble retaining walls
-            "brushed_concrete"]  # garda cantilevered deck / roadside cycle path  # garda house fronts / roofs  # garda lanes / house fronts / roadside path
+            "brushed_concrete",  # garda cantilevered deck / roadside cycle path
+            "snow_01", "snow_02", "asphalt_snow"]  # winter scene: packed-snow road, snow ground, icy ruts  # garda house fronts / roofs  # garda lanes / house fronts / roadside path
 
 for m in MODELS:
     g = json.loads(get(f"https://api.polyhaven.com/files/{m}"))["gltf"]["1k"]["gltf"]

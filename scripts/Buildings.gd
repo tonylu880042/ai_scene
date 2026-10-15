@@ -12,6 +12,8 @@ extends Node3D
 @export var ship_count := 3
 @export var ship_distance := Vector2(200.0, 450.0)
 @export var random_seed := 4
+@export var nordic := false          # winter: wooden farmhouses and barns (red / white / ochre, snow on the roof) on both sides
+                                     # of the road, only in sections with "houses": true, every ~farm_spacing metres
 
 var _route: Route
 var _rng := RandomNumberGenerator.new()
@@ -34,8 +36,15 @@ func _ready() -> void:
 		_pier(beach[int(beach.size() * 0.6)])
 		for i in boat_sheds:
 			_boatshed(beach[int(beach.size() * (0.15 + 0.35 * i + 0.05 * _rng.randf()))])
-	for i in maxi(int(_route.length / farm_spacing), 1):
-		_farmhouse((i + _rng.randf_range(0.2, 0.8)) * farm_spacing)
+	if nordic:
+		var s2 := 20.0
+		while s2 < _route.length - 20.0:
+			if bool(_route.section_at(s2).get("houses", false)):
+				_nordic_house(s2)
+			s2 += farm_spacing * _rng.randf_range(0.6, 1.4)
+	else:
+		for i in maxi(int(_route.length / farm_spacing), 1):
+			_farmhouse((i + _rng.randf_range(0.2, 0.8)) * farm_spacing)
 	if summit_lookout:
 		_lookout(_route.length - 12.0)  # deck right beside the finish gate
 	var ship := load("res://assets/models/dutch_ship_medium/dutch_ship_medium_1k.gltf") as PackedScene
@@ -146,6 +155,37 @@ func _farmhouse(s: float) -> void:
 	for x in [1.6, 3.3, -3.4]:
 		_part(n, _box(Vector3(1.0, 1.1, 0.1)), _plain(Color(0.2, 0.28, 0.35)), Vector3(x, 1.9, -3.03))
 	_part(n, _box(Vector3(0.7, 2.4, 0.7)), _plain(Color(0.45, 0.4, 0.38)), Vector3(3.0, 5.0, 0.8))
+
+# Norwegian farm building: plank walls (red barn, white / ochre / brown house), snow-covered gable roof, white trims
+func _nordic_house(s: float) -> void:
+	var side := 1.0 if _rng.randf() < 0.5 else -1.0
+	var u := side * (_route.half_left(s) + _rng.randf_range(9.0, 26.0))
+	var n := _at(s, u, -_route.left_at(s) * side)  # long side to the road
+	var barn := _rng.randf() < 0.3
+	var col: Color = Color(0.55, 0.1, 0.08) if barn else [Color(0.93, 0.92, 0.88), Color(0.86, 0.66, 0.32), Color(0.32, 0.2, 0.14), Color(0.6, 0.12, 0.09)][_rng.randi() % 4]
+	var walls := _mat("wood_planks_grey", 0.5)
+	walls.albedo_color = col * 1.4
+	var w := _rng.randf_range(11.0, 16.0) if barn else _rng.randf_range(8.0, 11.0)
+	var d := _rng.randf_range(7.0, 9.0) if barn else _rng.randf_range(6.0, 7.5)
+	var h := 4.2 if barn else _rng.randf_range(4.8, 6.0)  # houses: two storeys
+	_part(n, _box(Vector3(w + 0.4, 2.6, d + 0.4)), _plain(Color(0.45, 0.44, 0.42)), Vector3(0, -1.0, 0))  # stone foundation hides the slope
+	_part(n, _box(Vector3(w, h, d)), walls, Vector3(0, h * 0.5, 0))
+	var roof := PrismMesh.new()
+	roof.size = Vector3(d + 1.0, d * 0.45, w + 0.8)
+	_part(n, roof, _plain(Color(0.92, 0.94, 0.97)), Vector3(0, h + d * 0.225, 0)).rotation.y = PI * 0.5  # snow on the roof
+	var trim := _plain(Color(0.95, 0.95, 0.93))
+	var glass := _plain(Color(0.1, 0.12, 0.15))
+	if barn:
+		_part(n, _box(Vector3(3.2, 3.2, 0.12)), trim, Vector3(0, 1.6, -d * 0.5 - 0.05))
+		_part(n, _box(Vector3(2.9, 2.9, 0.14)), _plain(Color(0.45, 0.08, 0.06)), Vector3(0, 1.5, -d * 0.5 - 0.06))
+	else:
+		_part(n, _box(Vector3(1.0, 2.1, 0.12)), trim, Vector3(-w * 0.3, 1.05, -d * 0.5 - 0.05))
+		for x in [w * 0.05, w * 0.3]:
+			for y in [1.5, 3.9]:
+				if y < h - 0.6:
+					_part(n, _box(Vector3(1.1, 1.3, 0.1)), trim, Vector3(x, y, -d * 0.5 - 0.04))
+					_part(n, _box(Vector3(0.85, 1.05, 0.12)), glass, Vector3(x, y, -d * 0.5 - 0.05))
+		_part(n, _box(Vector3(0.6, 1.6, 0.6)), _plain(Color(0.35, 0.33, 0.32)), Vector3(w * 0.25, h + d * 0.35, 0.6))  # chimney
 
 # Summit finish: wooden viewing deck on the sea side (rail + posts over the drop), a cairn and a flag inland.
 func _lookout(s: float) -> void:

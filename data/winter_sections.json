@@ -1,0 +1,30 @@
+{
+ "_about": "Winter valley run (video/winter mountain run.mp4, private): sections along the video's km overlay (7.9 km), stretched over any course. half = road half-width [downhill, uphill] m; slope = inland_slope multiplier; trees = tree / plant multiplier (FoliageSpawner); fence = wooden fences in this section; houses = Buildings.gd nordic farm buildings here.",
+ "video_km": 7.9,
+ "types": {
+  "field": {"half": [1.85, 1.85], "slope": 0.6, "trees": 0.2, "fence": true, "houses": false},
+  "forest": {"half": [1.8, 1.8], "slope": 1.0, "trees": 2.2, "fence": false, "houses": false},
+  "farm": {"half": [1.9, 1.9], "slope": 0.7, "trees": 0.5, "fence": true, "houses": true}
+ },
+ "sections": [
+  [0.0, "field"],
+  [0.45, "forest"],
+  [0.7, "farm"],
+  [0.85, "forest"],
+  [1.35, "farm"],
+  [1.55, "forest"],
+  [2.2, "field"],
+  [2.65, "farm"],
+  [2.85, "field"],
+  [3.1, "farm"],
+  [3.3, "forest"],
+  [4.4, "field"],
+  [4.85, "farm"],
+  [5.25, "field"],
+  [6.15, "forest"],
+  [6.4, "farm"],
+  [6.55, "forest"],
+  [7.25, "farm"],
+  [7.45, "field"]
+ ]
+}

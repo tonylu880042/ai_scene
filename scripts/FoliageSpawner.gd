@@ -37,6 +37,8 @@ const MODEL := "res://assets/models/%s/%s_1k.gltf"
 @export var tree_cluster := 5         # fir_models: saplings per tree spot
 @export var fir_tint := Color(0.5, 0.6, 0.46)  # darkens the scanned fir/pine foliage
 @export var blob_tint := Color(1, 1, 1)         # multiplies the procedural leafy/cypress trees (Mediterranean: dark olive)
+@export var snow_load := 0.0         # procedural spruces: 0 green .. 1 every branch tier white with snow on top
+@export var birches := false         # the broadleaf trees are bare, frosted birches (winter) instead of the scanned tree
 @export var fir_models := false      # real Poly Haven fir/pine saplings (scaled up) instead of the procedural spruces
 @export var lamps := true            # street lamps along the inland road edge
 @export var rock_scale_mult := 1.0   # alpine: bigger boulders
@@ -58,6 +60,7 @@ var _flowers: Array[Mesh]
 var _rocks_big: Array[Mesh]
 var _rocks_small: Array[Mesh]
 var _blobs: Array[Mesh]
+var _birch: Array[Mesh] = []
 var _autumn: Array[Mesh] = []  # rust and yellow copies of the leafy crowns (autumn scrub on the cliffs)
 var _clump: Mesh
 var _root_mesh: Mesh
@@ -106,6 +109,9 @@ func _ready() -> void:
 	else:
 		for k in 5:
 			_blobs.append(_make_spruce(21 + k) if spruce else _make_tree(k < 3, 11 + k))
+	if birches:
+		for k in 4:
+			_birch.append(_make_birch(51 + k))
 	for tint in [Color(1.5, 0.75, 0.45), Color(1.3, 1.1, 0.45)]:
 		var m := _blobs[0].duplicate() as Mesh
 		for si in m.get_surface_count():
@@ -203,7 +209,7 @@ func _spawn(idx: int) -> void:  # coroutine: one mesh type per frame to avoid hi
 		var n := tree_cluster if (pine and fir_models) else 1  # saplings are sparse, so a stand of a few reads as one full tree
 		for k in n:
 			var tree := MeshInstance3D.new()
-			tree.mesh = _blobs[rng.randi() % _blobs.size()] if pine else _trees[0]
+			tree.mesh = _blobs[rng.randi() % _blobs.size()] if pine else (_birch[rng.randi() % _birch.size()] if birches else _trees[0])
 			var off := Vector3(rng.randf_range(-2.6, 2.6), 0, rng.randf_range(-2.6, 2.6)) if k > 0 else Vector3.ZERO
 			tree.position = spot + off
 			tree.rotation.y = rng.randf() * TAU
@@ -323,7 +329,7 @@ func _bank_plants(holder: Node3D, rng: RandomNumberGenerator, s0: float, origin:
 		var u: float = bank_u.call(s)
 		var pine := rng.randf() < conifer_ratio
 		var tree := MeshInstance3D.new()
-		tree.mesh = _blobs[rng.randi() % _blobs.size()] if pine else _trees[0]
+		tree.mesh = _blobs[rng.randi() % _blobs.size()] if pine else (_birch[rng.randi() % _birch.size()] if birches else _trees[0])
 		tree.position = _route.pos_at(s) + _route.left_at(s) * u
 		tree.position.y = _route.ground_y(s, u) - 0.2
 		tree.rotation.y = rng.randf() * TAU
@@ -362,7 +368,7 @@ func _cliff_plants(holder: Node3D, rng: RandomNumberGenerator, s0: float, origin
 		_add_mm(holder, mm, origin, tree_view_distance)
 
 func _fence(holder: Node3D, idx: int, s0: float, origin: Vector3) -> void:
-	if (idx + random_seed) % fence_every != 0:
+	if (idx + random_seed) % fence_every != 0 or not bool(_route.section_at(s0 + chunk_length * 0.5).get("fence", true)):
 		return
 	var step := 3.0
 	var n := int(chunk_length / step)
@@ -540,11 +546,12 @@ func _make_spruce(seed_: int) -> Mesh:
 			var p0 := ring[i]
 			var p1 := ring[(i + 1) % n]
 			var lum := rng.randf_range(0.0, 1.0)
-			st.set_color(tip.lerp(mid, 0.3 + 0.4 * lum))
+			var snow := snow_load * rng.randf_range(0.55, 1.0)  # snow lying on the tier's upper side, patchy
+			st.set_color(tip.lerp(mid, 0.3 + 0.4 * lum).lerp(SNOW, snow))
 			st.add_vertex(apex)
-			st.set_color(mid.lerp(dark, 0.35 + 0.4 * lum))
+			st.set_color(mid.lerp(dark, 0.35 + 0.4 * lum).lerp(SNOW, snow * 0.75))  # branch tips: thinner snow
 			st.add_vertex(p1)
-			st.set_color(mid.lerp(dark, 0.35 + 0.4 * lum))
+			st.set_color(mid.lerp(dark, 0.35 + 0.4 * lum).lerp(SNOW, snow * 0.75))
 			st.add_vertex(p0)
 			st.set_color(dark)  # underside
 			st.add_vertex(centre)
@@ -558,8 +565,62 @@ func _make_spruce(seed_: int) -> Mesh:
 	mat.uv1_triplanar = true
 	mat.uv1_scale = Vector3.ONE * 0.9
 	mat.albedo_color = Color(1.5, 1.5, 1.3)
+	if snow_load > 0.0:  # a neutral speckle, so the snow stays white (the needle texture is green)
+		mat.albedo_texture = load("res://assets/textures/snow_02_diff.jpg")
+		mat.albedo_color = Color(1.1, 1.1, 1.1)
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	mat.roughness = 1.0
+	m.surface_set_material(0, mat)
+	return m
+
+const SNOW := Color(0.92, 0.94, 0.98)
+
+# bare winter birch: white trunk with dark marks, two levels of thin upswept branches, frost on their upper sides
+func _make_birch(seed_: int) -> Mesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var height := rng.randf_range(9.0, 13.0)
+	var limb := func(a: Vector3, b: Vector3, r0: float, r1: float, col: Color) -> void:
+		var d := (b - a).normalized()
+		var side := d.cross(Vector3.UP if absf(d.y) < 0.95 else Vector3.RIGHT).normalized()
+		var up := side.cross(d)
+		for i in 5:
+			var a0 := TAU * i / 5
+			var a1 := TAU * (i + 1) / 5
+			var n0 := side * cos(a0) + up * sin(a0)
+			var n1 := side * cos(a1) + up * sin(a1)
+			var frost := col.lerp(SNOW, 0.55 * clampf(n0.y + 0.3, 0.0, 1.0))  # frost / snow on the upper side
+			st.set_color(frost)
+			for v in [[a + n0 * r0, n0], [b + n0 * r1, n0], [b + n1 * r1, n1], [a + n0 * r0, n0], [b + n1 * r1, n1], [a + n1 * r0, n1]]:
+				st.set_normal(v[1])
+				st.add_vertex(v[0])
+	var bark := Color(0.82, 0.8, 0.76)
+	var pts := [Vector3.ZERO]
+	for k in 6:  # slightly wandering trunk
+		pts.append(Vector3(rng.randf_range(-0.25, 0.25), height * (k + 1) / 6.0, rng.randf_range(-0.25, 0.25)))
+	for k in 6:
+		var dark := rng.randf() < 0.3
+		limb.call(pts[k], pts[k + 1], lerpf(0.22, 0.05, k / 6.0), lerpf(0.22, 0.05, (k + 1) / 6.0), Color(0.12, 0.1, 0.09) if dark else bark)
+	var twig := Color(0.3, 0.24, 0.2)
+	for k in rng.randi_range(14, 20):  # branches from the upper two thirds, each with a few twigs
+		var t := rng.randf_range(0.3, 0.95)
+		var base := Vector3(0, height * t, 0)
+		var dir := Vector3(cos(rng.randf() * TAU), rng.randf_range(0.6, 1.4), sin(rng.randf() * TAU)).normalized()
+		var len := lerpf(3.2, 1.2, t) * rng.randf_range(0.8, 1.2)
+		var tip := base + dir * len
+		limb.call(base, tip, 0.05, 0.02, twig)
+		for j in 3:
+			var tb := base.lerp(tip, rng.randf_range(0.4, 0.9))
+			var td := (dir + Vector3(rng.randf_range(-0.8, 0.8), rng.randf_range(-0.2, 0.6), rng.randf_range(-0.8, 0.8))).normalized()
+			limb.call(tb, tb + td * len * 0.45, 0.02, 0.008, twig)
+	st.index()
+	var m := st.commit()
+	var mat := StandardMaterial3D.new()
+	mat.vertex_color_use_as_albedo = true
+	mat.roughness = 0.9
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED  # thin limbs: seen from every side
 	m.surface_set_material(0, mat)
 	return m
 
