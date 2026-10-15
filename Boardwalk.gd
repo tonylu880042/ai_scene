@@ -55,6 +55,7 @@ var _post: Mesh
 func _ready() -> void:
 	_route = get_node(path_node)
 	_noise.seed = random_seed
+	_noise.frequency = 1.0  # _height's s * 0.012 is the real scale (~80 m); the default 0.01 made every wall one height
 	_steel.albedo_color = Color(0.72, 0.74, 0.76)
 	_steel.metallic = 0.75
 	_steel.roughness = 0.35
@@ -795,8 +796,9 @@ const LIMESTONE := Color(1.4, 1.36, 1.28)
 func _cliff_rocks(rng: RandomNumberGenerator, s0: float, s1: float, o: Vector3, rocks: Dictionary) -> void:
 	var s := s0 + rng.randf() * 3.0
 	while s < s1:
-		var h := float(_route.section_at(s).get("cliff", 0.0))
-		if h <= 0.0:
+		var sec := _route.section_at(s)
+		var h := float(sec.get("cliff", 0.0))
+		if h <= 0.0 or float(sec.get("cliff_from", 6.0)) < 4.0:  # a face right at the path edge leaves no ledge for them
 			s += 6.0
 			continue
 		_frame_at(s, o)

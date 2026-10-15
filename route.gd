@@ -58,7 +58,8 @@ const MOUNTAIN_U: Array[float] = [-900.0, -600.0, -420.0, -280.0, -190.0]  # coa
 const REAL_U: Array[float] = [-3000.0, -2600.0, -2250.0, -1950.0, -1700.0, -1500.0, -1330.0, -1180.0, -1050.0,
 		-950.0, -900.0, -850.0, -800.0, -750.0, -710.0, -670.0, -630.0, -590.0, -550.0, -510.0, -470.0, -430.0, -395.0,
 		-360.0, -325.0, -290.0, -260.0, -235.0, -210.0, -190.0]  # every ~40 m near the shore (the real DEM is ~14 m)
-const NEAR_U_MOUNTAIN: Array[float] = [-120.0, -80.0, -55.0, -38.0, -26.0, -18.0, -12.0, -8.0, -5.0, -3.0]  # finer, for cliffs
+const NEAR_U_MOUNTAIN: Array[float] = [-120.0, -80.0, -55.0, -42.0, -34.0, -28.0, -24.0, -20.0, -17.0, -14.0, -12.0, -10.0, -8.0,
+		-6.5, -5.0, -3.0]  # finer, for cliffs: ~2 m apart where the rock face rises (6-20 m behind the edge)
 const LAND_U_ALPINE: Array[float] = [-150.0, -80.0, -40.0, -20.0, -10.0, -4.0, -2.0]
 const OUT_ALPINE: Array[float] = [3.0, 12.0, 40.0, 100.0, 180.0]          # downhill columns beyond the lip
 
@@ -87,12 +88,14 @@ var _video_km := 1.0
 var _surf_mats := {}
 var _wy := PackedFloat32Array()          # per-row water level: sea_y, or (sections with "water_gap") that far below the path
 var _quay := PackedByteArray()           # per-row: harbour quay wall straight into the water instead of a bank
+var _cf := PackedFloat32Array()          # per-row distance behind the path edge where the cliff face starts (sections "cliff_from")
 var _br := PackedFloat32Array()          # per-row lake-bank run per metre of drop (sections "bank_ratio", else bank_ratio)
 var _cliff := PackedFloat32Array()       # per-row height of the natural rock face rising from the inland edge (sections "cliff")
 var _land_u: Array[float] = LAND_U_COAST
 var _ni := 5    # inland columns before the road
 var _no := 5    # seaward strips after the road edge
-var _noise := FastNoiseLite.new()
+var _noise := FastNoiseLite.new()  # default frequency 0.01: its callers were tuned with that factor
+var _rock := FastNoiseLite.new()   # cliff relief at the scale its callers state (frequency 1)
 var start_time := 0.0      # seconds into the course to start from (--start-min=)
 var start_offset := 0.0    # ... as metres along the route
 var _t := 0.0
@@ -116,6 +119,8 @@ func _ready() -> void:
 	_t = start_time
 	_n = ceili(length / ROW) + 1
 	_noise.seed = random_seed
+	_rock.seed = random_seed
+	_rock.frequency = 1.0
 	if alpine_trail:
 		road_left = trail_half
 		road_right = trail_half
@@ -324,8 +329,11 @@ func _rock_face(i: int, a: float, q: Vector3) -> float:
 	var h := _cliff[i]
 	if h <= 0.5 or a <= 0.0:
 		return 0.0
-	var crag := 0.7 + 0.3 * _noise.get_noise_2d(q.x * 0.06 + 300.0, q.z * 0.06) + 0.25 * _noise.get_noise_2d(q.x * 0.21, q.z * 0.21 + 70.0)
-	return h * crag * pow(clampf((a - 6.0) / 14.0, 0.0, 1.0), 0.55)  # starts ~6 m back: scanned crags (Boardwalk.gd) form the face in front
+	var crag := 0.7 + 0.3 * _rock.get_noise_2d(q.x * 0.06 + 300.0, q.z * 0.06) + 0.25 * _rock.get_noise_2d(q.x * 0.21, q.z * 0.21 + 70.0)
+	var t := clampf((a - _cf[i]) / 14.0, 0.0, 1.0)
+	# ledges: the profile steps at a few heights (bands of harder strata), different along the route and column to column
+	var ledges := 0.15 * _rock.get_noise_2d(q.x * 0.05 + q.z * 0.05, a * 0.9 + 900.0) * sin(t * PI)
+	return h * (crag * pow(t, 0.55) + ledges)  # starts cliff_from behind the edge (6 m: scanned crags, Boardwalk.gd, in front)
 
 func _smooth(a: PackedFloat32Array, r: int) -> PackedFloat32Array:  # box filter over 2r+1 rows
 	var out := a.duplicate()
@@ -348,6 +356,8 @@ func _build_widths() -> void:
 	_cliff.fill(0.0)
 	_br.resize(_n)
 	_br.fill(bank_ratio)
+	_cf.resize(_n)
+	_cf.fill(6.0)
 	_quay.resize(_n)
 	_quay.fill(0)
 	for i in _n:
@@ -363,6 +373,7 @@ func _build_widths() -> void:
 			_quay[i] = 1 if sec.get("quay", false) else 0
 			_cliff[i] = float(sec.get("cliff", 0.0))
 			_br[i] = float(sec.get("bank_ratio", bank_ratio))
+			_cf[i] = float(sec.get("cliff_from", 6.0))
 			continue
 		if alpine_trail:
 			_hl[i] = clampf(trail_half * (1.0 + width_jitter * _noise.get_noise_1d(s * 0.025 + 700.0)) + 0.08 * _noise.get_noise_1d(s * 0.17 + 40.0), 0.6, 1.15)
@@ -384,6 +395,7 @@ func _build_widths() -> void:
 		_slope = _smooth(_slope, 10)
 		_cliff = _smooth(_cliff, 15)
 		_br = _smooth(_br, 15)
+		_cf = _smooth(_cf, 15)
 
 # outer edge of the walkable/blend surface at row i (u > 0 left, u < 0 right)
 func _edge(i: int, left: bool) -> float:
@@ -428,7 +440,10 @@ func _build_columns() -> void:
 				u = minf(u, -er - 0.3)
 				if _cliff[i] > 0.5 and u > -40.0:  # rock face: buttresses and recesses 0-4 m deep along the route
 					var s_ := i * ROW
-					u -= (2.0 + 1.4 * _noise.get_noise_1d(s_ * 0.09 + 11.0) + 0.8 * _noise.get_noise_1d(s_ * 0.31 + 23.0)) * smoothstep(er + 0.3, er + 3.0, -u) * minf(_cliff[i] / 30.0, 1.0)
+					u -= (2.0 + 1.4 * _rock.get_noise_1d(s_ * 0.09 + 11.0) + 0.8 * _rock.get_noise_1d(s_ * 0.31 + 23.0)) * smoothstep(er + 0.3, er + 3.0, -u) * minf(_cliff[i] / 30.0, 1.0)
+					# ribs and gullies that change with height: each column of the face wanders on its own
+					var fa := absf(u) - er
+					u -= 1.6 * _rock.get_noise_2d(s_ * 0.11, fa * 0.35 + 400.0) * smoothstep(_cf[i] - 2.0, _cf[i] + 1.0, fa) * (1.0 - smoothstep(24.0, 34.0, fa))
 				u = maxf(u, prev_u + 0.01)
 				prev_u = u
 			var a := absf(u) - er
@@ -439,7 +454,7 @@ func _build_columns() -> void:
 				var y := shoulder + inland_slope * a + hills * hill_height * smoothstep(3.0, 40.0, absf(u))
 				ys.append(maxf(y, shoulder + 0.08 * a))  # never a gully beside the trail
 			else:
-				var ledge := smoothstep(6.0, 14.0, a) if _cliff[i] > 0.5 else 1.0  # cliff sections: a low ledge the scanned crags stand on
+				var ledge := smoothstep(_cf[i], _cf[i] + 8.0, a) if _cliff[i] > 0.5 else 1.0  # cliff sections: a low ledge before the face
 				ys.append(shoulder + inland_slope * _slope[i] * a * ledge + hills * hill_height * clampf(_slope[i], 0.3, 1.5) * smoothstep(10.0, 50.0, absf(u)) + _mountain(u, q, i * ROW) + _rock_face(i, a, q))  # rolling land beside the road
 				if not _real.is_empty():  # real mountains from 190 m; the near band hands over to them from ~15 m inland
 					# never below a rise of 30 m over the first 100 m: flat real shore land (towns, deltas) at lake level
