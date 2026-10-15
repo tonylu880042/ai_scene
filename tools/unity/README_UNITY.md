@@ -1,4 +1,4 @@
-# Virtual Run - alpine trail scene for Unity
+# Virtual Run - scene for Unity
 
 Exported from the Godot project with `tools/export_unity.gd`. Scene only (no runners).
 Coordinates are metres, Y up, world space; every tile lines up with the others and with `route.json`.
@@ -6,14 +6,14 @@ Coordinates are metres, Y up, world space; every tile lines up with the others a
 ## Files
 | File | What |
 |---|---|
-| `tile_XX.glb` | trail surface (dirt) + meadow ribbon + unique props (signposts, hut, cairns, start/finish gates) for one stretch of the route |
+| `tile_XX.glb` | path / road surfaces, terrain, walls, railings, houses and unique props (alpine: signposts, hut, cairns; garda: quay, tunnel portal, arched passages, road gallery; start/finish gates) for one stretch of the route |
 | `tile_XX_instances.json` | position / rotation / scale of every repeated object in that stretch (trees, grass clumps, flowers, rocks, pebbles, roots, fence posts/rails) |
 | `prototypes.glb` | each repeated object's mesh + materials, once (child nodes named like the `proto` field in the JSON) |
 | `water.glb` | lake surface (garda / coast), material `lake_water` - swap in a Unity water shader; its height follows `route.json` `water_y` (the lake level changes per section) |
 | `backdrop.glb` | real terrain around the start (alpine: Jungfrau region, swisstopo SWISSIMAGE; garda: Lake Garda, Sentinel-2 cloudless), the far lake plane (garda) and the sun light |
 | `sky.hdr` | HDRI sky (Poly Haven, CC0) |
 | `environment.json` | sun direction / colour, fog, ambient, tonemapping, camera, tile list |
-| `route.json` | centre line every 1 m (x, y, z) and the trail half-widths |
+| `route.json` | centre line every 1 m (x, y, z), path half-widths, lake level `water_y`, backdrop turn `backdrop_yaw` (rad) |
 | `VirtualRunBackdrop.cs` | Unity component that keeps the backdrop around the runner (as in Godot) |
 | `VirtualRunScatter.cs` | Unity component that places the repeated objects |
 
@@ -24,7 +24,7 @@ Coordinates are metres, Y up, world space; every tile lines up with the others a
 4. Drag `prototypes.glb` into the scene and **disable** it.
 5. Add an empty GameObject with `VirtualRunScatter`: set `Prototypes` to the disabled prototypes object and add every
    `tile_XX_instances.json` to `Instance Files`. Keep `Conversion = NegateX` when the tiles were imported with glTFast.
-   Check once that trees stand on the meadow next to the trail; if they are mirrored, switch to `NegateZ`.
+   Check once that trees stand on the ground next to the path (not on it / in the lake); if they are mirrored, switch to `NegateZ`.
 5b. Add `VirtualRunBackdrop` to the backdrop object: assign `route.json` (TextAsset) and the runner camera, same
    `Conversion` as above, `Start Index` = `route_from_m` from environment.json. Without it the real mountains stay
    where they are at the start (and do not turn with the route), and their edges show up as floating sheets further along.
@@ -41,7 +41,18 @@ The terrain (`terrain_grass` / `terrain_rock` / `terrain_sand` materials), raili
 vertex colours (glTF COLOR_0). glTFast's own materials apply them; if you convert materials to URP/HDRP Lit, use a
 shader that multiplies the vertex colour or the terrain turns flat grey.
 
+## Please check in Unity (not verified there - built and checked in Godot only)
+- `VirtualRunScatter.cs` / `VirtualRunBackdrop.cs` have not been run in a Unity project; the export was checked by rebuilding
+  it from these files in Godot (`tools/verify_unity_export.gd`).
+- Performance: the scanned tree `island_tree_02` is ~870k vertices and appears ~1,800 times along a route. Godot draws trees
+  only within 250-300 m; `VirtualRunScatter` makes these heavy prototypes ordinary GameObjects with frustum culling only -
+  add distance culling (or a LODGroup / lighter tree) before recording.
+- `lake_water` (water.glb, far lake in backdrop.glb) is a plain placeholder material: use a Unity water shader.
+- The scene is runner-relative like the Godot one: the backdrop (real mountains + far lake) follows and turns with the camera
+  (VirtualRunBackdrop); tiles and water.glb are static world geometry.
+
 ## Not exported (Godot-only shaders)
+- Lake water shader (waves, shallow-water colour, sparkle) - see above.
 - Alpine scene only - ray-marched cloud sea below the trail (`environment.json.cloud_sea`): use a Unity volumetric cloud layer
   (HDRP Volumetric Clouds) or a cloud-sea asset, ~17 m below the runner.
 - Wind sway on grass, the ragged dirt/grass edge of the trail (exported as a clean dirt band), steep-slope rock blend.

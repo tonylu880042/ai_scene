@@ -578,11 +578,11 @@ func _terrain_mesh(src: Mesh, xf: Transform3D, sm: ShaderMaterial) -> ArrayMesh:
 			low = low.lerp(sd["mean"] * 0.8, c.b * dirt)
 			var rock: Color = rk["mean"] * rock_tint
 			if streaks > 0.0:
-				rock *= 0.6 + 0.8 * (rk["mean"] as Color).r  # close-up grain, on average
-				var streak := _samp(rk["small"], Vector2((w.x + w.z) * 0.015, w.y * 0.0015)).r
-				var stain := smoothstep(0.55, 0.75, _samp(rk["small"], Vector2(w.x, w.z) * 0.003 + Vector2(w.y * 0.004, 0.0)).g)
-				rock *= lerpf(1.0, lerpf(0.55, 1.2, streak), streaks)
-				rock = rock.lerp(rock * Color(1.15, 0.95, 0.75), stain * streaks)
+				rock *= 0.35 + 1.6 * (rk["mean"] as Color).r  # close-up grain, on average (terrain.gdshader)
+				var streak := smoothstep(0.28, 0.48, _samp(rk["small"], Vector2((w.x + w.z) * 0.015, w.y * 0.0015)).r)
+				var stain := smoothstep(0.40, 0.50, _samp(rk["small"], Vector2(w.x, w.z) * 0.003 + Vector2(w.y * 0.004, 0.0)).g)
+				rock *= lerpf(1.0, lerpf(0.4, 1.15, streak), streaks)
+				rock = rock.lerp(rock * Color(1.2, 0.95, 0.7), stain * streaks)
 			rw[k] = maxf(c.g, smoothstep(0.35, 0.6, 1.0 - n.y) * c.a)
 			var alb := low.lerp(rock, rw[k])
 			var oa := 0.0

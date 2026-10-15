@@ -58,6 +58,7 @@ var _flowers: Array[Mesh]
 var _rocks_big: Array[Mesh]
 var _rocks_small: Array[Mesh]
 var _blobs: Array[Mesh]
+var _autumn: Array[Mesh] = []  # rust and yellow copies of the leafy crowns (autumn scrub on the cliffs)
 var _clump: Mesh
 var _root_mesh: Mesh
 var _log := CylinderMesh.new()
@@ -105,6 +106,13 @@ func _ready() -> void:
 	else:
 		for k in 5:
 			_blobs.append(_make_spruce(21 + k) if spruce else _make_tree(k < 3, 11 + k))
+	for tint in [Color(1.5, 0.75, 0.45), Color(1.3, 1.1, 0.45)]:
+		var m := _blobs[0].duplicate() as Mesh
+		for si in m.get_surface_count():
+			var mat := m.surface_get_material(si).duplicate() as StandardMaterial3D
+			mat.albedo_color *= tint
+			m.surface_set_material(si, mat)
+		_autumn.append(m)
 	if meadow_clumps > 0:
 		_clump = _make_clump()
 	_lamp = _make_lamp()
@@ -213,6 +221,7 @@ func _spawn(idx: int) -> void:  # coroutine: one mesh type per frame to avoid hi
 		return
 	_rocks(holder, rng, s0, origin, (1.0 + (1.0 - veg) * 3.0) * minf(sm, 1.0))
 	_bank_plants(holder, rng, s0, origin)
+	_cliff_plants(holder, rng, s0, origin)
 	if spruce:
 		_trail_debris(holder, rng, s0, origin)
 	_fence(holder, idx, s0, origin)
@@ -323,6 +332,34 @@ func _bank_plants(holder: Node3D, rng: RandomNumberGenerator, s0: float, origin:
 		tree.scale = Vector3(sc, sc, sc)
 		tree.visibility_range_end = tree_view_distance
 		holder.add_child(tree)
+
+# scrub clinging to the ledges of the rock face (sections "cliff_plants" per chunk): green and autumn crowns and shrubs,
+# only where the face is not sheer (ground rising < 3 m per m across the slope)
+func _cliff_plants(holder: Node3D, rng: RandomNumberGenerator, s0: float, origin: Vector3) -> void:
+	var sec := _route.section_at(s0 + chunk_length * 0.5)
+	var n := int(sec.get("cliff_plants", 0))
+	if n <= 0:
+		return
+	var cf := float(sec.get("cliff_from", 6.0))
+	var spots := []
+	for k in n * 4:
+		if spots.size() >= n:
+			break
+		var s := s0 + rng.randf() * chunk_length
+		var u := -(_route.half_right(s) + cf + rng.randf_range(0.5, 22.0))
+		if absf(_route.ground_y(s, u + 1.0) - _route.ground_y(s, u - 1.0)) < 6.0:
+			spots.append([s, u])
+	var meshes: Array[Mesh] = []
+	meshes.append_array(_shrubs)
+	meshes.append(_blobs[0])
+	meshes.append_array(_autumn)
+	for m: Mesh in meshes:
+		var mine := spots.filter(func(_p): return rng.randf() < 1.0 / meshes.size())
+		var mm := _new_mm(m, mine.size())
+		var small := m in _shrubs
+		for i in mine.size():
+			_put(mm, i, rng, mine[i][0], mine[i][1], origin, shrub_scale * 1.2 if small else Vector2(0.1, 0.25), 0.3)
+		_add_mm(holder, mm, origin, tree_view_distance)
 
 func _fence(holder: Node3D, idx: int, s0: float, origin: Vector3) -> void:
 	if (idx + random_seed) % fence_every != 0:

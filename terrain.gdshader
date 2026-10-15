@@ -47,14 +47,16 @@ void fragment() {
 	vec3 rk = tri(rock_d, wp, wn, uv_scale * 0.5);
 	if (rock_streaks > 0.0) {
 		rk = mix(rk, tri(rock_d, wp, wn, uv_scale * 0.13), 0.5);  // second scale: no visible tiling on big faces
-		rk *= 0.6 + 0.8 * dot(tri(rock_d, wp, wn, uv_scale * 4.0), vec3(0.33));  // close-up grain (1.25 m repeat)
+		rk *= 0.35 + 1.6 * dot(tri(rock_d, wp, wn, uv_scale * 4.0), vec3(0.33));  // close-up grain (1.25 m repeat), strong: a cliff read as plaster
 	}
 	rk = vec3(dot(rk, vec3(0.3, 0.59, 0.11))) * rock_tint;  // desaturated: grey granite
 	if (rock_streaks > 0.0) {
-		float streak = texture(rock_d, vec2((wp.x + wp.z) * 0.015, wp.y * 0.0015)).r;   // stretched down the face
-		float stain = smoothstep(0.55, 0.75, texture(rock_d, wp.xz * 0.003 + vec2(wp.y * 0.004, 0.0)).g);
-		rk *= mix(1.0, mix(0.55, 1.2, streak), rock_streaks);
-		rk = mix(rk, rk * vec3(1.15, 0.95, 0.75), stain * rock_streaks);
+		// thresholds sit inside the rock texture's own range (linear r/g ~0.2-0.5): distinct dark water streaks and
+		// ochre stain patches rather than an even darkening (tools/export_unity.gd bakes the same terms)
+		float streak = smoothstep(0.28, 0.48, texture(rock_d, vec2((wp.x + wp.z) * 0.015, wp.y * 0.0015)).r);   // stretched down the face
+		float stain = smoothstep(0.40, 0.50, texture(rock_d, wp.xz * 0.003 + vec2(wp.y * 0.004, 0.0)).g);
+		rk *= mix(1.0, mix(0.4, 1.15, streak), rock_streaks);
+		rk = mix(rk, rk * vec3(1.2, 0.95, 0.7), stain * rock_streaks);
 	}
 	ALBEDO = mix(low_d, rk, rock);
 	if (ortho.a > 0.001) {  // real mountains: the photo's colour, the procedural textures only as fine detail
