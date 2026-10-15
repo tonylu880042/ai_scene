@@ -86,6 +86,7 @@ var _video_km := 1.0
 var _surf_mats := {}
 var _wy := PackedFloat32Array()          # per-row water level: sea_y, or (sections with "water_gap") that far below the path
 var _quay := PackedByteArray()           # per-row: harbour quay wall straight into the water instead of a bank
+var _br := PackedFloat32Array()          # per-row lake-bank run per metre of drop (sections "bank_ratio", else bank_ratio)
 var _cliff := PackedFloat32Array()       # per-row height of the natural rock face rising from the inland edge (sections "cliff")
 var _land_u: Array[float] = LAND_U_COAST
 var _ni := 5    # inland columns before the road
@@ -336,6 +337,8 @@ func _build_widths() -> void:
 	gap.resize(_n)
 	_cliff.resize(_n)
 	_cliff.fill(0.0)
+	_br.resize(_n)
+	_br.fill(bank_ratio)
 	_quay.resize(_n)
 	_quay.fill(0)
 	for i in _n:
@@ -350,6 +353,7 @@ func _build_widths() -> void:
 			gap[i] = float(sec.get("water_gap", _pos[i].y - sea_y))
 			_quay[i] = 1 if sec.get("quay", false) else 0
 			_cliff[i] = float(sec.get("cliff", 0.0))
+			_br[i] = float(sec.get("bank_ratio", bank_ratio))
 			continue
 		if alpine_trail:
 			_hl[i] = clampf(trail_half * (1.0 + width_jitter * _noise.get_noise_1d(s * 0.025 + 700.0)) + 0.08 * _noise.get_noise_1d(s * 0.17 + 40.0), 0.6, 1.15)
@@ -370,6 +374,7 @@ func _build_widths() -> void:
 		_pr = _smooth(_pr, 3)
 		_slope = _smooth(_slope, 10)
 		_cliff = _smooth(_cliff, 15)
+		_br = _smooth(_br, 15)
 
 # outer edge of the walkable/blend surface at row i (u > 0 left, u < 0 right)
 func _edge(i: int, left: bool) -> float:
@@ -450,7 +455,7 @@ func _build_columns() -> void:
 				us.append(lip + d)
 				ys.append(minf(y, shoulder - 0.12 * d - 0.3 * maxf(d - 30.0, 0.0)))  # falls away below the cloud layer
 		else:
-			var w := clampf(alt * bank_ratio, bank_run if grass_bank else 20.0, 260.0)  # horizontal run from the shoulder down to the sea
+			var w := clampf(alt * _br[i], bank_run if grass_bank else 20.0, 260.0)  # horizontal run from the shoulder down to the sea
 			var k := smoothstep(2.0, 8.0, alt)
 			var lip := lerpf(bank_lip if grass_bank else 14.0, cliff_lip, k)  # flat shoulder: wide on the beach (huts), narrow on cliffs
 			if _quay[i] == 1:  # harbour: the quay wall (Boardwalk.gd) drops straight into the water at the path edge
@@ -460,7 +465,10 @@ func _build_columns() -> void:
 			ys.append(shoulder)
 			for f in [0.2, 0.5, 0.8, 1.0]:
 				us.append(lip + w * f)
-				ys.append(lerpf(shoulder, wy - 0.5, f * f * (3.0 - 2.0 * f)))
+				var knob := 0.0  # wide (section) banks: outcrops and hollows, not one smooth sweep down to the water
+				if _br[i] > bank_ratio + 0.1 and f < 1.0:
+					knob = 0.12 * alt * _noise.get_noise_2d(i * ROW * 0.05, f * 7.0) * 4.0 * f * (1.0 - f)
+				ys.append(lerpf(shoulder, wy - 0.5, f * f * (3.0 - 2.0 * f)) + knob)
 			us.append(lip + w + 3.0)  # skirt below the water: no bank edge in the air when the lake sits lower elsewhere
 			ys.append(wy - 40.0)
 		var rs := PackedFloat32Array()
@@ -492,6 +500,8 @@ func _build_columns() -> void:
 func _col(i: int, j: int) -> Color:
 	var dirt := 0.0
 	var steep_rock := 1.0 - _co[i][j].a  # a: real mountains use the orthophoto mask only (fades in with the photo colour)
+	if j > _ni and _br[i] > bank_ratio + 0.1:
+		steep_rock = 0.0  # wide (section) lake banks are scrub-covered, not bare rock: no pale strip on the water across a bay
 	return Color(1.0 if (j <= _ni or grass_bank) else _ck[i], _cr[i][j], dirt, steep_rock)
 
 

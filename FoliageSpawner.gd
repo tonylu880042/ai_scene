@@ -212,6 +212,7 @@ func _spawn(idx: int) -> void:  # coroutine: one mesh type per frame to avoid hi
 	if not is_instance_valid(holder):
 		return
 	_rocks(holder, rng, s0, origin, (1.0 + (1.0 - veg) * 3.0) * minf(sm, 1.0))
+	_bank_plants(holder, rng, s0, origin)
 	if spruce:
 		_trail_debris(holder, rng, s0, origin)
 	_fence(holder, idx, s0, origin)
@@ -286,6 +287,42 @@ func _rocks(holder: Node3D, rng: RandomNumberGenerator, s0: float, origin: Vecto
 				var u := (1.0 if rng.randf() < 0.5 and _route.sea_grass(s0) else -1.0) * rng.randf_range(set[3], 28.0)  # never into the water
 				_put(mm, i, rng, s0 + rng.randf() * chunk_length, u, origin, set[2], 0.15)
 			_add_mm(holder, mm, origin, 200.0)
+
+# scrub and a few trees on the lake bank between the path edge and the waterline (sections "bank_plants" per chunk):
+# below a cantilevered path they fill the slope and their crowns rise past the railing
+func _bank_plants(holder: Node3D, rng: RandomNumberGenerator, s0: float, origin: Vector3) -> void:
+	var n := int(_route.section_at(s0 + chunk_length * 0.5).get("bank_plants", 0))
+	if n <= 0:
+		return
+	var bank_u := func(s: float) -> float:
+		var a := _route.half_left(s) + 0.8  # crowded near the path edge: lower down the slope they drop out of sight
+		return lerpf(a, maxf(_route.water_edge_u(s) - 0.5, a + 0.5), pow(rng.randf(), 2.0))
+	for m: Mesh in _shrubs:
+		var mm := _new_mm(m, n)
+		for i in n:
+			var s := s0 + rng.randf() * chunk_length
+			_put(mm, i, rng, s, bank_u.call(s), origin, shrub_scale * 1.5, 0.1)
+		_add_mm(holder, mm, origin, tree_view_distance)
+	for m: Mesh in _blobs:  # dense low evergreen scrub (holm oak / pittosporum look): the light procedural crowns, bush-sized
+		var mm := _new_mm(m, n / 4)
+		for i in mm.instance_count:
+			var s := s0 + rng.randf() * chunk_length
+			_put(mm, i, rng, s, bank_u.call(s), origin, Vector2(0.12, 0.3), 0.6)
+		_add_mm(holder, mm, origin, tree_view_distance)
+	for i in n / 8:
+		var s := s0 + rng.randf() * chunk_length
+		var u: float = bank_u.call(s)
+		var pine := rng.randf() < conifer_ratio
+		var tree := MeshInstance3D.new()
+		tree.mesh = _blobs[rng.randi() % _blobs.size()] if pine else _trees[0]
+		tree.position = _route.pos_at(s) + _route.left_at(s) * u
+		tree.position.y = _route.ground_y(s, u) - 0.2
+		tree.rotation.y = rng.randf() * TAU
+		var sr := conifer_scale if pine else tree_scale
+		var sc := rng.randf_range(sr.x, sr.y)
+		tree.scale = Vector3(sc, sc, sc)
+		tree.visibility_range_end = tree_view_distance
+		holder.add_child(tree)
 
 func _fence(holder: Node3D, idx: int, s0: float, origin: Vector3) -> void:
 	if (idx + random_seed) % fence_every != 0:
