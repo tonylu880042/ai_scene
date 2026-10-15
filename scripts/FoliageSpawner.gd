@@ -587,7 +587,7 @@ func _make_clump() -> Mesh:
 				st.add_vertex(tri[k * 2])
 	var m := st.commit()
 	var mat := ShaderMaterial.new()
-	mat.shader = load("res://grass.gdshader")
+	mat.shader = load("res://shaders/grass.gdshader")
 	m.surface_set_material(0, mat)
 	return m
 

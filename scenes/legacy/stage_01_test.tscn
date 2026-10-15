@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=3]
 
-[ext_resource type="PackedScene" path="res://Player.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="1"]
 
 [sub_resource type="BoxShape3D" id="floor_shape"]
 size = Vector3(200, 1, 200)

@@ -17,10 +17,16 @@ Options after `--`: `--course=<name>` (see `programs.json`), `--start-min=N`, `-
 Keys: Tab auto/manual run, WASD + mouse in manual mode, F1 hide HUD, F11 fullscreen, Esc release mouse.
 
 ## Layout
-- `route.gd` builds the route, terrain and road from a program; `course_setup.gd` applies the scene template
-  and time of day from `courses.json`.
-- `FoliageSpawner.gd`, `Buildings.gd`, `Pedestrians.gd`, `Gates.gd` dress the route; `hud.gd`, `minimap.gd` are the HUD.
-- `stage_0*.tscn`, `MainScene_island.tscn`, `coastal_path.gd` are earlier prototype stages kept for reference.
+- `scenes/` - `MainScene.tscn` (coastal harbour), `MainScene_alpine.tscn`, `MainScene_garda.tscn` (Lake Garda), `Player.tscn`;
+  `scenes/legacy/` holds the earlier prototype stages (kept for reference, no longer maintained).
+- `scripts/` - `route.gd` builds the route, terrain and road from a program; `course_setup.gd` applies the scene template
+  and time of day; `FoliageSpawner.gd`, `Boardwalk.gd`, `Buildings.gd`, `AlpineProps.gd`, `Pedestrians.gd`, `Gates.gd`
+  dress the route; `hud.gd`, `minimap.gd` are the HUD.
+- `shaders/` - terrain, trail, grass, water, sky and cloud shaders.
+- `data/` - `programs.json` (treadmill programs), `courses*.json` (scene template per course), `garda_sections.json`
+  (Garda scene sections and landmarks along the reference video).
+- `tools/` - asset/terrain fetchers, Unity export (`export_unity.gd`, `unity/`), course recording and older experiments.
+- `assets/`, `video/` (private references) and the outputs `export/`, `export_unity/` are not in git.
 
 Assets: Poly Haven (CC0).
 

@@ -1,7 +1,7 @@
 extends SceneTree
 # Bake the alpine trail scene for one course into Unity-ready glTF (.glb) tiles. Scene only - no avatars.
 #
-#   godot --path . --script tools/export_unity.gd -- --course=summit [--out=export_unity/summit] [--scene=res://MainScene_garda.tscn]
+#   godot --path . --script tools/export_unity.gd -- --course=summit [--out=export_unity/summit] [--scene=res://scenes/MainScene_garda.tscn]
 #         [--from-m=0] [--to-m=<course length>] [--tile-m=750] [--grass=0.15] [--flowers=0.35]
 #
 # Run WITH a window (not --headless): textures are read back from the GPU for embedding.
@@ -17,7 +17,7 @@ extends SceneTree
 # terrain is grass, grass clumps use vertex colours; the ray-marched cloud sea and the procedural sky are not
 # exportable (use the HDRI + a Unity volumetric cloud asset).
 
-const SCENE := "res://MainScene_alpine.tscn"
+const SCENE := "res://scenes/MainScene_alpine.tscn"
 var A := {}
 var _route: Route
 var _mat_cache := {}

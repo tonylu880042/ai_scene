@@ -109,7 +109,7 @@ func _ready() -> void:
 			start_time = float(a.substr(12)) * 60.0
 		elif a == "--quit-at-end":
 			quit_at_end = true
-	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://programs.json"))
+	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/programs.json"))
 	_segs = data[course]
 	for s in _segs:
 		total_minutes += s[0]
@@ -155,7 +155,7 @@ func _ready() -> void:
 	_line_mat.albedo_color = Color(0.93, 0.93, 0.9)
 	_line_mat.roughness = 0.7
 	var terrain_mat := ShaderMaterial.new()
-	terrain_mat.shader = load("res://terrain.gdshader")
+	terrain_mat.shader = load("res://shaders/terrain.gdshader")
 	for k in ["sand_d", "sand_n", "grass_d", "grass_n", "rock_d", "rock_n"]:
 		var f := "coast_sand_01" if k.begins_with("sand") else ("aerial_grass_rock" if k.begins_with("grass") else "rock_boulder_dry")
 		if alpine_trail and k.begins_with("sand"):
@@ -166,7 +166,7 @@ func _ready() -> void:
 	var surface_mat: Material = road_mat
 	if alpine_trail:  # ragged worn trail blended into the meadow, same grass maths as terrain.gdshader
 		var tm := ShaderMaterial.new()
-		tm.shader = load("res://trail.gdshader")
+		tm.shader = load("res://shaders/trail.gdshader")
 		for k in ["dirt_d", "dirt_n", "grass_d", "grass_n", "gravel_d"]:
 			var f2: String = {"dirt": trail_texture, "grass": "aerial_grass_rock", "gravel": "coast_sand_01"}[k.split("_")[0]]
 			tm.set_shader_parameter(k, load("res://assets/textures/%s_%s.jpg" % [f2, "diff" if k.ends_with("d") else "nor"]))

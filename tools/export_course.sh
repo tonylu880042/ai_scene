@@ -5,7 +5,7 @@
 set -euo pipefail
 SCENE=${1:?scene coast|alpine}; COURSE=${2:?course}; START=${3:?start minute}; MIN=${4:?minutes}
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
-case $SCENE in coast) TSCN=res://MainScene.tscn;; alpine) TSCN=res://MainScene_alpine.tscn;; garda) TSCN=res://MainScene_garda.tscn;; *) echo bad scene; exit 1;; esac
+case $SCENE in coast) TSCN=res://scenes/MainScene.tscn;; alpine) TSCN=res://scenes/MainScene_alpine.tscn;; garda) TSCN=res://scenes/MainScene_garda.tscn;; *) echo bad scene; exit 1;; esac
 OUT="$ROOT/export/${SCENE}_${COURSE}_${START}m${EXPORT_SUFFIX:-}"
 mkdir -p "$OUT"
 touch "$ROOT/export/.gdignore"  # keep Godot from importing the exports

@@ -9,7 +9,7 @@ extends Node
 @export var player_path: NodePath
 @export var sea_path: NodePath       # optional (alpine scene has no ocean shader)
 @export var extra_sea_paths: Array[NodePath] = []  # more shader layers that need the sun direction
-@export var courses_file := "res://courses.json"
+@export var courses_file := "res://data/courses.json"
 @export var mist_enabled := false     # episodic mist / white-out from the course json "fog": [base, extra]
 @export var sun_left_deg := Vector2(20.0, 65.0)  # sun azimuth left of the run direction: low sun .. high sun
 @export_group("HDRI sky")

@@ -1,7 +1,7 @@
 extends Node
 # Offline "film" quality for recorded courses. Active with --hq on the command line (export_course.sh passes it
 # through EXPORT_EXTRA) or when `always_on` is set. Real-time play keeps the cheaper defaults.
-#   godot --path . res://MainScene_alpine.tscn --write-movie out.avi --fixed-fps 60 -- --course=summit --hq
+#   godot --path . res://scenes/MainScene_alpine.tscn --write-movie out.avi --fixed-fps 60 -- --course=summit --hq
 
 @export var env_path: NodePath
 @export var sun_path: NodePath
@@ -45,7 +45,7 @@ func _ready() -> void:
 		var rect := ColorRect.new()
 		rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 		var m := ShaderMaterial.new()
-		m.shader = load("res://post_fx.gdshader")
+		m.shader = load("res://shaders/post_fx.gdshader")
 		rect.material = m
 		rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		layer.add_child(rect)

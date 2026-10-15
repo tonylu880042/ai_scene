@@ -1,19 +1,19 @@
 [gd_scene load_steps=24 format=3]
 
-[ext_resource type="PackedScene" path="res://Player.tscn" id="1"]
-[ext_resource type="Script" path="res://route.gd" id="2"]
-[ext_resource type="Shader" path="res://ocean_water.gdshader" id="3"]
-[ext_resource type="Script" path="res://FoliageSpawner.gd" id="4"]
-[ext_resource type="Script" path="res://hud.gd" id="5"]
-[ext_resource type="Script" path="res://Boardwalk.gd" id="7"]
-[ext_resource type="Script" path="res://FollowPlayer.gd" id="8"]
-[ext_resource type="Script" path="res://course_setup.gd" id="9"]
-[ext_resource type="Script" path="res://Gates.gd" id="11"]
-[ext_resource type="Shader" path="res://hdri_sky.gdshader" id="13"]
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="1"]
+[ext_resource type="Script" path="res://scripts/route.gd" id="2"]
+[ext_resource type="Shader" path="res://shaders/ocean_water.gdshader" id="3"]
+[ext_resource type="Script" path="res://scripts/FoliageSpawner.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/hud.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/Boardwalk.gd" id="7"]
+[ext_resource type="Script" path="res://scripts/FollowPlayer.gd" id="8"]
+[ext_resource type="Script" path="res://scripts/course_setup.gd" id="9"]
+[ext_resource type="Script" path="res://scripts/Gates.gd" id="11"]
+[ext_resource type="Shader" path="res://shaders/hdri_sky.gdshader" id="13"]
 [ext_resource type="Texture2D" path="res://assets/hdri/kloofendal_43d_clear_puresky_4k.hdr" id="15"]
-[ext_resource type="Script" path="res://render_quality.gd" id="16"]
-[ext_resource type="Script" path="res://real_terrain.gd" id="17"]
-[ext_resource type="Script" path="res://track_exporter.gd" id="99"]
+[ext_resource type="Script" path="res://scripts/render_quality.gd" id="16"]
+[ext_resource type="Script" path="res://scripts/real_terrain.gd" id="17"]
+[ext_resource type="Script" path="res://scripts/track_exporter.gd" id="99"]
 
 [sub_resource type="FastNoiseLite" id="noise_a"]
 seed = 1
@@ -104,7 +104,7 @@ sun_path = NodePath("../Sun")
 env_path = NodePath("../WorldEnvironment")
 player_path = NodePath("../Player")
 sea_path = NodePath("../Lake")
-courses_file = "res://courses_garda.json"
+courses_file = "res://data/courses_garda.json"
 hdri_sky = true
 hdri_sun_u = 0.6005
 hdri_sun_elev = 43.0
@@ -163,7 +163,7 @@ alpine_range = 150.0
 bank_ratio = 0.45
 cliff_lip = 0.4
 sea_side_plants = false
-sections_file = "res://garda_sections.json"
+sections_file = "res://data/garda_sections.json"
 real_shore = "res://assets/terrain/garda_west_shore.json"
 terrain_params = {
 "grass_tint": Color(0.45, 0.52, 0.28, 1),

@@ -7,10 +7,12 @@ description: Turn a reference running/hiking video into a Godot virtual-run scen
 
 Project: `/Users/tunghunglu/projects/ai_scene` (Godot 4.7, `godot` on PATH; ffmpeg; Python 3 + Pillow/numpy;
 node + puppeteer-core in the session scratchpad for browser checks). Two reference scenes already exist and are the
-templates: `MainScene.tscn` (coastal harbour) and `MainScene_alpine.tscn` (alpine trail - the most complete one).
+templates: `scenes/MainScene.tscn` (coastal harbour), `scenes/MainScene_alpine.tscn` (alpine trail) and
+`scenes/MainScene_garda.tscn` (Lake Garda - the most complete one: sections + landmarks from `data/garda_sections.json`).
+Layout: scenes in `scenes/`, scripts in `scripts/`, shaders in `shaders/`, json config in `data/`.
 
 Arguments: `<video path>` and optionally a scene name (default: video file stem, snake_case) and a course
-(default `summit`; courses live in `programs.json`, scene templates per course in `courses*.json`).
+(default `summit`; courses live in `data/programs.json`, scene templates per course in `data/courses*.json`).
 
 Work in this order and show the user rendered evidence (contact sheets / screenshots) at each phase - never
 claim a look you have not rendered and viewed.
@@ -25,12 +27,12 @@ claim a look you have not rendered and viewed.
    unique branded elements. Keep `video/` git-ignored.
 
 ## Phase 2 - Build the Godot scene
-Start from the closest template (copy it to `MainScene_<name>.tscn`; never edit the existing scenes destructively).
+Start from the closest template (copy it to `scenes/MainScene_<name>.tscn`; never edit the existing scenes destructively).
 Knobs that already exist - prefer them over new code:
 - `route.gd` (`Path3D` node): `alpine_trail`, `trail_half`, `width_jitter`, `edge_blend`, `groove_depth`, `bump_amp`,
   `wiggle`, `micro_relief`, `hill_height`, `inland_slope`, `side_slope`, `alpine_start/range`, `sea_y`.
   Coastal mode: `road_left/right`, `bank_*`, `grass_bank`.
-- `courses_<name>.json` per-course templates (copy `courses_alpine.json`) applied by `course_setup.gd`
+- `data/courses_<name>.json` per-course templates (copy `data/courses_alpine.json`) applied by `course_setup.gd`
   (`courses_file`, `tod` time-of-day range, `fog`/mist episodes, `hdri_sky` + `hdri_sun_u/elev`).
 - `FoliageSpawner.gd`: `meadow_clumps`, `clump_scale`, `fir_models`, `tree_cluster`, `fir_tint`, `conifer_*`,
   `rocks_per_chunk`, `rock_scale_mult`, `flower_*`, `fence_*`, `trail_pebbles/roots`.
@@ -42,7 +44,7 @@ Knobs that already exist - prefer them over new code:
 - Cloud sea: `cloud_volume.gdshader` (ray-marched). Water: `ocean_water.gdshader`. Grass: `grass.gdshader`.
 - New CC0 assets: Poly Haven API (`https://api.polyhaven.com/files/<id>`); add them to `tools/download_assets.py`.
 Verify with real renders (not headless) and view them:
-`godot --path . res://MainScene_<name>.tscn --write-movie /tmp/x/f.png --fixed-fps 60 --quit-after 62 -- --course=<c> --start-min=<m> --no-hud --hq`
+`godot --path . res://scenes/MainScene_<name>.tscn --write-movie /tmp/x/f.png --fixed-fps 60 --quit-after 62 -- --course=<c> --start-min=<m> --no-hud --hq`
 Compare side by side with the reference contact sheet; iterate on the biggest differences first.
 
 ## Phase 3 - Render a course clip + camera track

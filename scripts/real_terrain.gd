@@ -67,7 +67,7 @@ func _ready() -> void:
 	m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
 	mesh = m
 	_mat = ShaderMaterial.new()
-	_mat.shader = load("res://real_terrain.gdshader")
+	_mat.shader = load("res://shaders/real_terrain.gdshader")
 	_mat.set_shader_parameter("albedo_tex", load(dir + terrain_name + "_albedo.jpg"))
 	material_override = _mat
 	rotation.y = deg_to_rad(rotation_deg)

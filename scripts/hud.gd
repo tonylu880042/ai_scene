@@ -20,7 +20,7 @@ func _ready() -> void:
 	if _route:
 		_time = _route.start_time
 		var mm := Control.new()
-		mm.set_script(load("res://minimap.gd"))
+		mm.set_script(load("res://scripts/minimap.gd"))
 		add_child(mm)
 		mm.setup(_route, _player)
 	_label.position = Vector2(24, 20)

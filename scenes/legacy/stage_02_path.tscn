@@ -1,7 +1,7 @@
 [gd_scene load_steps=6 format=3]
 
-[ext_resource type="PackedScene" path="res://Player.tscn" id="1"]
-[ext_resource type="Script" path="res://coastal_path.gd" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="1"]
+[ext_resource type="Script" path="res://scripts/coastal_path.gd" id="2"]
 
 [sub_resource type="StandardMaterial3D" id="road_mat"]
 albedo_color = Color(0.45, 0.45, 0.47, 1)

@@ -1,21 +1,21 @@
 [gd_scene load_steps=25 format=3]
 
-[ext_resource type="PackedScene" path="res://Player.tscn" id="1"]
-[ext_resource type="Script" path="res://route.gd" id="2"]
-[ext_resource type="Script" path="res://FoliageSpawner.gd" id="4"]
-[ext_resource type="Script" path="res://hud.gd" id="5"]
-[ext_resource type="Script" path="res://mountain_ring.gd" id="6"]
-[ext_resource type="Script" path="res://FollowPlayer.gd" id="8"]
-[ext_resource type="Script" path="res://course_setup.gd" id="9"]
-[ext_resource type="Script" path="res://Gates.gd" id="11"]
-[ext_resource type="Script" path="res://AlpineProps.gd" id="12"]
-[ext_resource type="Shader" path="res://hdri_sky.gdshader" id="13"]
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="1"]
+[ext_resource type="Script" path="res://scripts/route.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/FoliageSpawner.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/hud.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/mountain_ring.gd" id="6"]
+[ext_resource type="Script" path="res://scripts/FollowPlayer.gd" id="8"]
+[ext_resource type="Script" path="res://scripts/course_setup.gd" id="9"]
+[ext_resource type="Script" path="res://scripts/Gates.gd" id="11"]
+[ext_resource type="Script" path="res://scripts/AlpineProps.gd" id="12"]
+[ext_resource type="Shader" path="res://shaders/hdri_sky.gdshader" id="13"]
 [ext_resource type="Texture2D" path="res://assets/hdri/kloofendal_48d_partly_cloudy_puresky_8k.hdr" id="15"]
-[ext_resource type="Script" path="res://render_quality.gd" id="16"]
-[ext_resource type="Script" path="res://real_terrain.gd" id="17"]
-[ext_resource type="Shader" path="res://cloud_sea.gdshader" id="14"]
-[ext_resource type="Shader" path="res://cloud_volume.gdshader" id="18"]
-[ext_resource type="Script" path="res://track_exporter.gd" id="99"]
+[ext_resource type="Script" path="res://scripts/render_quality.gd" id="16"]
+[ext_resource type="Script" path="res://scripts/real_terrain.gd" id="17"]
+[ext_resource type="Shader" path="res://shaders/cloud_sea.gdshader" id="14"]
+[ext_resource type="Shader" path="res://shaders/cloud_volume.gdshader" id="18"]
+[ext_resource type="Script" path="res://scripts/track_exporter.gd" id="99"]
 
 [sub_resource type="FastNoiseLite" id="cloud_noise"]
 seed = 4
@@ -115,7 +115,7 @@ env_path = NodePath("../WorldEnvironment")
 player_path = NodePath("../Player")
 sea_path = NodePath("../CloudSea")
 extra_sea_paths = [NodePath("../CloudSea2")]
-courses_file = "res://courses_alpine.json"
+courses_file = "res://data/courses_alpine.json"
 mist_enabled = true
 hdri_sky = true
 
