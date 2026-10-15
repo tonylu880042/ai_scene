@@ -27,7 +27,7 @@ Coordinates are metres, Y up, world space; every tile lines up with the others a
    Check once that trees stand on the meadow next to the trail; if they are mirrored, switch to `NegateZ`.
 5b. Add `VirtualRunBackdrop` to the backdrop object: assign `route.json` (TextAsset) and the runner camera, same
    `Conversion` as above, `Start Index` = `route_from_m` from environment.json. Without it the real mountains stay
-   where they are at the start and their edges show up as floating sheets further along the route.
+   where they are at the start (and do not turn with the route), and their edges show up as floating sheets further along.
 6. Sky: create a material with `Skybox/Panoramic`, assign `sky.hdr` (Texture Shape 2D, HDR), set it in
    Lighting -> Environment. Rotate the skybox until the bright sun in the photo sits where the directional light
    comes from (start around `-sky.yaw_deg` from environment.json).

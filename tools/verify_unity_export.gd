@@ -80,10 +80,13 @@ func _run() -> void:
 	e.tonemap_mode = Environment.TONE_MAPPER_AGX
 	we.environment = e
 	world.add_child(we)
-	# the backdrop follows the runner (VirtualRunBackdrop.cs in Unity): x/z with the camera, y at the lake level
+	# the backdrop follows the runner (VirtualRunBackdrop.cs in Unity): x/z with the camera, y at the lake level, turned
+	# by backdrop_yaw about the runner
 	var s0 := int(env["route_from_m"])
 	if backdrop is Node3D:
-		(backdrop as Node3D).position = Vector3(p.x - route["x"][s0], route["water_y"][s] - route["water_y"][s0], p.z - route["z"][s0])
+		var r := Basis(Vector3.UP, float(route["backdrop_yaw"][s]) if route.has("backdrop_yaw") else 0.0)
+		var home := Vector3(route["x"][s0], route["water_y"][s0], route["z"][s0])
+		(backdrop as Node3D).transform = Transform3D(r, Vector3(p.x, route["water_y"][s], p.z) - r * home)
 	var cam := Camera3D.new()
 	cam.fov = 75.0
 	cam.far = 30000.0

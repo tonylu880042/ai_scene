@@ -193,7 +193,7 @@ func _run() -> void:
 		"cloud_sea": {"note": "ray-marched in Godot (cloud_volume.gdshader); recreate with a Unity volumetric cloud layer",
 			"top_below_runner_m": 17.0, "thickness_m": 120.0},
 		"backdrop": {"file": "backdrop.glb", "follows_runner": true, "placed_at_m": from_m,
-			"note": "placed for the route start; moves with the runner in x/z at the lake level (water_y) as in Godot - VirtualRunBackdrop.cs"},
+			"note": "placed for the route start; moves with the runner in x/z at the lake level (water_y) and turns by backdrop_yaw about the runner, as in Godot - VirtualRunBackdrop.cs"},
 		"water": {"file": "water.glb" if lake else "", "note": "lake surface (material lake_water: replace with a Unity water shader); its height follows route.json water_y"},
 		"sea_y": _route.sea_y, "sea_side": "right" if _route.sea_right else "left",  # water plane level (coast / garda scenes)
 	}
@@ -645,7 +645,7 @@ func _gltf_safe_mesh(mesh: Mesh) -> void:
 			mesh.surface_set_material(si, _gltf_safe(mat))
 
 func _write_route(path: String) -> void:
-	var d := {"version": 1, "step": 1.0, "length": _route.length, "s": [], "x": [], "y": [], "z": [], "half_left": [], "half_right": [], "water_y": []}
+	var d := {"version": 1, "step": 1.0, "length": _route.length, "s": [], "x": [], "y": [], "z": [], "half_left": [], "half_right": [], "water_y": [], "backdrop_yaw": []}
 	for i in int(floor(_route.length)) + 1:
 		var p := _route.pos_at(float(i))
 		d["s"].append(i)
@@ -655,6 +655,7 @@ func _write_route(path: String) -> void:
 		d["half_left"].append(snappedf(_route.half_left(float(i)), 0.01))
 		d["half_right"].append(snappedf(_route.half_right(float(i)), 0.01))
 		d["water_y"].append(snappedf(_route.water_level(float(i)), 0.01))  # lake surface (varies per scene section)
+		d["backdrop_yaw"].append(snappedf(_route.backdrop_yaw(float(i)), 0.0001))  # rad about +Y: the backdrop turns with the route
 	var f := FileAccess.open(path, FileAccess.WRITE)
 	f.store_string(JSON.stringify(d))
 	f.close()

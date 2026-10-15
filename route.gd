@@ -69,6 +69,8 @@ var _segs: Array = []
 var _n := 0
 var _pos := PackedVector3Array()   # centre line, y = road height
 var _left := PackedVector3Array()
+var _cpos := PackedVector3Array()  # prefix sums of _pos / _left (box-filtered centre line for far columns, backdrop yaw)
+var _cleft := PackedVector3Array()
 var _cu: Array[PackedFloat32Array] = []  # per row: column offsets u (left positive)
 var _cy: Array[PackedFloat32Array] = []  # ... heights
 var _ck: Array[float] = []               # ... sand->grass blend (per row)
@@ -202,6 +204,11 @@ func _build_centreline() -> void:
 		var target := float(info_at(s / speed)["incline"]) / 100.0 * grade_scale
 		g += (target - g) * minf(1.0, ROW / 20.0)  # ~20 m to ease between grades
 		p += f * ROW + Vector3(0, g * ROW, 0)
+	_cpos.resize(_n + 1)
+	_cleft.resize(_n + 1)
+	for i in _n:
+		_cpos[i + 1] = _cpos[i] + _pos[i]
+		_cleft[i + 1] = _cleft[i] + _left[i]
 	var c := Curve3D.new()
 	c.bake_interval = 2.0
 	for q in _pos:
@@ -486,8 +493,23 @@ func _col(i: int, j: int) -> Color:
 	return Color(1.0 if (j <= _ni or grass_bank) else _ck[i], _cr[i][j], dirt, steep_rock)
 
 
+# Columns far from the path hang off a smoothed centre line (window ~ twice their distance): an offset curve folds over itself
+# where the bend radius is smaller than the offset (the real-mountain band reaches 3 km, bends are ~550 m). The 150 m
+# beside the path are exact, so props placed with ground_y() stay on the ground.
+const FAR_SMOOTH_FROM := 150.0
+
+func _box(pre: PackedVector3Array, i: int, k: int) -> Vector3:
+	var a := maxi(i - k, 0)
+	var b := mini(i + k + 1, _n)
+	return (pre[b] - pre[a]) / float(b - a)
+
 func _pt(i: int, j: int) -> Vector3:
-	var q := _pos[i] + _left[i] * _cu[i][j]
+	var u := _cu[i][j]
+	var k := int(maxf(absf(u) - FAR_SMOOTH_FROM, 0.0) / ROW)  # half-window = distance beyond FAR_SMOOTH_FROM
+	var q := _pos[i] + _left[i] * u
+	if k > 0:
+		var l := _box(_cleft, i, k)
+		q = _box(_cpos, i, k) + Vector3(l.x, 0.0, l.z).normalized() * u
 	q.y = _cy[i][j]
 	return q
 
@@ -607,6 +629,14 @@ func _surface_mat(key: String) -> Material:
 		m.albedo_color = Color(tint[0], tint[1], tint[2])
 		_surf_mats[key] = m
 	return _surf_mats[key]
+
+# yaw (rad, about +Y) that turns the route's direction at the start into its direction at s, smoothed over ~600 m:
+# the real-terrain backdrop turns with the runner so its lake / shore layout stays as it is at the start
+func backdrop_yaw(s: float) -> float:
+	var k := int(300.0 / ROW)
+	var a := _box(_cleft, 0, k)
+	var b := _box(_cleft, clampi(int(_row(s).x), 0, _n - 1), k)
+	return atan2(-b.z, b.x) - atan2(-a.z, a.x)
 
 func water_level(s: float) -> float:  # lake / sea surface height at route offset s
 	var r := _row(s)

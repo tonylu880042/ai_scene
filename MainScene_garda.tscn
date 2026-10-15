@@ -135,6 +135,7 @@ script = ExtResource("8")
 player_path = NodePath("../Player")
 base_y = 0.0
 route_water = NodePath("../Path3D")
+route_yaw = true
 
 [node name="RealTerrain" type="MeshInstance3D" parent="RealBackdrop"]
 script = ExtResource("17")
