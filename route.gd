@@ -428,8 +428,10 @@ func _build_columns() -> void:
 				var ledge := smoothstep(6.0, 14.0, a) if _cliff[i] > 0.5 else 1.0  # cliff sections: a low ledge the scanned crags stand on
 				ys.append(shoulder + inland_slope * _slope[i] * a * ledge + hills * hill_height * clampf(_slope[i], 0.3, 1.5) * smoothstep(10.0, 50.0, absf(u)) + _mountain(u, q, i * ROW) + _rock_face(i, a, q))  # rolling land beside the road
 				if not _real.is_empty():  # real mountains from 190 m; the near band hands over to them from ~15 m inland
-					var rh := wy + _real_height(i * ROW, -u)
-					ys[ys.size() - 1] = rh if u <= -190.0 else lerpf(ys[ys.size() - 1], maxf(rh, shoulder + 0.3 * a), smoothstep(15.0, 110.0, a))
+					# never below a rise of 30 m over the first 100 m: flat real shore land (towns, deltas) at lake level
+					# would leave a trough behind the path that reads as a dark strip on the water across a bend
+					var rh := maxf(wy + _real_height(i * ROW, -u), shoulder + 0.3 * minf(a, 100.0))
+					ys[ys.size() - 1] = rh if u <= -190.0 else lerpf(ys[ys.size() - 1], rh, smoothstep(15.0, 110.0, a))
 		if not _real.is_empty():  # never a hollow between the near slope and the real mountains
 			for j in range(_ni - 2, -1, -1):
 				ys[j] = maxf(ys[j], ys[j + 1] - 25.0)

@@ -147,6 +147,16 @@ func _run() -> void:
 		bd.add_child(copy)
 		# as at runtime: the backdrop follows the runner at the lake level, the terrain offset by its anchor
 		copy.transform = Transform3D(rt.global_transform.basis, Vector3(start.x, _route.water_level(from_m), start.z) + rt.position)
+	var lake_far := scene.get_node_or_null("LakeFar") as MeshInstance3D
+	if lake_far:  # the 40 km far lake that follows the runner in Godot: moves with the backdrop (covers its sunk hole)
+		var lf := MeshInstance3D.new()
+		lf.name = "lake_far"
+		var pm := PlaneMesh.new()
+		pm.size = Vector2(40000, 40000)
+		lf.mesh = pm
+		lf.material_override = _water_mat(lake_far.get_surface_override_material(0) as ShaderMaterial)
+		lf.position = Vector3(start.x, _route.water_level(from_m) - 0.08, start.z)
+		bd.add_child(lf)
 	var sun := scene.get_node("Sun") as DirectionalLight3D
 	var sun_copy := DirectionalLight3D.new()
 	sun_copy.name = "Sun"
@@ -236,6 +246,14 @@ func _water_mesh(from_m: float, to_m: float, sm: ShaderMaterial) -> ArrayMesh:
 			st.add_vertex(w)
 	st.index()
 	st.generate_tangents()
+	var mesh := st.commit()
+	mesh.surface_set_material(0, _water_mat(sm))
+	return mesh
+
+var _water_m: StandardMaterial3D
+func _water_mat(sm: ShaderMaterial) -> StandardMaterial3D:
+	if _water_m:
+		return _water_m
 	var m := StandardMaterial3D.new()
 	m.resource_name = "lake_water"
 	m.albedo_color = Color(0.03, 0.22, 0.42)
@@ -247,9 +265,8 @@ func _water_mesh(from_m: float, to_m: float, sm: ShaderMaterial) -> ArrayMesh:
 		if nt and nt.get_image():
 			m.normal_enabled = true
 			m.normal_texture = ImageTexture.create_from_image(nt.get_image())
-	var mesh := st.commit()
-	mesh.surface_set_material(0, m)
-	return mesh
+	_water_m = m
+	return m
 
 func _s_of(p: Vector3) -> float:
 	return _route.curve.get_closest_offset(_route.to_local(p))
