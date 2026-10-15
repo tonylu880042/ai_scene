@@ -167,7 +167,7 @@ real_shore = "res://assets/terrain/garda_west_shore.json"
 terrain_params = {
 "grass_tint": Color(0.45, 0.52, 0.28, 1),
 "grass_tint_dry": Color(0.66, 0.56, 0.38, 1),
-"rock_tint": Color(0.78, 0.76, 0.72, 1),
+"rock_tint": Color(1.35, 1.33, 1.3, 1),
 "rock_streaks": 1.0,
 "ortho_gain": 1.15
 }

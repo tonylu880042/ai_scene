@@ -4,6 +4,8 @@ extends Node3D
 #   rail           curved steel posts, round top rail, steel-rope mesh infill (cliff boardwalk / roadside path)
 #   parapet_fence  stone parapet with a green metal fence on top (olive terraces)
 #   lowwall        low dry-stone wall (lanes)
+#   chainlink      (inland) low dry-stone wall with a green chain-link fence (olive groves)
+#   wall           retaining wall as tall as the inland one (walled alleys)
 #   parapet_lamps  low stone parapet and harbour lamps
 #   harbour        quay wall into the water, kerb + lamps, flower beds, benches, a pier with pontoon and mooring piles
 #   houses         pastel village houses with shuttered windows
@@ -32,6 +34,8 @@ var _route: Route
 var _noise := FastNoiseLite.new()
 var _steel := StandardMaterial3D.new()
 var _stone := StandardMaterial3D.new()
+var _rubble := StandardMaterial3D.new()  # tall mortared rubble walls (Limone lanes, retaining walls)
+var _chain := StandardMaterial3D.new()   # green chain-link fence (olive groves)
 var _net := StandardMaterial3D.new()
 var _paint := StandardMaterial3D.new()    # vertex-coloured: fences, guardrails, lamps, windows, shutters, doors
 var _plaster := StandardMaterial3D.new()  # vertex-coloured house walls and stone trims
@@ -59,6 +63,9 @@ func _ready() -> void:
 	_stone.cull_mode = BaseMaterial3D.CULL_DISABLED
 	_stone.uv1_scale = Vector3.ONE * 0.6
 	_stone.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC  # walls are seen at grazing angles
+	_pbr(_rubble, "old_stone_wall", 0.4)
+	_rubble.albedo_texture = _desat("old_stone_wall", 0.4)  # the scan is ochre; Limone's walls are grey-beige
+	_rubble.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var img := Image.create(64, 64, false, Image.FORMAT_RGBA8)  # diamond steel-rope mesh, one cell per 32 px
 	for y in 64:
 		for x in 64:
@@ -67,6 +74,9 @@ func _ready() -> void:
 	img.generate_mipmaps()  # far away the mesh averages out to a faint grey veil, like the real thing
 	_net.albedo_texture = ImageTexture.create_from_image(img)
 	_net.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_chain = _net.duplicate()
+	_chain.albedo_color = Color(0.2, 0.6, 0.3)
+	_chain.uv1_scale = Vector3(8, 8, 1)  # ~6 cm cells (the railing mesh cells are 50 cm)
 	_net.cull_mode = BaseMaterial3D.CULL_DISABLED
 	_net.metallic = 0.6
 	_net.roughness = 0.4
@@ -119,6 +129,14 @@ func _pbr(m: StandardMaterial3D, tex: String, uv_per_m: float) -> void:
 	m.cull_mode = BaseMaterial3D.CULL_DISABLED
 	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 
+func _desat(tex: String, saturation: float) -> Texture2D:
+	var img := (load("res://assets/textures/%s_diff.jpg" % tex) as Texture2D).get_image()
+	img.decompress()
+	img.convert(Image.FORMAT_RGB8)
+	img.adjust_bcs(1.0, 1.0, saturation)
+	img.generate_mipmaps()
+	return ImageTexture.create_from_image(img)
+
 func _grey(tex: String) -> Texture2D:
 	var src := (load("res://assets/textures/%s_diff.jpg" % tex) as Texture2D).get_image()
 	src.decompress()
@@ -145,11 +163,12 @@ func _chunk(c: int) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = random_seed * 7919 + c
 	var sts := {}
-	for k in ["rails", "net", "stone", "paint", "plaster", "roof", "glass", "wood", "shutter", "awning", "concrete"]:
+	for k in ["rails", "net", "chain", "stone", "rubble", "paint", "plaster", "roof", "glass", "wood", "shutter", "awning", "concrete"]:
 		sts[k] = SurfaceTool.new()
 		sts[k].begin(Mesh.PRIMITIVE_TRIANGLES)
 	var rails: SurfaceTool = sts["rails"]
 	var stone: SurfaceTool = sts["stone"]
+	var rubble: SurfaceTool = sts["rubble"]
 	var paint: SurfaceTool = sts["paint"]
 	var top := PackedVector3Array()  # current run of top rail points
 	var steps := maxi(int((s1 - s0) / 2.0), 1)
@@ -157,6 +176,7 @@ func _chunk(c: int) -> void:
 		var sp := lerpf(s0, s1, float(k) / steps)
 		var s := lerpf(s0, s1, float(k + 1) / steps)
 		var st := _styles((sp + s) * 0.5, c)
+		var wh := _wall_h((sp + s) * 0.5)
 		var pp := _route.pos_at(sp)
 		var p := _route.pos_at(s)
 		var lp := _route.left_at(sp)
@@ -193,6 +213,8 @@ func _chunk(c: int) -> void:
 					_fence(paint, pp, p, lp, l, ulp + 0.2, ul + 0.2, 0.8, o)
 				"lowwall":
 					_wall(stone, sp, s, pp, p, lp, l, ulp + 0.45, ul + 0.45, ulp, ul, 1.0, 1.0, o)
+				"wall":  # walled alley: retaining wall on the lake side too, the lake out of sight
+					_wall(rubble, sp, s, pp, p, lp, l, ulp + 0.6, ul + 0.6, ulp, ul, _height(sp + 977.0, wh, -1.0), _height(s + 977.0, wh, -1.0), o)
 				"parapet_lamps":
 					_wall(stone, sp, s, pp, p, lp, l, ulp + 0.4, ul + 0.4, ulp, ul, 0.55, 0.55, o)
 					if posmod(int(s), 16) < 2:
@@ -200,15 +222,18 @@ func _chunk(c: int) -> void:
 		# --- inland edge
 		match st[1]:
 			"wall":
-				_wall(stone, sp, s, pp, p, lp, l, -hrp - 0.6, -hr - 0.6, -hrp, -hr, _height(sp, lane_wall_h, -1.0), _height(s, lane_wall_h, -1.0), o)
+				_wall(rubble, sp, s, pp, p, lp, l, -hrp - 0.6, -hr - 0.6, -hrp, -hr, _height(sp, wh, -1.0), _height(s, wh, -1.0), o)
 			"cliffwall":
 				var h0 := _height(sp, wall_h, wall_gap)
 				var h1 := _height(s, wall_h, wall_gap)
 				if h0 > 0.0 and h1 > 0.0:
-					_wall(stone, sp, s, pp, p, lp, l, -hrp - 0.6, -hr - 0.6, -hrp, -hr, h0, h1, o)
+					_wall(rubble, sp, s, pp, p, lp, l, -hrp - 0.6, -hr - 0.6, -hrp, -hr, h0, h1, o)
 			"guardrail":
 				_guardrail(paint, pp, p, lp, l, -prp - 0.15, -pr - 0.15, o)
-				_wall(stone, sp, s, pp, p, lp, l, -hrp - 0.6, -hr - 0.6, -hrp, -hr, _height(sp, lane_wall_h, -1.0), _height(s, lane_wall_h, -1.0), o)
+				_wall(rubble, sp, s, pp, p, lp, l, -hrp - 0.6, -hr - 0.6, -hrp, -hr, _height(sp, wh, -1.0), _height(s, wh, -1.0), o)
+			"chainlink":  # low dry-stone wall with a green chain-link fence on top, grass slope beyond
+				_wall(stone, sp, s, pp, p, lp, l, -hrp - 0.5, -hr - 0.5, -hrp, -hr, 0.5, 0.5, o)
+				_chainlink(sts, pp, p, lp, l, -hrp - 0.25, -hr - 0.25, 0.5, sp, s, o)
 	_flush_rail(rails, top)
 	_posts(holder, c, s0, s1, o)
 	var props := {}
@@ -222,6 +247,8 @@ func _chunk(c: int) -> void:
 	_commit(holder, rails, _steel)
 	_commit(holder, sts["net"], _net, false)
 	_commit(holder, stone, _stone)
+	_commit(holder, rubble, _rubble)
+	_commit(holder, sts["chain"], _chain, false)
 	_commit(holder, paint, _paint)
 	_commit(holder, sts["plaster"], _plaster)
 	_commit(holder, sts["roof"], _roof)
@@ -256,6 +283,26 @@ func _posts(holder: Node3D, c: int, s0: float, s1: float, o: Vector3) -> void:
 	mmi.multimesh = mm
 	mmi.visibility_range_end = view_distance
 	holder.add_child(mmi)
+
+# tall-wall height range at s: the section's "wall_h" [min, max] (m), else lane_wall_h
+func _wall_h(s: float) -> Vector2:
+	var h: Variant = _route.section_at(s).get("wall_h", null)
+	return Vector2(h[0], h[1]) if h != null else lane_wall_h
+
+# chain-link fence 1.6 m tall standing h above the path: green posts every ~2.5 m and the mesh between them
+func _chainlink(sts: Dictionary, pa: Vector3, pb: Vector3, la: Vector3, lb: Vector3, ua: float, ub: float, h: float, sa: float, sb: float, o: Vector3) -> void:
+	var a := pa + la * ua - o + Vector3(0, h, 0)
+	var b := pb + lb * ub - o + Vector3(0, h, 0)
+	var paint: SurfaceTool = sts["paint"]
+	paint.set_color(GREEN)
+	if posmod(int(sb), 5) < 2:
+		_tube(paint, PackedVector3Array([b, b + Vector3(0, 1.65, 0)]), 0.025, 4)
+	var net: SurfaceTool = sts["chain"]
+	var top := Vector3(0, 1.6, 0)
+	net.set_normal((b - a).cross(top).normalized())
+	for v in [[a, sa, 0.0], [b, sb, 0.0], [b + top, sb, 1.6], [a, sa, 0.0], [b + top, sb, 1.6], [a + top, sa, 1.6]]:  # UV in metres, like the railing mesh
+		net.set_uv(Vector2(v[1], v[2]))
+		net.add_vertex(v[0])
 
 # height of a wall at s within range h; with a gap threshold > -1, below it there is no wall (0)
 func _height(s: float, h: Vector2, gap: float) -> float:

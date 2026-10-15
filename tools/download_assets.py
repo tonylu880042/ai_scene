@@ -22,7 +22,9 @@ TEXTURES = ["asphalt_02", "coast_sand_01", "aerial_grass_rock", "brown_planks_09
             "beige_wall_001", "clay_roof_tiles", "rock_boulder_dry", "rocky_trail",
             "wood_planks_grey", "stacked_stone_wall",  # garda boardwalk deck / dry-stone walls
             "patterned_cobblestone", "clay_plaster", "concrete_pavement",
-            "painted_plaster_wall", "clay_roof_tiles_02"]  # garda house fronts / roofs  # garda lanes / house fronts / roadside path
+            "painted_plaster_wall", "clay_roof_tiles_02",
+            "old_stone_wall",  # garda tall rubble retaining walls
+            "brushed_concrete"]  # garda cantilevered deck / roadside cycle path  # garda house fronts / roofs  # garda lanes / house fronts / roadside path
 
 for m in MODELS:
     g = json.loads(get(f"https://api.polyhaven.com/files/{m}"))["gltf"]["1k"]["gltf"]

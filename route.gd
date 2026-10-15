@@ -455,20 +455,25 @@ func _build_columns() -> void:
 			us.append(lip + w + 3.0)  # skirt below the water: no bank edge in the air when the lake sits lower elsewhere
 			ys.append(wy - 40.0)
 		var rs := PackedFloat32Array()
+		var steep := PackedFloat32Array()
 		for j in ys.size():
 			var r := smoothstep(alpine_start, alpine_start + 0.6 * alpine_range, ys[j] - wy)
+			var st := 0.0
 			if _mtn() and j < _ni:  # steep inland faces are bare rock at any altitude
 				var du := absf(us[j + 1] - us[j]) + 0.01
-				r = maxf(r, smoothstep(0.9, 1.8, absf(ys[j + 1] - ys[j]) / du))
-				if not _real.is_empty() and us[j] <= -40.0:  # real mountains: bare rock only where the orthophoto shows it
-					r = lerpf(r, _real_rock(i * ROW, absf(us[j])), smoothstep(40.0, 190.0, absf(us[j])))
+				st = smoothstep(0.9, 1.8, absf(ys[j + 1] - ys[j]) / du)
+				r = maxf(r, st)
+				if not _real.is_empty() and us[j] <= -40.0:  # real mountains: bare rock where the orthophoto shows it, and on cliffs
+					r = maxf(lerpf(r, _real_rock(i * ROW, absf(us[j])), smoothstep(40.0, 190.0, absf(us[j]))), st)
 			rs.append(r)
+			steep.append(st)
 		_cu.append(us)
 		_cy.append(ys)
 		_cr.append(rs)
 		var co := PackedColorArray()
 		for j in ys.size():
 			var ow := smoothstep(40.0, 190.0, absf(us[j])) if (not _real.is_empty() and j < _ni) else 0.0
+			ow *= 1.0 - steep[j]  # a 10 m/px photo smears down a cliff face: procedural limestone there instead
 			var oc := _real_ortho(i * ROW, absf(us[j])) if ow > 0.0 else Color(0, 0, 0, 0)
 			co.append(Color(oc.r * ow, oc.g * ow, oc.b * ow, ow))  # premultiplied: the shader divides by alpha
 		_co.append(co)
