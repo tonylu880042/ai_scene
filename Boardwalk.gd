@@ -4,6 +4,7 @@ extends Node3D
 #   rail           curved steel posts, round top rail, steel-rope mesh infill (cliff boardwalk / roadside path)
 #   parapet_fence  stone parapet with a green metal fence on top (olive terraces)
 #   lowwall        low dry-stone wall (lanes)
+#   blackrail      black metal railing with vertical bars (lanes above the lake)
 #   chainlink      (inland) low dry-stone wall with a green chain-link fence (olive groves)
 #   wall           retaining wall as tall as the inland one (walled alleys)
 #   parapet_lamps  low stone parapet and harbour lamps
@@ -36,6 +37,7 @@ var _steel := StandardMaterial3D.new()
 var _stone := StandardMaterial3D.new()
 var _rubble := StandardMaterial3D.new()  # tall mortared rubble walls (Limone lanes, retaining walls)
 var _chain := StandardMaterial3D.new()   # green chain-link fence (olive groves)
+var _bars := StandardMaterial3D.new()    # vertical bars of the black lane railings
 var _net := StandardMaterial3D.new()
 var _paint := StandardMaterial3D.new()    # vertex-coloured: fences, guardrails, lamps, windows, shutters, doors
 var _plaster := StandardMaterial3D.new()  # vertex-coloured house walls and stone trims
@@ -77,6 +79,18 @@ func _ready() -> void:
 	_chain = _net.duplicate()
 	_chain.albedo_color = Color(0.2, 0.6, 0.3)
 	_chain.uv1_scale = Vector3(8, 8, 1)  # ~6 cm cells (the railing mesh cells are 50 cm)
+	var bars := Image.create(16, 4, false, Image.FORMAT_RGBA8)  # one 2 px bar per 16 px; UV x in metres x 8 -> 12.5 cm apart
+	for y in 4:
+		for x in 16:
+			bars.set_pixel(x, y, Color(0.05, 0.05, 0.05, 1.0 if x < 2 else 0.0))
+	bars.generate_mipmaps()
+	_bars.albedo_texture = ImageTexture.create_from_image(bars)
+	_bars.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	_bars.alpha_scissor_threshold = 0.5
+	_bars.uv1_scale = Vector3(8, 1, 1)
+	_bars.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_bars.metallic = 0.5
+	_bars.roughness = 0.5
 	_net.cull_mode = BaseMaterial3D.CULL_DISABLED
 	_net.metallic = 0.6
 	_net.roughness = 0.4
@@ -163,7 +177,7 @@ func _chunk(c: int) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = random_seed * 7919 + c
 	var sts := {}
-	for k in ["rails", "net", "chain", "stone", "rubble", "paint", "plaster", "roof", "glass", "wood", "shutter", "awning", "concrete"]:
+	for k in ["rails", "net", "chain", "bars", "stone", "rubble", "paint", "plaster", "roof", "glass", "wood", "shutter", "awning", "concrete"]:
 		sts[k] = SurfaceTool.new()
 		sts[k].begin(Mesh.PRIMITIVE_TRIANGLES)
 	var rails: SurfaceTool = sts["rails"]
@@ -213,6 +227,8 @@ func _chunk(c: int) -> void:
 					_fence(paint, pp, p, lp, l, ulp + 0.2, ul + 0.2, 0.8, o)
 				"lowwall":
 					_wall(stone, sp, s, pp, p, lp, l, ulp + 0.45, ul + 0.45, ulp, ul, 1.0, 1.0, o)
+				"blackrail":  # black metal railing with vertical bars (lanes above the lake)
+					_blackrail(sts, pp, p, lp, l, ulp + 0.05, ul + 0.05, sp, s, o)
 				"wall":  # walled alley: retaining wall on the lake side too, the lake out of sight
 					_wall(rubble, sp, s, pp, p, lp, l, ulp + 0.6, ul + 0.6, ulp, ul, _height(sp + 977.0, wh, -1.0), _height(s + 977.0, wh, -1.0), o)
 				"parapet_lamps":
@@ -249,6 +265,7 @@ func _chunk(c: int) -> void:
 	_commit(holder, stone, _stone)
 	_commit(holder, rubble, _rubble)
 	_commit(holder, sts["chain"], _chain, false)
+	_commit(holder, sts["bars"], _bars, false)
 	_commit(holder, paint, _paint)
 	_commit(holder, sts["plaster"], _plaster)
 	_commit(holder, sts["roof"], _roof)
@@ -303,6 +320,23 @@ func _chainlink(sts: Dictionary, pa: Vector3, pb: Vector3, la: Vector3, lb: Vect
 	for v in [[a, sa, 0.0], [b, sb, 0.0], [b + top, sb, 1.6], [a, sa, 0.0], [b + top, sb, 1.6], [a + top, sa, 1.6]]:  # UV in metres, like the railing mesh
 		net.set_uv(Vector2(v[1], v[2]))
 		net.add_vertex(v[0])
+
+# black lane railing 1 m tall: posts every ~2 m, top and bottom rail, vertical bars between (alpha-scissor quad)
+func _blackrail(sts: Dictionary, pa: Vector3, pb: Vector3, la: Vector3, lb: Vector3, ua: float, ub: float, sa: float, sb: float, o: Vector3) -> void:
+	var a := pa + la * ua - o
+	var b := pb + lb * ub - o
+	var paint: SurfaceTool = sts["paint"]
+	paint.set_color(Color(0.05, 0.05, 0.05))
+	_tube(paint, PackedVector3Array([b, b + Vector3(0, 1.0, 0)]), 0.025, 4)
+	for y in [0.1, 1.0]:
+		_tube(paint, PackedVector3Array([a + Vector3(0, y, 0), b + Vector3(0, y, 0)]), 0.02, 4)
+	var bars: SurfaceTool = sts["bars"]
+	var lo := Vector3(0, 0.1, 0)
+	var hi := Vector3(0, 1.0, 0)
+	bars.set_normal((b - a).cross(Vector3.UP).normalized())
+	for v in [[a + lo, sa, 0.0], [b + lo, sb, 0.0], [b + hi, sb, 1.0], [a + lo, sa, 0.0], [b + hi, sb, 1.0], [a + hi, sa, 1.0]]:
+		bars.set_uv(Vector2(v[1], v[2]))
+		bars.add_vertex(v[0])
 
 # height of a wall at s within range h; with a gap threshold > -1, below it there is no wall (0)
 func _height(s: float, h: Vector2, gap: float) -> float:
