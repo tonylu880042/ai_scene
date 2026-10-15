@@ -86,7 +86,7 @@ func _run() -> void:
 			put.call(c, _s_of(c.global_transform * aabb.get_center()))
 	for idx in foliage._chunks.keys():
 		put.call(foliage._chunks[idx], idx * cl + cl * 0.5)
-	for parent_name in ["Props", "Gates"]:
+	for parent_name in ["Props", "Gates", "Buildings"]:
 		var p := scene.get_node_or_null(parent_name)
 		if p:
 			for c in p.get_children():
@@ -157,6 +157,34 @@ func _run() -> void:
 		lf.material_override = _water_mat(lake_far.get_surface_override_material(0) as ShaderMaterial)
 		lf.position = Vector3(start.x, _route.water_level(from_m) - 0.08, start.z)
 		bd.add_child(lf)
+	# procedural backdrop (mountain rings, valley floor; winter / alpine without real terrain): in Godot these follow the
+	# runner (FollowPlayer: x/z, base_y + y * y_factor); placed here for the route start, moved like the real terrain
+	var follow := []
+	for nm in ["Backdrop", "ValleyFloor"]:
+		var fn := scene.get_node_or_null(nm) as Node3D
+		if fn and fn.visible:
+			follow.append(fn)
+	for fn: Node3D in follow:
+		var home := Vector3(start.x, float(fn.get("base_y")) + start.y * float(fn.get("y_factor")), start.z)
+		var parts: Array = [fn] if fn is MeshInstance3D else fn.find_children("*", "MeshInstance3D", true, false)
+		for mi: MeshInstance3D in parts:
+			if mi.mesh == null:
+				continue
+			var copy := MeshInstance3D.new()
+			copy.name = String(mi.name)
+			copy.mesh = mi.mesh
+			var src: Material = mi.material_override if mi.material_override else mi.get_surface_override_material(0)
+			if src is StandardMaterial3D:
+				var m2 := (src as StandardMaterial3D).duplicate() as StandardMaterial3D
+				m2.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED  # the mist fade is a Godot runtime effect
+				m2.albedo_color.a = 1.0
+				copy.material_override = m2
+			copy.transform = Transform3D(mi.global_transform.basis, home + (mi.position if mi != fn else Vector3.ZERO))
+			bd.add_child(copy)
+	_turn_backdrop = false
+	var rb := scene.get_node_or_null("RealBackdrop")
+	if rb and rb.get("route_yaw") == true:
+		_turn_backdrop = true
 	var sun := scene.get_node("Sun") as DirectionalLight3D
 	var sun_copy := DirectionalLight3D.new()
 	sun_copy.name = "Sun"
@@ -251,6 +279,7 @@ func _water_mesh(from_m: float, to_m: float, sm: ShaderMaterial) -> ArrayMesh:
 	return mesh
 
 var _water_m: StandardMaterial3D
+var _turn_backdrop := false
 func _water_mat(sm: ShaderMaterial) -> StandardMaterial3D:
 	if _water_m:
 		return _water_m
@@ -373,17 +402,17 @@ func _mat(key: String) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.resource_name = key
 	match key:
-		"trail_dirt":
-			m.albedo_texture = load("res://assets/textures/rocky_trail_diff.jpg")
+		"trail_dirt":  # trail.gdshader's walked surface: the route's trail texture and dirt tint (alpine: rocky trail; winter: packed snow)
+			m.albedo_texture = load("res://assets/textures/%s_diff.jpg" % _route.trail_texture)
 			m.normal_enabled = true
-			m.normal_texture = load("res://assets/textures/rocky_trail_nor.jpg")
-			m.albedo_color = Color(0.68, 0.64, 0.6)
+			m.normal_texture = load("res://assets/textures/%s_nor.jpg" % _route.trail_texture)
+			m.albedo_color = _route.trail_params.get("dirt_tint", Color(0.68, 0.64, 0.6))
 			m.roughness = 0.9
-		"meadow":
-			m.albedo_texture = load("res://assets/textures/aerial_grass_rock_diff.jpg")
+		"meadow":  # trail.gdshader's blend band beside the trail: the route's ground texture and grass tint
+			m.albedo_texture = load("res://assets/textures/%s_diff.jpg" % _route.ground_texture)
 			m.normal_enabled = true
-			m.normal_texture = load("res://assets/textures/aerial_grass_rock_nor.jpg")
-			m.albedo_color = Color(0.6, 0.95, 0.35)
+			m.normal_texture = load("res://assets/textures/%s_nor.jpg" % _route.ground_texture)
+			m.albedo_color = _route.trail_params.get("grass_tint", Color(0.6, 0.95, 0.35))
 			m.roughness = 0.95
 		"grass_blades":
 			m.vertex_color_use_as_albedo = true
@@ -672,7 +701,7 @@ func _write_route(path: String) -> void:
 		d["half_left"].append(snappedf(_route.half_left(float(i)), 0.01))
 		d["half_right"].append(snappedf(_route.half_right(float(i)), 0.01))
 		d["water_y"].append(snappedf(_route.water_level(float(i)), 0.01))  # lake surface (varies per scene section)
-		d["backdrop_yaw"].append(snappedf(_route.backdrop_yaw(float(i)), 0.0001))  # rad about +Y: the backdrop turns with the route
+		d["backdrop_yaw"].append(snappedf(_route.backdrop_yaw(float(i)), 0.0001) if _turn_backdrop else 0.0)  # rad about +Y: the backdrop turns with the route (scenes whose RealBackdrop does)
 	var f := FileAccess.open(path, FileAccess.WRITE)
 	f.store_string(JSON.stringify(d))
 	f.close()

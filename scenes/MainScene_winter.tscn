@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="1"]
 [ext_resource type="Script" path="res://scripts/route.gd" id="2"]
@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://scripts/course_setup.gd" id="9"]
 [ext_resource type="Script" path="res://scripts/Gates.gd" id="11"]
 [ext_resource type="Script" path="res://scripts/Buildings.gd" id="12"]
+[ext_resource type="Script" path="res://scripts/WinterProps.gd" id="14"]
 [ext_resource type="Shader" path="res://shaders/hdri_sky.gdshader" id="13"]
 [ext_resource type="Texture2D" path="res://assets/hdri/kloppenheim_06_puresky_4k.hdr" id="15"]
 [ext_resource type="Script" path="res://scripts/render_quality.gd" id="16"]
@@ -203,6 +204,10 @@ nordic = true
 farm_spacing = 110.0
 boat_sheds = 0
 ship_count = 0
+
+[node name="Props" type="Node3D" parent="."]
+script = ExtResource("14")
+path_node = NodePath("../Path3D")
 
 [node name="HUD" type="CanvasLayer" parent="."]
 script = ExtResource("5")

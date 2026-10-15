@@ -1,10 +1,10 @@
 {
- "_about": "Winter valley run (video/winter mountain run.mp4, private): sections along the video's km overlay (7.9 km), stretched over any course. half = road half-width [downhill, uphill] m; slope = inland_slope multiplier; trees = tree / plant multiplier (FoliageSpawner); fence = wooden fences in this section; houses = Buildings.gd nordic farm buildings here.",
+ "_about": "Winter valley run (video/winter mountain run.mp4, private): sections along the video's km overlay (7.9 km), stretched over any course. half = road half-width [downhill, uphill] m; slope = inland_slope multiplier; trees = tree / plant multiplier (FoliageSpawner); fence = wooden fences in this section; houses = Buildings.gd nordic farm buildings here; power = WinterProps.gd power line here.",
  "video_km": 7.9,
  "types": {
-  "field": {"half": [1.85, 1.85], "slope": 0.6, "trees": 0.2, "fence": true, "houses": false},
-  "forest": {"half": [1.8, 1.8], "slope": 1.0, "trees": 2.2, "fence": false, "houses": false},
-  "farm": {"half": [1.9, 1.9], "slope": 0.7, "trees": 0.5, "fence": true, "houses": true}
+  "field": {"half": [1.85, 1.85], "slope": 0.6, "trees": 0.2, "fence": true, "houses": false, "power": true},
+  "forest": {"half": [1.8, 1.8], "slope": 1.0, "trees": 2.2, "fence": false, "houses": false, "power": false},
+  "farm": {"half": [1.9, 1.9], "slope": 0.7, "trees": 0.5, "fence": true, "houses": true, "power": true}
  },
  "sections": [
   [0.0, "field"],

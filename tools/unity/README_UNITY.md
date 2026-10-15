@@ -10,7 +10,7 @@ Coordinates are metres, Y up, world space; every tile lines up with the others a
 | `tile_XX_instances.json` | position / rotation / scale of every repeated object in that stretch (trees, grass clumps, flowers, rocks, pebbles, roots, fence posts/rails) |
 | `prototypes.glb` | each repeated object's mesh + materials, once (child nodes named like the `proto` field in the JSON) |
 | `water.glb` | lake surface (garda / coast), material `lake_water` - swap in a Unity water shader; its height follows `route.json` `water_y` (the lake level changes per section) |
-| `backdrop.glb` | real terrain around the start (alpine: Jungfrau region, swisstopo SWISSIMAGE; garda: Lake Garda, Sentinel-2 cloudless), the far lake plane (garda) and the sun light |
+| `backdrop.glb` | the distant view and the sun light: real terrain around the start (alpine: Jungfrau region, swisstopo SWISSIMAGE; garda: Lake Garda, Sentinel-2 cloudless) and the far lake plane (garda), or procedural mountain rings and a valley floor (winter) |
 | `sky.hdr` | HDRI sky (Poly Haven, CC0) |
 | `environment.json` | sun direction / colour, fog, ambient, tonemapping, camera, tile list |
 | `route.json` | centre line every 1 m (x, y, z), path half-widths, lake level `water_y`, backdrop turn `backdrop_yaw` (rad) |
