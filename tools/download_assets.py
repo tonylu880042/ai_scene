@@ -26,7 +26,9 @@ TEXTURES = ["asphalt_02", "coast_sand_01", "aerial_grass_rock", "brown_planks_09
             "painted_plaster_wall", "clay_roof_tiles_02",
             "old_stone_wall",  # garda tall rubble retaining walls
             "brushed_concrete",  # garda cantilevered deck / roadside cycle path
-            "snow_01", "snow_02", "asphalt_snow"]  # winter scene: packed-snow road, snow ground, icy ruts  # garda house fronts / roofs  # garda lanes / house fronts / roadside path
+            "snow_01", "snow_02", "asphalt_snow",
+            "gravel_floor_02", "brown_mud_leaves_01",  # weissensee: pale gravel roads / shore path, leaf-litter forest trail
+            "dry_decay_leaves", "japanese_sycamore", "knotted_pine_bark", "pine_bark"]  # weissensee: beech-litter floor, beech / spruce / larch bark  # winter scene: packed-snow road, snow ground, icy ruts  # garda house fronts / roofs  # garda lanes / house fronts / roadside path
 
 for m in MODELS:
     g = json.loads(get(f"https://api.polyhaven.com/files/{m}"))["gltf"]["1k"]["gltf"]

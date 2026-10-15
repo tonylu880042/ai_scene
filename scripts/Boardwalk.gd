@@ -13,6 +13,10 @@ extends Node3D
 #   houses         pastel village houses with shuttered windows
 # Inland edge styles: wall (dry-stone retaining wall), cliffwall (wall with gaps of bare cliff), guardrail (green
 # guardrail between path and the roadside car lane, retaining wall beyond the road), houses.
+# Either side (Weissensee): woodrail (brown post-and-rail fence), efence (white pasture posts + tape), cable (steel
+# posts with one rope handrail on forest trails), lograil (log handrail on short posts), boardfence (tall fence of
+# weathered horizontal boards), lattice (criss-cross garden fence). Anything else (e.g. "none") leaves that edge open.
+# Sections "lamps": spacing (m) of black lantern posts on the inland edge (villages).
 # Built once in chunk_m pieces (children of this node, so tools/export_unity.gd tiles them like other props).
 
 @export var path_node: NodePath
@@ -244,6 +248,11 @@ func _chunk(c: int) -> void:
 					_wall(stone, sp, s, pp, p, lp, l, ulp + 0.4, ul + 0.4, ulp, ul, 0.55, 0.55, o)
 					if posmod(int(s), 16) < 2:
 						_lamp(paint, p + l * (ul + 0.2) - o)
+				_:
+					_simple_fence(paint, st[0], s, pp, p, lp, l, ulp + 0.3, ul + 0.3, o)
+		var lamp_m := int(_route.section_at(s).get("lamps", 0))
+		if lamp_m > 0 and posmod(int(s), lamp_m) < 2:
+			_lamp(paint, p - l * (pr + 0.7) - o)
 		# --- inland edge
 		match st[1]:
 			"wall":
@@ -261,6 +270,8 @@ func _chunk(c: int) -> void:
 			"chainlink":  # low dry-stone wall with a green chain-link fence on top, grass slope beyond
 				_wall(stone, sp, s, pp, p, lp, l, -hrp - 0.5, -hr - 0.5, -hrp, -hr, 0.5, 0.5, o)
 				_chainlink(sts, pp, p, lp, l, -hrp - 0.25, -hr - 0.25, 0.5, sp, s, o)
+			_:
+				_simple_fence(paint, st[1], s, pp, p, lp, l, -hrp - 0.3, -hr - 0.3, o)
 	_flush_rail(rails, top)
 	_wall_openings(sts, c, s0, s1, o)
 	for lm in _route.landmarks():
@@ -269,6 +280,11 @@ func _chunk(c: int) -> void:
 				"portal": _tunnel_portal(sts, lm[0], o)
 				"gallery": _gallery(sts, lm[0], o)
 				"passage": _passage(sts, lm[0], o)
+				"jetty": _jetty(sts, lm[0], o)
+				"footbridge": _footbridge(sts, lm[0], o)
+				"deck": _view_deck(sts, lm[0], o)
+				"picnic": _picnic(sts, lm[0], o, true)
+				"bench": _picnic(sts, lm[0], o, false)
 	_posts(holder, c, s0, s1, o)
 	var props := {}
 	for side in [1.0, -1.0]:
@@ -509,6 +525,101 @@ func _fence(st: SurfaceTool, pa: Vector3, pb: Vector3, la: Vector3, lb: Vector3,
 	_tube(st, PackedVector3Array([a, a + Vector3(0, 0.9, 0)]), 0.03, 4)
 	for y in [0.45, 0.88]:
 		_tube(st, PackedVector3Array([a + Vector3(0, y, 0), b + Vector3(0, y, 0)]), 0.022, 4)
+
+# woodrail / efence / cable for one 2 m step (pa -> pb at lateral ua -> ub); other styles draw nothing
+func _simple_fence(st: SurfaceTool, style: String, s: float, pa: Vector3, pb: Vector3, la: Vector3, lb: Vector3, ua: float, ub: float, o: Vector3) -> void:
+	var cfg: Array = {  # colour, post every N m, post height / radius, rail heights / radius
+		"woodrail": [Color(0.15, 0.085, 0.04), 2, 1.1, 0.07, [0.5, 0.95], 0.05],  # vertex colours are linear
+		"efence": [Color(0.8, 0.8, 0.78), 6, 1.0, 0.03, [0.85], 0.012],
+		"cable": [Color(0.26, 0.27, 0.28), 4, 1.0, 0.022, [0.9], 0.009],
+		"lograil": [Color(0.13, 0.09, 0.05), 3, 0.6, 0.06, [0.5], 0.08],
+		"boardfence": [Color(0.2, 0.18, 0.14), 2, 1.35, 0.06, [], 0.0],  # weathered grey boards
+		"lattice": [Color(0.17, 0.095, 0.04), 2, 1.1, 0.04, [1.05], 0.025]}.get(style, [])
+	if cfg.is_empty():
+		return
+	st.set_color(cfg[0])
+	var a := pa + la * ua - o
+	var b := pb + lb * ub - o
+	if style == "boardfence":  # five weathered boards with narrow gaps, as along the east-end path
+		for y in [0.1, 0.36, 0.62, 0.88, 1.14]:
+			_quad(st, a + Vector3(0, y, 0), b + Vector3(0, y, 0), b + Vector3(0, y + 0.22, 0), a + Vector3(0, y + 0.22, 0))
+	elif style == "lattice":  # diagonal slats crossing every 0.5 m
+		for k in 4:
+			var p0 := a.lerp(b, k / 4.0)
+			var p1 := a.lerp(b, (k + 1) / 4.0)
+			_tube(st, PackedVector3Array([p0 + Vector3(0, 0.1, 0), p1 + Vector3(0, 1.0, 0)]), 0.018, 4)
+			_tube(st, PackedVector3Array([p0 + Vector3(0, 1.0, 0), p1 + Vector3(0, 0.1, 0)]), 0.018, 4)
+	if posmod(int(s), cfg[1]) < 2:
+		_tube(st, PackedVector3Array([a + Vector3(0, -0.2, 0), a + Vector3(0, cfg[2], 0)]), cfg[3], 4)
+	for y in cfg[4]:
+		_tube(st, PackedVector3Array([a + Vector3(0, y, 0), b + Vector3(0, y, 0)]), cfg[5], 4)
+
+# wooden bathing jetty (Weissensee landmark): plank walkway from the path edge out over the lake, a wider T-head with
+# a short ladder, square timber piles down into the water
+func _jetty(sts: Dictionary, s: float, o: Vector3) -> void:
+	_frame_at(s, o)
+	var ul := _route.half_left(s)
+	var wl := _route.water_level(s) - _route.pos_at(s).y  # water surface relative to the path (negative)
+	var top := maxf(wl + 0.7, -0.6)
+	var z1 := _route.water_edge_u(s) + 32.0
+	var wood: SurfaceTool = sts["wood"]
+	_fbox(wood, Vector3(-1.2, top - 0.2, ul), Vector3(1.2, top, z1))
+	_fbox(wood, Vector3(-7.0, top - 0.2, z1), Vector3(7.0, top, z1 + 3.5))
+	var paint: SurfaceTool = sts["paint"]
+	paint.set_color(Color(0.3, 0.24, 0.17))
+	var z := ul + 3.0
+	while z <= z1:
+		for x in [-1.1, 1.1]:
+			_tube(paint, PackedVector3Array([_fp(Vector3(x, wl - 2.5, z)), _fp(Vector3(x, top - 0.15, z))]), 0.12, 4)
+		z += 3.5
+	for x in [-6.8, -2.3, 2.3, 6.8]:
+		_tube(paint, PackedVector3Array([_fp(Vector3(x, wl - 2.5, z1 + 3.3)), _fp(Vector3(x, top - 0.15, z1 + 3.3))]), 0.12, 4)
+	paint.set_color(Color(0.75, 0.76, 0.78))
+	for x in [5.3, 5.9]:
+		_tube(paint, PackedVector3Array([_fp(Vector3(x, wl - 1.0, z1 + 3.55)), _fp(Vector3(x, top + 0.9, z1 + 3.55))]), 0.025, 6)
+
+# wooden footbridge over a stream crossing the path: plank deck 10 m long, posts and two rails on both sides
+func _footbridge(sts: Dictionary, s: float, o: Vector3) -> void:
+	_frame_at(s, o)
+	var hw := maxf(_route.half_left(s), _route.half_right(s)) + 0.15
+	_fbox(sts["wood"], Vector3(-5.0, -0.05, -hw), Vector3(5.0, 0.18, hw))
+	var paint: SurfaceTool = sts["paint"]
+	paint.set_color(Color(0.4, 0.3, 0.2))
+	for z in [-hw, hw]:
+		for x in [-5.0, -2.5, 0.0, 2.5, 5.0]:
+			_tube(paint, PackedVector3Array([_fp(Vector3(x, -0.6, z)), _fp(Vector3(x, 1.15, z))]), 0.06, 4)
+		for y in [0.6, 1.1]:
+			_tube(paint, PackedVector3Array([_fp(Vector3(-5.0, y, z)), _fp(Vector3(5.0, y, z))]), 0.05, 4)
+
+# viewing deck on the lake side (38:35 in the video): 8 x 5 m plank platform on posts, board railing on three sides
+func _view_deck(sts: Dictionary, s: float, o: Vector3) -> void:
+	_frame_at(s, o)
+	var ul := _route.half_left(s)
+	var wood: SurfaceTool = sts["wood"]
+	_fbox(wood, Vector3(-4.0, -0.25, ul), Vector3(4.0, 0.0, ul + 5.0))
+	for q in [Vector3(-4.0, 0, ul + 5.0), Vector3(4.0, 0, ul + 5.0), Vector3(-4.0, 0, ul), Vector3(4.0, 0, ul)]:
+		_fbox(wood, q + Vector3(-0.12, -4.0, -0.12), q + Vector3(0.12, 0.0, 0.12))
+	_fbox(wood, Vector3(-4.0, 0.0, ul + 4.9), Vector3(4.0, 1.0, ul + 5.0))
+	for x in [-4.0, 3.9]:
+		_fbox(wood, Vector3(x, 0.0, ul + 0.6), Vector3(x + 0.1, 1.0, ul + 5.0))
+
+# picnic table with two benches (glade at 14:45) or a single bench facing the lake, on the lake side of the path
+func _picnic(sts: Dictionary, s: float, o: Vector3, table: bool) -> void:
+	_frame_at(s, o)
+	var z := _route.half_left(s) + (3.0 if table else 1.0)
+	var wood: SurfaceTool = sts["wood"]
+	var y := _route.ground_y(s, z) - _route.pos_at(s).y
+	if table:
+		_fbox(wood, Vector3(-1.0, y + 0.72, z - 0.4), Vector3(1.0, y + 0.78, z + 0.4))
+		for dz in [-0.75, 0.75]:
+			_fbox(wood, Vector3(-1.0, y + 0.42, z + dz - 0.15), Vector3(1.0, y + 0.47, z + dz + 0.15))
+		for x in [-0.8, 0.8]:
+			_fbox(wood, Vector3(x - 0.05, y, z - 0.9), Vector3(x + 0.05, y + 0.75, z + 0.9))
+	else:
+		_fbox(wood, Vector3(-0.9, y + 0.42, z - 0.2), Vector3(0.9, y + 0.47, z + 0.2))
+		_fbox(wood, Vector3(-0.9, y + 0.5, z - 0.25), Vector3(0.9, y + 0.9, z - 0.2))
+		for x in [-0.75, 0.75]:
+			_fbox(wood, Vector3(x - 0.05, y, z - 0.2), Vector3(x + 0.05, y + 0.45, z + 0.2))
 
 # road guardrail (green W-beam on posts) between the path and the car lane
 func _guardrail(st: SurfaceTool, pa: Vector3, pb: Vector3, la: Vector3, lb: Vector3, ua: float, ub: float, o: Vector3) -> void:

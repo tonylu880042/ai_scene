@@ -1,0 +1,2015 @@
+{
+ "_about": "Weissensee north shore, east end -> west (video/moutain.mp4, private; captions 'LAKE EAST END', 'NORTH SHORE', 'LAKESIDE HIGH ROUTE', Ronacherfels inn at 7.2 km). Built from the video frame by frame: a 10 s contact-sheet reading (each entry: [video km, type, overrides, 'video time + what the frames show']) and per-second frame metrics (yellow = share of autumn crowns, trees / spruce from canopy openness and dark green vs yellow). Keys as in garda_sections.json plus: litter (forest-floor leaves, route.gd), grass / ferns (ground plants), beech / spruce / larch (tree shares), hazel / reeds / roots / pebbles / logs / scree (per 60 m chunk), depth (tree band, m) - FoliageSpawner forest_mix; lake / inland edge styles woodrail, efence, cable, lograil, boardfence, lattice, none and lamps (Boardwalk.gd); houses / barns (Buildings.gd chalet).",
+ "_about_landmarks": "footbridge, jetty, picnic, bench, deck (Boardwalk.gd) at video km",
+ "video_km": 9.1,
+ "types": {
+  "board_path": {
+   "surface": "gravel_floor_02",
+   "uv_m": 2.0,
+   "half": [
+    1.25,
+    1.25
+   ],
+   "road": 0,
+   "slope": 0.17,
+   "trees": 0.15,
+   "water_gap": 5,
+   "lake_trees": true,
+   "lake": "boardfence",
+   "inland": "none",
+   "bank_ratio": 3,
+   "litter": 0.0,
+   "grass": 0.62,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 2,
+   "reeds": 0,
+   "depth": 35,
+   "clumps": 2.5
+  },
+  "plaza": {
+   "surface": "gravel_floor_02",
+   "uv_m": 2.0,
+   "half": [
+    3.0,
+    3.0
+   ],
+   "road": 0,
+   "slope": 0.11,
+   "trees": 0.105,
+   "water_gap": 4,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 4,
+   "litter": 0.0,
+   "grass": 0.5,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 3,
+   "reeds": 6,
+   "depth": 38,
+   "clumps": 2.0
+  },
+  "reed_path": {
+   "surface": "gravel_floor_02",
+   "uv_m": 2.0,
+   "half": [
+    1.0,
+    1.0
+   ],
+   "road": 0,
+   "slope": 0.17,
+   "trees": 0.15,
+   "water_gap": 2,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 6,
+   "litter": 0.0,
+   "grass": 0.38,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 10,
+   "reeds": 25,
+   "depth": 38,
+   "clumps": 1.5
+  },
+  "spruce_gravel": {
+   "surface": "gravel_floor_02",
+   "uv_m": 2.0,
+   "half": [
+    1.25,
+    1.25
+   ],
+   "road": 0,
+   "slope": 0.22,
+   "trees": 1.6,
+   "water_gap": 6,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.6,
+   "litter": 0.3,
+   "grass": 0.3,
+   "ferns": 1.0,
+   "beech": 0.15,
+   "spruce": 0.8,
+   "larch": 0.05,
+   "hazel": 3,
+   "reeds": 0,
+   "depth": 60,
+   "clumps": 0.32
+  },
+  "meadow_gravel": {
+   "surface": "gravel_floor_02",
+   "uv_m": 2.0,
+   "half": [
+    1.25,
+    1.25
+   ],
+   "road": 0,
+   "slope": 0.08,
+   "trees": 0.075,
+   "water_gap": 3,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 4,
+   "litter": 0.0,
+   "grass": 0.75,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 0,
+   "reeds": 0,
+   "depth": 38,
+   "clumps": 3.0
+  },
+  "parking": {
+   "surface": "gravel_floor_02",
+   "uv_m": 2.0,
+   "half": [
+    4.0,
+    4.0
+   ],
+   "road": 0,
+   "slope": 0.11,
+   "trees": 0.06,
+   "water_gap": 3,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 4,
+   "litter": 0.0,
+   "grass": 0.38,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 0,
+   "reeds": 0,
+   "depth": 38,
+   "houses": true,
+   "clumps": 1.5
+  },
+  "park": {
+   "surface": "concrete_pavement",
+   "uv_m": 2.0,
+   "half": [
+    0.9,
+    0.9
+   ],
+   "road": 0,
+   "slope": 0.03,
+   "trees": 0.135,
+   "water_gap": 1.2,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 12,
+   "litter": 0.0,
+   "grass": 0.75,
+   "ferns": 0.5,
+   "beech": 0.75,
+   "spruce": 0.2,
+   "larch": 0.05,
+   "hazel": 0,
+   "reeds": 12,
+   "depth": 38,
+   "tint": [
+    1.1,
+    1.1,
+    1.1
+   ],
+   "clumps": 3.0
+  },
+  "hamlet": {
+   "surface": "gravel_floor_02",
+   "uv_m": 2.0,
+   "half": [
+    1.75,
+    1.75
+   ],
+   "road": 0,
+   "slope": 0.17,
+   "trees": 0.12,
+   "water_gap": 5,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 3,
+   "litter": 0.0,
+   "grass": 0.5,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 0,
+   "reeds": 0,
+   "depth": 38,
+   "houses": true,
+   "clumps": 2.0
+  },
+  "hazel_path": {
+   "surface": "gravel_floor_02",
+   "uv_m": 2.0,
+   "half": [
+    1.0,
+    1.0
+   ],
+   "road": 0,
+   "slope": 0.28,
+   "trees": 0.27,
+   "water_gap": 5,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.6,
+   "litter": 0.0,
+   "grass": 0.3,
+   "ferns": 0.5,
+   "beech": 0.6,
+   "spruce": 0.4,
+   "larch": 0.0,
+   "hazel": 14,
+   "reeds": 0,
+   "depth": 38,
+   "clumps": 1.2
+  },
+  "fence_forest": {
+   "surface": "gravel_floor_02",
+   "uv_m": 2.0,
+   "half": [
+    1.0,
+    1.0
+   ],
+   "road": 0,
+   "slope": 0.33,
+   "trees": 1.4,
+   "water_gap": 5,
+   "lake_trees": true,
+   "lake": "boardfence",
+   "inland": "none",
+   "bank_ratio": 1.6,
+   "litter": 0.3,
+   "grass": 0.25,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.5,
+   "larch": 0.0,
+   "hazel": 8,
+   "reeds": 0,
+   "depth": 60,
+   "clumps": 0.76
+  },
+  "mixed_gravel": {
+   "surface": "gravel_floor_02",
+   "uv_m": 2.0,
+   "half": [
+    1.0,
+    1.0
+   ],
+   "road": 0,
+   "slope": 0.39,
+   "trees": 1.5,
+   "water_gap": 4,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.6,
+   "litter": 0.4,
+   "grass": 0.2,
+   "ferns": 1.2,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 6,
+   "reeds": 0,
+   "depth": 60,
+   "clumps": 0.19
+  },
+  "shore_open": {
+   "surface": "gravel_floor_02",
+   "uv_m": 2.0,
+   "half": [
+    1.0,
+    1.0
+   ],
+   "road": 0,
+   "slope": 0.55,
+   "trees": 0.21,
+   "water_gap": 1.6,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.6,
+   "litter": 0.0,
+   "grass": 0.38,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 6,
+   "reeds": 8,
+   "depth": 38,
+   "clumps": 1.5
+  },
+  "grass_slope": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.6,
+    0.6
+   ],
+   "road": 0,
+   "slope": 0.66,
+   "trees": 0.24,
+   "water_gap": 2,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.6,
+   "litter": 0.1,
+   "grass": 0.62,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 0,
+   "reeds": 10,
+   "depth": 38,
+   "clumps": 2.3
+  },
+  "beech_trail": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.7,
+    0.7
+   ],
+   "road": 0,
+   "slope": 0.66,
+   "trees": 2.0,
+   "water_gap": 15,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.4,
+   "litter": 0.85,
+   "grass": 0.06,
+   "ferns": 0.9,
+   "beech": 0.75,
+   "spruce": 0.2,
+   "larch": 0.05,
+   "hazel": 6,
+   "reeds": 0,
+   "depth": 60,
+   "roots": 6,
+   "logs": 1,
+   "clumps": 0.03
+  },
+  "spruce_grass": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.55,
+    0.55
+   ],
+   "road": 0,
+   "slope": 0.55,
+   "trees": 1.6,
+   "water_gap": 8,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.6,
+   "litter": 0.35,
+   "grass": 0.5,
+   "ferns": 1.0,
+   "beech": 0.1,
+   "spruce": 0.7,
+   "larch": 0.2,
+   "hazel": 4,
+   "reeds": 0,
+   "depth": 60,
+   "clumps": 0.5
+  },
+  "glade": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.8,
+    0.8
+   ],
+   "road": 0,
+   "slope": 0.17,
+   "trees": 0.105,
+   "water_gap": 2,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 6,
+   "litter": 0.0,
+   "grass": 0.75,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 0,
+   "reeds": 10,
+   "depth": 38,
+   "clumps": 3.0
+  },
+  "thicket_shore": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.6,
+    0.6
+   ],
+   "road": 0,
+   "slope": 0.5,
+   "trees": 1.1,
+   "water_gap": 2.5,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.6,
+   "litter": 0.6,
+   "grass": 0.15,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 22,
+   "reeds": 4,
+   "depth": 60,
+   "logs": 1,
+   "clumps": 0.31
+  },
+  "open_bank": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.6,
+    0.6
+   ],
+   "road": 0,
+   "slope": 0.61,
+   "trees": 0.18,
+   "water_gap": 4,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.3,
+   "litter": 0.2,
+   "grass": 0.5,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 10,
+   "reeds": 0,
+   "depth": 38,
+   "clumps": 1.68
+  },
+  "climb_roots": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.5,
+    0.5
+   ],
+   "road": 0,
+   "slope": 0.88,
+   "trees": 2.0,
+   "water_gap": 30,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.1,
+   "litter": 0.85,
+   "grass": 0.06,
+   "ferns": 0.9,
+   "beech": 0.6,
+   "spruce": 0.35,
+   "larch": 0.05,
+   "hazel": 4,
+   "reeds": 0,
+   "depth": 60,
+   "roots": 40,
+   "logs": 2,
+   "clumps": 0.03
+  },
+  "scree": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.6,
+    0.6
+   ],
+   "road": 0,
+   "slope": 0.94,
+   "trees": 1.0,
+   "water_gap": 38,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.1,
+   "litter": 0.5,
+   "grass": 0.25,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 0,
+   "reeds": 0,
+   "depth": 60,
+   "scree": 120,
+   "roots": 6,
+   "clumps": 0.6
+  },
+  "steep_cable": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.45,
+    0.45
+   ],
+   "road": 0,
+   "slope": 1.04,
+   "trees": 1.8,
+   "water_gap": 55,
+   "lake_trees": true,
+   "lake": "lograil",
+   "inland": "cable",
+   "bank_ratio": 1.0,
+   "litter": 0.7,
+   "grass": 0.2,
+   "ferns": 0.8,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 0,
+   "reeds": 0,
+   "depth": 60,
+   "roots": 35,
+   "clumps": 0.12
+  },
+  "rock_wall": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.6,
+    0.6
+   ],
+   "road": 0,
+   "slope": 0.77,
+   "trees": 1.2,
+   "water_gap": 68,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.0,
+   "litter": 0.7,
+   "grass": 0.25,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 0,
+   "reeds": 0,
+   "depth": 60,
+   "cliff": 26,
+   "cliff_from": 1.5,
+   "cliff_plants": 25,
+   "clumps": 0.44
+  },
+  "steep_high": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.45,
+    0.45
+   ],
+   "road": 0,
+   "slope": 0.99,
+   "trees": 2.0,
+   "water_gap": 60,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.0,
+   "litter": 0.8,
+   "grass": 0.17,
+   "ferns": 0.5,
+   "beech": 0.55,
+   "spruce": 0.3,
+   "larch": 0.15,
+   "hazel": 0,
+   "reeds": 0,
+   "depth": 60,
+   "roots": 10,
+   "logs": 1,
+   "clumps": 0.09
+  },
+  "steep_logs": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.45,
+    0.45
+   ],
+   "road": 0,
+   "slope": 0.99,
+   "trees": 2.0,
+   "water_gap": 57,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.0,
+   "litter": 0.8,
+   "grass": 0.17,
+   "ferns": 0.5,
+   "beech": 0.3,
+   "spruce": 0.6,
+   "larch": 0.1,
+   "hazel": 0,
+   "reeds": 0,
+   "depth": 60,
+   "roots": 15,
+   "logs": 6,
+   "clumps": 0.09
+  },
+  "grass_steep_larch": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.45,
+    0.45
+   ],
+   "road": 0,
+   "slope": 0.99,
+   "trees": 1.3,
+   "water_gap": 54,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "cable",
+   "bank_ratio": 1.0,
+   "litter": 0.3,
+   "grass": 0.55,
+   "ferns": 0.5,
+   "beech": 0.25,
+   "spruce": 0.4,
+   "larch": 0.35,
+   "hazel": 0,
+   "reeds": 0,
+   "depth": 60,
+   "clumps": 1.67
+  },
+  "descent": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.5,
+    0.5
+   ],
+   "road": 0,
+   "slope": 0.83,
+   "trees": 1.9,
+   "water_gap": 35,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.1,
+   "litter": 0.8,
+   "grass": 0.1,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 0,
+   "reeds": 0,
+   "depth": 60,
+   "logs": 3,
+   "roots": 10,
+   "clumps": 0.05
+  },
+  "flat_mixed": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.8,
+    0.8
+   ],
+   "road": 0,
+   "slope": 0.44,
+   "trees": 2.0,
+   "water_gap": 12,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.6,
+   "litter": 0.6,
+   "grass": 0.15,
+   "ferns": 1.2,
+   "beech": 0.45,
+   "spruce": 0.5,
+   "larch": 0.05,
+   "hazel": 0,
+   "reeds": 0,
+   "depth": 60,
+   "clumps": 0.11
+  },
+  "lake_slope": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.6,
+    0.6
+   ],
+   "road": 0,
+   "slope": 0.72,
+   "trees": 1.7,
+   "water_gap": 12,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.3,
+   "litter": 0.6,
+   "grass": 0.25,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 0,
+   "reeds": 0,
+   "depth": 60,
+   "roots": 12,
+   "clumps": 0.18
+  },
+  "cable_lake": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.6,
+    0.6
+   ],
+   "road": 0,
+   "slope": 0.72,
+   "trees": 1.5,
+   "water_gap": 18,
+   "lake_trees": true,
+   "lake": "cable",
+   "inland": "none",
+   "bank_ratio": 1.2,
+   "litter": 0.5,
+   "grass": 0.3,
+   "ferns": 0.5,
+   "beech": 0.3,
+   "spruce": 0.4,
+   "larch": 0.3,
+   "hazel": 0,
+   "reeds": 0,
+   "depth": 60,
+   "roots": 8,
+   "clumps": 0.25
+  },
+  "cliff_shore": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.6,
+    0.6
+   ],
+   "road": 0,
+   "slope": 0.72,
+   "trees": 1.0,
+   "water_gap": 6,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.0,
+   "litter": 0.2,
+   "grass": 0.25,
+   "ferns": 0.5,
+   "beech": 0.0,
+   "spruce": 0.7,
+   "larch": 0.3,
+   "hazel": 0,
+   "reeds": 0,
+   "depth": 60,
+   "cliff": 30,
+   "cliff_from": 1.5,
+   "cliff_plants": 25,
+   "clumps": 0.84
+  },
+  "reed_shore": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.6,
+    0.6
+   ],
+   "road": 0,
+   "slope": 0.5,
+   "trees": 0.24,
+   "water_gap": 1.2,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 3,
+   "litter": 0.0,
+   "grass": 0.38,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 0,
+   "reeds": 100,
+   "depth": 38,
+   "clumps": 1.5
+  },
+  "lake_level": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.6,
+    0.6
+   ],
+   "road": 0,
+   "slope": 0.55,
+   "trees": 1.6,
+   "water_gap": 4,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.6,
+   "litter": 0.5,
+   "grass": 0.3,
+   "ferns": 0.5,
+   "beech": 0.2,
+   "spruce": 0.55,
+   "larch": 0.25,
+   "hazel": 0,
+   "reeds": 0,
+   "depth": 60,
+   "clumps": 0.25
+  },
+  "spruce_scree": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.6,
+    0.6
+   ],
+   "road": 0,
+   "slope": 0.55,
+   "trees": 1.6,
+   "water_gap": 5,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.6,
+   "litter": 0.5,
+   "grass": 0.25,
+   "ferns": 0.5,
+   "beech": 0.1,
+   "spruce": 0.8,
+   "larch": 0.1,
+   "hazel": 0,
+   "reeds": 0,
+   "depth": 60,
+   "scree": 60,
+   "clumps": 0.21
+  },
+  "spruce_open": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.8,
+    0.8
+   ],
+   "road": 0,
+   "slope": 0.55,
+   "trees": 1.7,
+   "water_gap": 20,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.6,
+   "litter": 0.8,
+   "grass": 0.15,
+   "ferns": 1.3,
+   "beech": 0.2,
+   "spruce": 0.75,
+   "larch": 0.05,
+   "hazel": 0,
+   "reeds": 0,
+   "depth": 60,
+   "roots": 25,
+   "logs": 4,
+   "clumps": 0.08
+  },
+  "root_net": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.8,
+    0.8
+   ],
+   "road": 0,
+   "slope": 0.55,
+   "trees": 1.7,
+   "water_gap": 20,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.6,
+   "litter": 0.85,
+   "grass": 0.07,
+   "ferns": 0.5,
+   "beech": 0.2,
+   "spruce": 0.75,
+   "larch": 0.05,
+   "hazel": 0,
+   "reeds": 0,
+   "depth": 60,
+   "roots": 90,
+   "logs": 2,
+   "clumps": 0.03
+  },
+  "pebble_shore": {
+   "surface": "gravel_floor_02",
+   "uv_m": 2.0,
+   "half": [
+    0.75,
+    0.75
+   ],
+   "road": 0,
+   "slope": 0.55,
+   "trees": 0.18,
+   "water_gap": 0.8,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 3,
+   "litter": 0.0,
+   "grass": 0.12,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 0,
+   "reeds": 0,
+   "depth": 38,
+   "clumps": 0.5
+  },
+  "shore_mixed": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.6,
+    0.6
+   ],
+   "road": 0,
+   "slope": 0.61,
+   "trees": 1.6,
+   "water_gap": 4,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.6,
+   "litter": 0.7,
+   "grass": 0.15,
+   "ferns": 0.5,
+   "beech": 0.6,
+   "spruce": 0.3,
+   "larch": 0.1,
+   "hazel": 8,
+   "reeds": 0,
+   "depth": 60,
+   "roots": 6,
+   "clumps": 0.09
+  },
+  "dry_grass": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.6,
+    0.6
+   ],
+   "road": 0,
+   "slope": 0.55,
+   "trees": 0.27,
+   "water_gap": 5,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.6,
+   "litter": 0.2,
+   "grass": 0.62,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 6,
+   "reeds": 0,
+   "depth": 38,
+   "clumps": 2.1
+  },
+  "meadow_track": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    0.6,
+    0.6
+   ],
+   "road": 0,
+   "slope": 0.5,
+   "trees": 0.18,
+   "water_gap": 6,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.6,
+   "litter": 0.1,
+   "grass": 0.75,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 3,
+   "reeds": 0,
+   "depth": 38,
+   "clumps": 2.76
+  },
+  "forest_road": {
+   "surface": "brown_mud_leaves_01",
+   "uv_m": 2.5,
+   "half": [
+    1.25,
+    1.25
+   ],
+   "road": 0,
+   "slope": 0.55,
+   "trees": 1.4,
+   "water_gap": 3,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.6,
+   "litter": 0.5,
+   "grass": 0.25,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 6,
+   "reeds": 0,
+   "depth": 60,
+   "clumps": 0.6
+  },
+  "cottage": {
+   "surface": "gravel_floor_02",
+   "uv_m": 2.0,
+   "half": [
+    1.0,
+    1.0
+   ],
+   "road": 0,
+   "slope": 0.44,
+   "trees": 0.15,
+   "water_gap": 4,
+   "lake_trees": true,
+   "lake": "lattice",
+   "inland": "none",
+   "bank_ratio": 1.6,
+   "litter": 0.0,
+   "grass": 0.38,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 0,
+   "reeds": 0,
+   "depth": 38,
+   "houses": true,
+   "clumps": 1.5
+  },
+  "inn": {
+   "surface": "concrete_pavement",
+   "uv_m": 2.0,
+   "half": [
+    1.5,
+    1.5
+   ],
+   "road": 0,
+   "slope": 0.44,
+   "trees": 0.09,
+   "water_gap": 4,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 1.6,
+   "litter": 0.0,
+   "grass": 0.12,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 0,
+   "reeds": 0,
+   "depth": 38,
+   "tint": [
+    1.1,
+    1.1,
+    1.1
+   ],
+   "houses": true,
+   "clumps": 0.5
+  },
+  "lake_road": {
+   "surface": "gravel_floor_02",
+   "uv_m": 2.0,
+   "half": [
+    1.6,
+    1.6
+   ],
+   "road": 0,
+   "slope": 0.55,
+   "trees": 1.1,
+   "water_gap": 2.0,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 2.5,
+   "litter": 0.2,
+   "grass": 0.38,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.35,
+   "larch": 0.15,
+   "hazel": 8,
+   "reeds": 15,
+   "depth": 60,
+   "clumps": 1.26
+  },
+  "meadow_road": {
+   "surface": "gravel_floor_02",
+   "uv_m": 2.0,
+   "half": [
+    1.6,
+    1.6
+   ],
+   "road": 0,
+   "slope": 0.28,
+   "trees": 0.09,
+   "water_gap": 2.5,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "none",
+   "bank_ratio": 3,
+   "litter": 0.0,
+   "grass": 0.75,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 6,
+   "reeds": 10,
+   "depth": 38,
+   "clumps": 3.0
+  },
+  "fence_road": {
+   "surface": "gravel_floor_02",
+   "uv_m": 2.0,
+   "half": [
+    1.6,
+    1.6
+   ],
+   "road": 0,
+   "slope": 0.28,
+   "trees": 0.12,
+   "water_gap": 4,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "woodrail",
+   "bank_ratio": 3,
+   "litter": 0.0,
+   "grass": 0.75,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 14,
+   "reeds": 0,
+   "depth": 38,
+   "clumps": 3.0
+  },
+  "shore_road": {
+   "surface": "gravel_floor_02",
+   "uv_m": 2.0,
+   "half": [
+    1.6,
+    1.6
+   ],
+   "road": 0,
+   "slope": 0.19,
+   "trees": 0.045,
+   "water_gap": 1.5,
+   "lake_trees": true,
+   "lake": "none",
+   "inland": "efence",
+   "bank_ratio": 4,
+   "litter": 0.0,
+   "grass": 0.75,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 0,
+   "reeds": 140,
+   "depth": 30,
+   "barns": true,
+   "clumps": 3.0
+  },
+  "village": {
+   "surface": "asphalt_02",
+   "uv_m": 3.0,
+   "half": [
+    1.75,
+    1.75
+   ],
+   "road": 0,
+   "slope": 0.22,
+   "trees": 0.09,
+   "water_gap": 6,
+   "lake_trees": true,
+   "lake": "woodrail",
+   "inland": "efence",
+   "bank_ratio": 4,
+   "litter": 0.0,
+   "grass": 0.62,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 4,
+   "reeds": 0,
+   "depth": 38,
+   "houses": true,
+   "lamps": 30,
+   "clumps": 2.5
+  },
+  "end_path": {
+   "surface": "gravel_floor_02",
+   "uv_m": 2.0,
+   "half": [
+    1.0,
+    1.0
+   ],
+   "road": 0,
+   "slope": 0.11,
+   "trees": 0.09,
+   "water_gap": 3,
+   "lake_trees": true,
+   "lake": "woodrail",
+   "inland": "woodrail",
+   "bank_ratio": 4,
+   "litter": 0.0,
+   "grass": 0.62,
+   "ferns": 0.5,
+   "beech": 0.5,
+   "spruce": 0.4,
+   "larch": 0.1,
+   "hazel": 0,
+   "reeds": 0,
+   "depth": 38,
+   "clumps": 2.5
+  }
+ },
+ "sections": [
+  [
+   0.0,
+   "board_path",
+   {
+    "yellow": 0.49
+   },
+   "00:55 gravel path, weathered board fence on the lake side, meadow and road inland"
+  ],
+  [
+   0.075,
+   "plaza",
+   {
+    "yellow": 0.52
+   },
+   "01:25 road crossing, gravel square with flagpole, info boards, birches"
+  ],
+  [
+   0.2,
+   "reed_path",
+   {
+    "yellow": 0.69
+   },
+   "02:10 footbridge over the inlet, gravel path between reeds and bushes"
+  ],
+  [
+   0.283,
+   "spruce_gravel",
+   {
+    "yellow": 0.22,
+    "trees": 1.87,
+    "spruce": 0.63
+   },
+   "02:50 gravel path into tall spruce forest, grassy verges"
+  ],
+  [
+   0.418,
+   "meadow_gravel",
+   {
+    "yellow": 0.47
+   },
+   "03:32 open lakeside meadow, info board, wire fence"
+  ],
+  [
+   0.523,
+   "parking",
+   {
+    "yellow": 0.41
+   },
+   "04:12 gravel car park, pavilion and lodge with red roof"
+  ],
+  [
+   0.577,
+   "park",
+   {
+    "yellow": 0.41
+   },
+   "04:28 paver path across the beach lawn, maples / linden, playground, reeds, bathing jetty"
+  ],
+  [
+   0.99,
+   "hamlet",
+   {
+    "yellow": 0.36
+   },
+   "06:42 gravel lane past the lodge, chalets, carport"
+  ],
+  [
+   1.093,
+   "hazel_path",
+   {
+    "yellow": 0.83
+   },
+   "07:22 path into yellow hazel bushes"
+  ],
+  [
+   1.118,
+   "fence_forest",
+   {
+    "yellow": 0.29,
+    "trees": 1.75,
+    "spruce": 0.55
+   },
+   "07:32 board fence on the left, dense green broadleaf"
+  ],
+  [
+   1.167,
+   "spruce_gravel",
+   {
+    "yellow": 0.2,
+    "trees": 2.0,
+    "spruce": 0.63
+   },
+   "07:52 spruce / larch, tall trunks"
+  ],
+  [
+   1.223,
+   "meadow_gravel",
+   {
+    "trees": 0.3,
+    "yellow": 0.76
+   },
+   "08:12 open meadow both sides, small hut"
+  ],
+  [
+   1.29,
+   "mixed_gravel",
+   {
+    "yellow": 0.69,
+    "trees": 1.63,
+    "spruce": 0.27
+   },
+   "08:32 NORTH SHORE: gravel trail in mixed forest"
+  ],
+  [
+   1.394,
+   "shore_open",
+   {
+    "yellow": 0.9
+   },
+   "09:22 path right on the shore, lake 1-3 m left"
+  ],
+  [
+   1.457,
+   "grass_slope",
+   {
+    "yellow": 0.88
+   },
+   "09:42 narrow trail on a grassy slope, reeds left"
+  ],
+  [
+   1.523,
+   "beech_trail",
+   {
+    "yellow": 0.76,
+    "trees": 2.38,
+    "spruce": 0.15
+   },
+   "10:02 beech forest, leaf-covered trail, slope up right, lake through the trunks"
+  ],
+  [
+   1.995,
+   "spruce_grass",
+   {
+    "grass": 2.5,
+    "yellow": 0.33,
+    "trees": 1.85,
+    "spruce": 0.53
+   },
+   "13:22 spruce / larch over a grassy slope, trail markers"
+  ],
+  [
+   2.214,
+   "glade",
+   {
+    "yellow": 0.78
+   },
+   "14:42 lakeside clearing with picnic tables"
+  ],
+  [
+   2.254,
+   "thicket_shore",
+   {
+    "yellow": 0.82,
+    "trees": 1.19,
+    "spruce": 0.25
+   },
+   "15:02 hazel / beech thicket along the shore, stumps"
+  ],
+  [
+   2.423,
+   "open_bank",
+   {
+    "water_gap": 2.0,
+    "yellow": 0.9
+   },
+   "16:02 trail on the bank, fallen logs in the water"
+  ],
+  [
+   2.457,
+   "thicket_shore",
+   {
+    "hazel": 26,
+    "yellow": 0.64,
+    "trees": 1.22,
+    "spruce": 0.25
+   },
+   "16:12 bushes arching over the trail"
+  ],
+  [
+   2.734,
+   "open_bank",
+   {
+    "yellow": 0.76
+   },
+   "17:52 open bank, lake below, bracken, orange shrubs"
+  ],
+  [
+   2.794,
+   "beech_trail",
+   {
+    "water_gap": 5,
+    "yellow": 0.9,
+    "trees": 1.75,
+    "spruce": 0.15
+   },
+   "18:22 yellow beech"
+  ],
+  [
+   2.823,
+   "open_bank",
+   {
+    "water_gap": 3,
+    "yellow": 0.9
+   },
+   "18:32 trail at the lake edge, clear shallows, pines"
+  ],
+  [
+   2.926,
+   "beech_trail",
+   {
+    "hazel": 18,
+    "water_gap": 6,
+    "yellow": 0.87,
+    "trees": 2.3,
+    "spruce": 0.15
+   },
+   "19:08 dense autumn beech / hazel"
+  ],
+  [
+   3.023,
+   "climb_roots",
+   {
+    "yellow": 0.5,
+    "trees": 2.48,
+    "spruce": 0.28
+   },
+   "19:52 LAKESIDE HIGH ROUTE: climbing, roots across the trail"
+  ],
+  [
+   3.174,
+   "scree",
+   {
+    "yellow": 0.34,
+    "trees": 1.25,
+    "spruce": 0.33
+   },
+   "20:52 pale limestone scree across the trail"
+  ],
+  [
+   3.234,
+   "steep_cable",
+   {
+    "yellow": 0.43,
+    "trees": 2.06,
+    "spruce": 0.34
+   },
+   "21:22 very steep slope, log edge, steel cable, root steps"
+  ],
+  [
+   3.395,
+   "steep_high",
+   {
+    "water_gap": 62,
+    "yellow": 0.49,
+    "trees": 1.3,
+    "spruce": 0.28
+   },
+   "22:52 viewpoint bench, lake far below"
+  ],
+  [
+   3.428,
+   "rock_wall",
+   {
+    "yellow": 0.9,
+    "trees": 1.37,
+    "spruce": 0.25
+   },
+   "23:12 grey limestone wall beside the trail"
+  ],
+  [
+   3.495,
+   "steep_high",
+   {
+    "yellow": 0.58,
+    "trees": 2.19,
+    "spruce": 0.25
+   },
+   "23:52 steep traverse, yellow beech, lake glimpses far below"
+  ],
+  [
+   3.528,
+   "steep_cable",
+   {
+    "water_gap": 60,
+    "lake": "none",
+    "yellow": 0.76,
+    "trees": 1.53,
+    "spruce": 0.26
+   },
+   "24:12 steel cable handrail"
+  ],
+  [
+   3.545,
+   "steep_high",
+   {
+    "yellow": 0.77,
+    "trees": 2.33,
+    "spruce": 0.2
+   },
+   "24:22 mixed beech / larch / spruce on a steep slope"
+  ],
+  [
+   3.745,
+   "steep_logs",
+   {
+    "yellow": 0.58,
+    "trees": 2.16,
+    "spruce": 0.4
+   },
+   "25:52 root steps, uprooted root plate, fallen logs"
+  ],
+  [
+   3.828,
+   "grass_steep_larch",
+   {
+    "yellow": 0.81,
+    "trees": 1.15,
+    "spruce": 0.25
+   },
+   "26:42 grassy steep slope, larch / pine, lake far below, cable"
+  ],
+  [
+   3.928,
+   "descent",
+   {
+    "water_gap": 42,
+    "yellow": 0.88,
+    "trees": 1.69,
+    "spruce": 0.25
+   },
+   "27:42 descending, viewpoint through yellow branches"
+  ],
+  [
+   4.01,
+   "descent",
+   {
+    "water_gap": 25,
+    "yellow": 0.54,
+    "trees": 2.35,
+    "spruce": 0.28
+   },
+   "28:30 mixed forest, fallen trees"
+  ],
+  [
+   4.074,
+   "flat_mixed",
+   {
+    "yellow": 0.37,
+    "trees": 2.37,
+    "spruce": 0.4
+   },
+   "29:02 flatter, wider trail in spruce / beech"
+  ],
+  [
+   4.223,
+   "lake_slope",
+   {
+    "yellow": 0.81,
+    "trees": 1.95,
+    "spruce": 0.25
+   },
+   "30:02 roots, trail markers, lake close below"
+  ],
+  [
+   4.374,
+   "cable_lake",
+   {
+    "yellow": 0.81,
+    "trees": 0.97,
+    "spruce": 0.26
+   },
+   "31:02 cable on the lake side, pines"
+  ],
+  [
+   4.468,
+   "cliff_shore",
+   {
+    "yellow": 0.77,
+    "trees": 0.6,
+    "spruce": 0.4
+   },
+   "31:42 trail cut into a limestone cliff, lake directly below"
+  ],
+  [
+   4.562,
+   "reed_shore",
+   {
+    "yellow": 0.83
+   },
+   "32:32 reeds, viewpoint bench"
+  ],
+  [
+   4.595,
+   "lake_level",
+   {
+    "yellow": 0.63,
+    "trees": 1.6,
+    "spruce": 0.37
+   },
+   "32:52 larch / spruce at lake level, grassy floor"
+  ],
+  [
+   4.935,
+   "spruce_scree",
+   {
+    "yellow": 0.64,
+    "trees": 1.88,
+    "spruce": 0.48
+   },
+   "35:12 scree cone beside the trail"
+  ],
+  [
+   5.018,
+   "spruce_open",
+   {
+    "water_gap": 12,
+    "roots": 10,
+    "yellow": 0.3,
+    "trees": 2.07,
+    "spruce": 0.6
+   },
+   "35:32 wider trail, spruce, hazel"
+  ],
+  [
+   5.192,
+   "root_net",
+   {
+    "roots": 70,
+    "yellow": 0.19,
+    "trees": 1.97,
+    "spruce": 0.62
+   },
+   "36:42 root network"
+  ],
+  [
+   5.218,
+   "spruce_open",
+   {
+    "yellow": 0.19,
+    "trees": 2.04,
+    "spruce": 0.62
+   },
+   "36:52 tall spruce, open needle floor, fallen logs"
+  ],
+  [
+   5.317,
+   "lake_slope",
+   {
+    "water_gap": 25,
+    "yellow": 0.31,
+    "trees": 1.91,
+    "spruce": 0.39
+   },
+   "37:32 mixed forest on a slope"
+  ],
+  [
+   5.45,
+   "spruce_open",
+   {
+    "yellow": 0.4,
+    "trees": 1.02,
+    "spruce": 0.49
+   },
+   "38:30 viewing deck over the lake"
+  ],
+  [
+   5.494,
+   "root_net",
+   {
+    "roots": 100,
+    "yellow": 0.12,
+    "trees": 2.08,
+    "spruce": 0.58
+   },
+   "38:52 massive root network"
+  ],
+  [
+   5.542,
+   "scree",
+   {
+    "water_gap": 18,
+    "scree": 60,
+    "yellow": 0.15,
+    "trees": 1.23,
+    "spruce": 0.38
+   },
+   "39:12 descending over rubble"
+  ],
+  [
+   5.61,
+   "lake_slope",
+   {
+    "yellow": 0.46,
+    "trees": 2.05,
+    "spruce": 0.35
+   },
+   "39:42 lake directly below"
+  ],
+  [
+   5.653,
+   "cable_lake",
+   {
+    "water_gap": 10,
+    "lake": "none",
+    "inland": "cable",
+    "yellow": 0.87,
+    "trees": 1.62,
+    "spruce": 0.25
+   },
+   "40:12 cable on the uphill side"
+  ],
+  [
+   5.667,
+   "shore_mixed",
+   {
+    "water_gap": 8,
+    "yellow": 0.82,
+    "trees": 1.86,
+    "spruce": 0.2
+   },
+   "40:22 yellow beech, walkers"
+  ],
+  [
+   5.777,
+   "pebble_shore",
+   {
+    "yellow": 0.76
+   },
+   "41:08 pebble beach, clear shallows"
+  ],
+  [
+   5.834,
+   "shore_mixed",
+   {
+    "yellow": 0.85,
+    "trees": 1.76,
+    "spruce": 0.2
+   },
+   "41:32 autumn mixed forest along the shore"
+  ],
+  [
+   6.085,
+   "reed_shore",
+   {
+    "yellow": 0.68
+   },
+   "43:12 reeds and dry grass on the bank"
+  ],
+  [
+   6.168,
+   "shore_mixed",
+   {
+    "yellow": 0.64,
+    "trees": 1.86,
+    "spruce": 0.2
+   },
+   "43:42 beech, bracken"
+  ],
+  [
+   6.49,
+   "pebble_shore",
+   {
+    "reeds": 5,
+    "yellow": 0.69
+   },
+   "45:22 open gravel shore"
+  ],
+  [
+   6.514,
+   "dry_grass",
+   {
+    "yellow": 0.63
+   },
+   "45:32 dry grass slope"
+  ],
+  [
+   6.623,
+   "meadow_track",
+   {
+    "yellow": 0.46
+   },
+   "46:22 track along a steep meadow"
+  ],
+  [
+   6.854,
+   "forest_road",
+   {
+    "yellow": 0.71,
+    "trees": 1.28,
+    "spruce": 0.26
+   },
+   "47:42 forest road along the lake"
+  ],
+  [
+   7.092,
+   "cottage",
+   {
+    "yellow": 0.58
+   },
+   "49:12 woodpile, lattice fence"
+  ],
+  [
+   7.157,
+   "inn",
+   {
+    "yellow": 0.52
+   },
+   "49:32 Ronacherfels inn, car park"
+  ],
+  [
+   7.257,
+   "lake_road",
+   {
+    "yellow": 0.67,
+    "trees": 0.73,
+    "spruce": 0.24
+   },
+   "50:02 gravel road on the shore, reeds, birches"
+  ],
+  [
+   7.514,
+   "meadow_road",
+   {
+    "yellow": 0.44
+   },
+   "51:42 meadow slope, yellow bushes, bench"
+  ],
+  [
+   7.623,
+   "fence_road",
+   {
+    "yellow": 0.68
+   },
+   "52:32 post-and-rail fence, hedge, chalet"
+  ],
+  [
+   7.857,
+   "shore_road",
+   {
+    "inland": "none",
+    "lake": "boardfence",
+    "yellow": 0.82
+   },
+   "53:42 board fence"
+  ],
+  [
+   7.89,
+   "shore_road",
+   {
+    "yellow": 0.44
+   },
+   "53:52 lake and reeds on the left, pasture with electric fence, hay barns, cows"
+  ],
+  [
+   8.393,
+   "village",
+   {
+    "yellow": 0.46
+   },
+   "56:42 asphalt lane through the village, chalets, hedges, lamps"
+  ],
+  [
+   9.057,
+   "end_path",
+   {
+    "yellow": 0.69
+   },
+   "60:12 car park, gravel path between fences, footbridge"
+  ]
+ ],
+ "landmarks": [
+  [
+   0.2,
+   "footbridge"
+  ],
+  [
+   0.7,
+   "jetty"
+  ],
+  [
+   2.23,
+   "picnic"
+  ],
+  [
+   3.4,
+   "bench"
+  ],
+  [
+   4.583,
+   "bench"
+  ],
+  [
+   5.46,
+   "deck"
+  ],
+  [
+   7.56,
+   "bench"
+  ],
+  [
+   9.1,
+   "footbridge"
+  ]
+ ]
+}

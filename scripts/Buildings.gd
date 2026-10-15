@@ -14,6 +14,8 @@ extends Node3D
 @export var random_seed := 4
 @export var nordic := false          # winter: wooden farmhouses and barns (red / white / ochre, snow on the roof) on both sides
                                      # of the road, only in sections with "houses": true, every ~farm_spacing metres
+@export var chalet := false          # like nordic, but Carinthian farmhouses: white plaster ground floor, dark timber upper
+                                     # floor with a balcony, wide shallow brown roof (Weissensee)
 
 var _route: Route
 var _rng := RandomNumberGenerator.new()
@@ -33,14 +35,20 @@ func _ready() -> void:
 				_hut(beach[_rng.randi() % beach.size()])
 		if not _route.grass_bank:
 			_lighthouse(beach[int(beach.size() * 0.3)])
-		_pier(beach[int(beach.size() * 0.6)])
+		if pier_length > 0.0:  # 0 = none (Weissensee: Boardwalk.gd jetties instead)
+			_pier(beach[int(beach.size() * 0.6)])
 		for i in boat_sheds:
 			_boatshed(beach[int(beach.size() * (0.15 + 0.35 * i + 0.05 * _rng.randf()))])
-	if nordic:
+	if nordic or chalet:
 		var s2 := 20.0
 		while s2 < _route.length - 20.0:
 			if bool(_route.section_at(s2).get("houses", false)):
-				_nordic_house(s2)
+				if chalet:
+					_chalet(s2)
+				else:
+					_nordic_house(s2)
+			elif chalet and bool(_route.section_at(s2).get("barns", false)) and _rng.randf() < 0.5:
+				_barn(s2)
 			s2 += farm_spacing * _rng.randf_range(0.6, 1.4)
 	else:
 		for i in maxi(int(_route.length / farm_spacing), 1):
@@ -186,6 +194,49 @@ func _nordic_house(s: float) -> void:
 					_part(n, _box(Vector3(1.1, 1.3, 0.1)), trim, Vector3(x, y, -d * 0.5 - 0.04))
 					_part(n, _box(Vector3(0.85, 1.05, 0.12)), glass, Vector3(x, y, -d * 0.5 - 0.05))
 		_part(n, _box(Vector3(0.6, 1.6, 0.6)), _plain(Color(0.35, 0.33, 0.32)), Vector3(w * 0.25, h + d * 0.35, 0.6))  # chimney
+
+# Carinthian farmhouse on the inland side (the lake side is a bank down to the water): white plaster ground floor, dark
+# larch upper floor with a balcony on the road front, wide gable roof with deep overhangs, dark windows with white frames
+func _chalet(s: float) -> void:
+	var u := -(_route.half_right(s) + _rng.randf_range(10.0, 30.0))
+	var n := _at(s, u, _route.left_at(s))  # long side to the road
+	var hotel := _rng.randf() < 0.25  # the village's guesthouses: long, three timber storeys of balconies
+	var w := _rng.randf_range(18.0, 26.0) if hotel else _rng.randf_range(10.0, 15.0)
+	var d := _rng.randf_range(11.0, 13.0) if hotel else _rng.randf_range(8.0, 10.0)
+	var h1 := 2.9
+	var h2 := _rng.randf_range(7.6, 8.4) if hotel else _rng.randf_range(2.6, 5.4)  # one to three timber storeys
+	var timber := _mat("brown_planks_09", 0.5)
+	timber.albedo_color = Color(0.55, 0.38, 0.26)
+	var white := _plain(Color(0.95, 0.94, 0.9))
+	_part(n, _box(Vector3(w + 0.3, 2.6, d + 0.3)), _plain(Color(0.6, 0.58, 0.55)), Vector3(0, -1.0, 0))  # plinth hides the slope
+	_part(n, _box(Vector3(w, h1, d)), white, Vector3(0, h1 * 0.5, 0))
+	_part(n, _box(Vector3(w, h2, d)), timber, Vector3(0, h1 + h2 * 0.5, 0))
+	var roof := PrismMesh.new()
+	roof.size = Vector3(d + 2.4, d * 0.28, w + 2.0)
+	_part(n, roof, _plain(Color(0.36, 0.22, 0.17)), Vector3(0, h1 + h2 + d * 0.14, 0)).rotation.y = PI * 0.5
+	_part(n, _box(Vector3(w + 0.6, 0.12, 1.2)), timber, Vector3(0, h1 + 0.1, -d * 0.5 - 0.6))  # balcony floor
+	_part(n, _box(Vector3(w + 0.6, 0.9, 0.08)), timber, Vector3(0, h1 + 0.6, -d * 0.5 - 1.15))  # balcony boards
+	var glass := _plain(Color(0.1, 0.12, 0.15))
+	for k in 4:
+		var x := (k - 1.5) * w * 0.22
+		for y in [1.5, h1 + 1.5]:
+			_part(n, _box(Vector3(1.1, 1.3, 0.1)), white, Vector3(x, y, -d * 0.5 - 0.04))
+			_part(n, _box(Vector3(0.85, 1.05, 0.12)), glass, Vector3(x, y, -d * 0.5 - 0.05))
+
+# hay barn in the lakeside meadows (55:05 in the video): dark weathered timber, small, steep shingle roof
+func _barn(s: float) -> void:
+	var u := -(_route.half_right(s) + _rng.randf_range(15.0, 60.0))
+	var n := _at(s, u, _route.left_at(s).rotated(Vector3.UP, _rng.randf_range(-0.4, 0.4)))
+	var timber := _mat("brown_planks_09", 0.5)
+	timber.albedo_color = Color(0.45, 0.32, 0.22)
+	var w := _rng.randf_range(4.5, 6.5)
+	var d := _rng.randf_range(4.0, 5.0)
+	var h := _rng.randf_range(3.2, 4.2)
+	_part(n, _box(Vector3(w + 0.2, 2.0, d + 0.2)), _plain(Color(0.4, 0.38, 0.35)), Vector3(0, -0.9, 0))
+	_part(n, _box(Vector3(w, h, d)), timber, Vector3(0, h * 0.5, 0))
+	var roof := PrismMesh.new()
+	roof.size = Vector3(d + 1.0, d * 0.55, w + 0.8)
+	_part(n, roof, _plain(Color(0.33, 0.27, 0.22)), Vector3(0, h + d * 0.275, 0)).rotation.y = PI * 0.5
 
 # Summit finish: wooden viewing deck on the sea side (rail + posts over the drop), a cairn and a flag inland.
 func _lookout(s: float) -> void:

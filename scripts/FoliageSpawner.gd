@@ -39,6 +39,9 @@ const MODEL := "res://assets/models/%s/%s_1k.gltf"
 @export var blob_tint := Color(1, 1, 1)         # multiplies the procedural leafy/cypress trees (Mediterranean: dark olive)
 @export var snow_load := 0.0         # procedural spruces: 0 green .. 1 every branch tier white with snow on top
 @export var birches := false         # the broadleaf trees are bare, frosted birches (winter) instead of the scanned tree
+@export var autumn_share := 0.0      # share of broadleaf trees in autumn colours (yellow beech, orange, red maple)
+@export var forest_mix := false      # weissensee: the video's species per section (beech / spruce / larch shares, hazel, reeds,
+                                     # logs, scree from the sections file) as procedural meshes, instead of the scanned leafy tree
 @export var fir_models := false      # real Poly Haven fir/pine saplings (scaled up) instead of the procedural spruces
 @export var lamps := true            # street lamps along the inland road edge
 @export var rock_scale_mult := 1.0   # alpine: bigger boulders
@@ -56,6 +59,16 @@ var _grass: Array[Mesh]
 var _ferns: Array[Mesh]
 var _shrubs: Array[Mesh]
 var _trees: Array[Mesh]
+var _trees_autumn: Array[Mesh] = []
+var _beech_green: Array[Mesh] = []
+var _beech_yellow: Array[Mesh] = []
+var _fspruce: Array[Mesh] = []   # forest spruce: bare lower trunk, narrow crown
+var _larch: Array[Mesh] = []
+var _hazel_green: Array[Mesh] = []
+var _hazel_yellow: Array[Mesh] = []
+var _reed: Mesh
+var _bark_beech: StandardMaterial3D
+var _logm: Mesh
 var _flowers: Array[Mesh]
 var _rocks_big: Array[Mesh]
 var _rocks_small: Array[Mesh]
@@ -79,6 +92,15 @@ func _ready() -> void:
 	if shrubs_per_mesh > 0:
 		_shrubs = _meshes(shrub_model, [shrub_model.get_slice("_", 0)])  # every mesh of the model
 	_trees = _meshes("island_tree_02", ["LOD0"])
+	for tint in [Color(1.5, 1.3, 0.35), Color(1.45, 1.15, 0.3), Color(1.6, 0.85, 0.3), Color(1.5, 0.45, 0.3)]:  # yellow x2, orange, red
+		var m := _trees[0].duplicate() as Mesh
+		for si in m.get_surface_count():
+			var mat := m.surface_get_material(si)
+			if mat.resource_name.contains("leaves"):
+				mat = mat.duplicate()
+				mat.albedo_color *= tint
+				m.surface_set_material(si, mat)
+		_trees_autumn.append(m)
 	_flowers.append_array(_meshes("celandine_01", ["celandine_01_a", "celandine_01_b", "celandine_01_e"]))
 	_flowers.append_array(_meshes("periwinkle_plant", ["plant_06", "plant_05"]))
 	_flowers.append_array(_meshes("dandelion_01", ["dandelion_01_d", "dandelion_01_e"]))
@@ -119,6 +141,25 @@ func _ready() -> void:
 			mat.albedo_color *= tint
 			m.surface_set_material(si, mat)
 		_autumn.append(m)
+	if forest_mix:  # leaf colours (linear vertex colours) picked from the video's beech: fresh green .. yellow .. orange
+		_leaf_mat_cards = _card_mat(_leaf_atlas())
+		_needle_mat_cards = _card_mat(_needle_atlas())
+		_bark_beech = _bark_mat("japanese_sycamore")
+		_bark_beech.albedo_color = Color(0.6, 0.6, 0.58)  # beech bark is mid grey; the scan is nearly white
+		for k in 3:
+			_beech_green.append(_make_beech(61 + k, [Color(0.1, 0.26, 0.03), Color(0.26, 0.4, 0.05), Color(0.16, 0.32, 0.04)][k]))
+		for k in 4:
+			_beech_yellow.append(_make_beech(71 + k, [Color(0.7, 0.5, 0.03), Color(0.5, 0.48, 0.05), Color(0.75, 0.3, 0.03), Color(0.62, 0.42, 0.04)][k]))
+		var spruce_bark := _bark_mat("knotted_pine_bark")
+		for k in 3:
+			_fspruce.append(_make_conifer(81 + k, 0.45, [Color(0.01, 0.035, 0.012), Color(0.03, 0.09, 0.025), Color(0.07, 0.17, 0.04)], 1.0, spruce_bark))
+		for k in 2:
+			_larch.append(_make_conifer(91 + k, 0.4, [Color(0.15, 0.09, 0.01), Color(0.45, 0.3, 0.03), Color(0.7, 0.48, 0.07)], 0.75, _bark_mat("pine_bark")))
+		for k in 2:
+			_hazel_green.append(_make_hazel(101 + k, Color(0.2, 0.36, 0.05)))
+			_hazel_yellow.append(_make_hazel(111 + k, Color(0.62, 0.5, 0.06)))
+		_reed = _make_reeds(121)
+		_logm = _make_log()
 	if meadow_clumps > 0:
 		_clump = _make_clump()
 	_lamp = _make_lamp()
@@ -140,7 +181,7 @@ func _ready() -> void:
 	_rail.material = wood
 	for m in _grass + _ferns:  # the source grass/fern textures are very dark; brighten them
 		var mat := m.surface_get_material(0).duplicate() as StandardMaterial3D
-		mat.albedo_color = Color(2.2, 2.2, 1.6)
+		mat.albedo_color = Color(2.2, 2.2, 1.6) if not (forest_mix and m in _ferns) else Color(1.1, 1.15, 0.9)  # shaded forest ferns
 		m.surface_set_material(0, mat)
 
 func _process(delta: float) -> void:
@@ -169,8 +210,12 @@ func _meshes(model: String, keys: Array) -> Array[Mesh]:
 
 # world point beside the route at offset s (retries the left/sea side away on beach sections)
 func _spot(rng: RandomNumberGenerator, s: float, dmin: float) -> Vector3:
-	var side := 1.0 if rng.randf() < 0.5 and _route.sea_grass(s) else -1.0
+	var we := _route.water_edge_u(s) - 0.5
+	var low_bank := forest_mix and we > _route.half_left(s) + 1.0  # weissensee: lawn / herbs reach down to the waterline
+	var side := 1.0 if rng.randf() < 0.5 and (_route.sea_grass(s) or low_bank) else -1.0
 	var u := side * lerpf(dmin, max_dist, pow(rng.randf(), 1.6))  # denser near the road
+	if low_bank and side > 0.0:
+		u = lerpf(dmin, we, rng.randf())
 	if spruce:  # alpine: plants may crowd right up to the (variable-width) trail edge, but not onto it
 		var edge := (_route.half_left(s) if side > 0.0 else _route.half_right(s)) + 0.2
 		u = side * maxf(absf(u), edge + rng.randf() * 0.4)
@@ -190,26 +235,31 @@ func _spawn(idx: int) -> void:  # coroutine: one mesh type per frame to avoid hi
 	var origin := _route.pos_at(s0 + chunk_length * 0.5)
 	# alpine thinning: 1 = lush, -> 0 above the route's alpine_start (Summit): bare rock, no trees
 	var veg := clampf(1.0 - (origin.y - _route.water_level(s0 + chunk_length * 0.5) - _route.alpine_start) / _route.alpine_range, 0.05, 1.0)
-	var sm := float(_route.section_at(s0 + chunk_length * 0.5).get("trees", 1.0))  # scene section: village 0 .. olive terraces 1.6
-	for set: Array in [[_grass, int(grass_per_mesh * veg * sm), grass_scale], [_ferns, int(fern_per_mesh * veg * sm), fern_scale], [_shrubs, int(shrubs_per_mesh * veg * sm), shrub_scale]]:
+	var sec := _route.section_at(s0 + chunk_length * 0.5)
+	var sm := float(sec.get("trees", 1.0))  # scene section: village 0 .. olive terraces 1.6
+	var gm := float(sec.get("grass", sm))  # ground plants (forest_mix: grass on meadows, little under a closed canopy)
+	var fm := float(sec.get("ferns", sm))
+	for set: Array in [[_grass, int(grass_per_mesh * veg * gm), grass_scale], [_ferns, int(fern_per_mesh * veg * fm), fern_scale], [_shrubs, int(shrubs_per_mesh * veg * sm), shrub_scale]]:
 		for m: Mesh in set[0]:
 			_multimesh(holder, rng, s0, origin, m, set[1], set[2])
 			await get_tree().process_frame
 			if not is_instance_valid(holder):
 				return
 	if meadow_clumps > 0:
-		_multimesh(holder, rng, s0, origin, _clump, int(meadow_clumps * veg * sm), clump_scale, clump_view)
+		_multimesh(holder, rng, s0, origin, _clump, int(meadow_clumps * veg * float(sec.get("clumps", sm))), clump_scale, clump_view)
 		await get_tree().process_frame
 		if not is_instance_valid(holder):
 			return
-	for i in (int(trees_per_chunk * sm) if veg > 0.6 else 0):
+	if forest_mix:
+		_forest(holder, rng, s0, origin, sec)
+	for i in (int(trees_per_chunk * sm) if veg > 0.6 and not forest_mix else 0):
 		var pine := rng.randf() < conifer_ratio
 		var spot := _spot(rng, s0 + rng.randf() * chunk_length, tree_min_dist)
 		var sr := conifer_scale if pine else tree_scale
 		var n := tree_cluster if (pine and fir_models) else 1  # saplings are sparse, so a stand of a few reads as one full tree
 		for k in n:
 			var tree := MeshInstance3D.new()
-			tree.mesh = _blobs[rng.randi() % _blobs.size()] if pine else (_birch[rng.randi() % _birch.size()] if birches else _trees[0])
+			tree.mesh = _blobs[rng.randi() % _blobs.size()] if pine else _broadleaf(rng)
 			var off := Vector3(rng.randf_range(-2.6, 2.6), 0, rng.randf_range(-2.6, 2.6)) if k > 0 else Vector3.ZERO
 			tree.position = spot + off
 			tree.rotation.y = rng.randf() * TAU
@@ -235,6 +285,13 @@ func _spawn(idx: int) -> void:  # coroutine: one mesh type per frame to avoid hi
 	_shore_rocks(holder, rng, s0, origin)
 	if lamps:
 		_roadside(holder, s0, origin)
+
+func _broadleaf(rng: RandomNumberGenerator) -> Mesh:
+	if birches:
+		return _birch[rng.randi() % _birch.size()]
+	if autumn_share > 0.0 and rng.randf() < autumn_share:  # no rng draw at 0: other scenes keep their tree layout
+		return _trees_autumn[rng.randi() % _trees_autumn.size()]
+	return _trees[0]
 
 func _multimesh(holder: Node3D, rng: RandomNumberGenerator, s0: float, origin: Vector3, mesh: Mesh, count: int, scale_range: Vector2, vis := -1.0) -> void:
 	var mm := MultiMesh.new()
@@ -329,7 +386,7 @@ func _bank_plants(holder: Node3D, rng: RandomNumberGenerator, s0: float, origin:
 		var u: float = bank_u.call(s)
 		var pine := rng.randf() < conifer_ratio
 		var tree := MeshInstance3D.new()
-		tree.mesh = _blobs[rng.randi() % _blobs.size()] if pine else (_birch[rng.randi() % _birch.size()] if birches else _trees[0])
+		tree.mesh = _blobs[rng.randi() % _blobs.size()] if pine else _broadleaf(rng)
 		tree.position = _route.pos_at(s) + _route.left_at(s) * u
 		tree.position.y = _route.ground_y(s, u) - 0.2
 		tree.rotation.y = rng.randf() * TAU
@@ -512,27 +569,30 @@ func _make_lamp() -> Mesh:  # pole + arm toward the road (-X = travel-left) + la
 
 # alpine spruce: many drooping, jagged-edged branch tiers (star-shaped rings hanging from each tier's tip),
 # dark green with lighter tips; a dark underside disc per tier hides the see-through gap.
-func _make_spruce(seed_: int) -> Mesh:
+# bare = fraction of the height below the lowest branch tier (forest spruce / larch: tall bare trunks under the canopy);
+# palette = [dark, mid, tip] needle colours (larch: autumn yellow)
+func _make_spruce(seed_: int, bare := 0.0, palette: Array = []) -> Mesh:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var trunk := CylinderMesh.new()
-	trunk.top_radius = 0.14
-	trunk.bottom_radius = 0.3
-	trunk.height = 4.0
-	trunk.radial_segments = 6
-	_add_arrays(st, trunk.get_mesh_arrays(), Vector3(0, 2.0, 0), Vector3.ONE, 0, func(_v, _h, _t): return Color(0.2, 0.14, 0.09))
 	var tiers := rng.randi_range(10, 13)
-	var height := rng.randf_range(12.0, 17.0)
-	var rmax := rng.randf_range(2.7, 3.4)
+	var height := rng.randf_range(12.0, 17.0) * (1.0 + 0.5 * bare)  # forest trees are taller
+	var rmax := rng.randf_range(2.7, 3.4) * (1.0 - 0.4 * bare)  # ... and narrower
+	var trunk := CylinderMesh.new()
+	trunk.top_radius = 0.14 if bare == 0.0 else 0.06
+	trunk.bottom_radius = 0.3 if bare == 0.0 else 0.32
+	trunk.height = 4.0 if bare == 0.0 else height * 0.92
+	trunk.radial_segments = 6
+	_add_arrays(st, trunk.get_mesh_arrays(), Vector3(0, trunk.height * 0.5, 0), Vector3.ONE, 0, func(_v, _h, _t): return Color(0.2, 0.14, 0.09))
 	var n := 14
-	var dark := Color(0.015, 0.06, 0.025)
-	var mid := Color(0.05, 0.14, 0.04)
-	var tip := Color(0.12, 0.26, 0.07)
+	var dark: Color = palette[0] if palette else Color(0.015, 0.06, 0.025)
+	var mid: Color = palette[1] if palette else Color(0.05, 0.14, 0.04)
+	var tip: Color = palette[2] if palette else Color(0.12, 0.26, 0.07)
+	var y_low := maxf(1.8, bare * height)
 	for k in tiers:
 		var t := float(k) / (tiers - 1)
-		var y0 := 1.8 + t * (height - 2.6)
+		var y0 := y_low + t * (height - 0.8 - y_low)
 		var r := rmax * pow(1.0 - t, 0.85) * rng.randf_range(0.9, 1.08) + 0.35
 		var h := lerpf(3.2, 1.6, t)
 		var apex := Vector3(0, y0 + h, 0)
@@ -583,19 +643,7 @@ func _make_birch(seed_: int) -> Mesh:
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var height := rng.randf_range(9.0, 13.0)
 	var limb := func(a: Vector3, b: Vector3, r0: float, r1: float, col: Color) -> void:
-		var d := (b - a).normalized()
-		var side := d.cross(Vector3.UP if absf(d.y) < 0.95 else Vector3.RIGHT).normalized()
-		var up := side.cross(d)
-		for i in 5:
-			var a0 := TAU * i / 5
-			var a1 := TAU * (i + 1) / 5
-			var n0 := side * cos(a0) + up * sin(a0)
-			var n1 := side * cos(a1) + up * sin(a1)
-			var frost := col.lerp(SNOW, 0.55 * clampf(n0.y + 0.3, 0.0, 1.0))  # frost / snow on the upper side
-			st.set_color(frost)
-			for v in [[a + n0 * r0, n0], [b + n0 * r1, n0], [b + n1 * r1, n1], [a + n0 * r0, n0], [b + n1 * r1, n1], [a + n1 * r0, n1]]:
-				st.set_normal(v[1])
-				st.add_vertex(v[0])
+		_limb(st, a, b, r0, r1, col, 0.55)
 	var bark := Color(0.82, 0.8, 0.76)
 	var pts := [Vector3.ZERO]
 	for k in 6:  # slightly wandering trunk
@@ -623,6 +671,337 @@ func _make_birch(seed_: int) -> Mesh:
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED  # thin limbs: seen from every side
 	m.surface_set_material(0, mat)
 	return m
+
+# 5-sided tapered limb from a to b; frost > 0 whitens its upper side (winter birch)
+func _limb(st: SurfaceTool, a: Vector3, b: Vector3, r0: float, r1: float, col: Color, frost := 0.0) -> void:
+	var d := (b - a).normalized()
+	var side := d.cross(Vector3.UP if absf(d.y) < 0.95 else Vector3.RIGHT).normalized()
+	var up := side.cross(d)
+	for i in 5:
+		var a0 := TAU * i / 5
+		var a1 := TAU * (i + 1) / 5
+		var n0 := side * cos(a0) + up * sin(a0)
+		var n1 := side * cos(a1) + up * sin(a1)
+		st.set_color(col.lerp(SNOW, frost * clampf(n0.y + 0.3, 0.0, 1.0)))  # frost / snow on the upper side
+		for v in [[a + n0 * r0, n0], [b + n0 * r1, n0], [b + n1 * r1, n1], [a + n0 * r0, n0], [b + n1 * r1, n1], [a + n1 * r0, n1]]:
+			st.set_normal(v[1])
+			st.add_vertex(v[0])
+
+func _leaf_mat() -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	mat.vertex_color_use_as_albedo = true
+	mat.roughness = 0.9
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	return mat
+
+# leaf-cluster card texture (alpha-cut): ~70 oval leaves on a few twigs, grey so the vertex colour sets the crown colour
+func _leaf_atlas() -> ImageTexture:
+	var img := Image.create(256, 256, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	for k in 5:  # twigs
+		var a := Vector2(128, 128) + Vector2(rng.randf_range(-20, 20), rng.randf_range(-20, 20))
+		var b := Vector2(rng.randf_range(10, 246), rng.randf_range(10, 246))
+		for t in 60:
+			var q := a.lerp(b, t / 60.0)
+			img.set_pixel(clampi(int(q.x), 0, 255), clampi(int(q.y), 0, 255), Color(0.25, 0.2, 0.15, 1))
+	for k in 130:
+		var c := Vector2(rng.randf_range(16, 240), rng.randf_range(16, 240))
+		if c.distance_to(Vector2(128, 128)) > 118.0:
+			continue
+		var ang := rng.randf() * TAU
+		var ln := rng.randf_range(10.0, 18.0)
+		var wd := ln * rng.randf_range(0.45, 0.6)
+		var v := rng.randf_range(0.62, 1.0)
+		var ax := Vector2(cos(ang), sin(ang))
+		for y in range(int(c.y - ln), int(c.y + ln) + 1):
+			for x in range(int(c.x - ln), int(c.x + ln) + 1):
+				var d := Vector2(x, y) - c
+				var along := d.dot(ax)
+				var across := d.dot(Vector2(-ax.y, ax.x))
+				if (along / ln) * (along / ln) + (across / wd) * (across / wd) <= 1.0 and x >= 0 and y >= 0 and x < 256 and y < 256:
+					var shade := v * (0.82 if absf(across) < 0.8 else 1.0) * lerpf(1.05, 0.85, (along / ln) * 0.5 + 0.5)  # midrib, lit tip
+					img.set_pixel(x, y, Color(shade, shade, shade, 1))
+	img.generate_mipmaps()
+	return ImageTexture.create_from_image(img)
+
+# needle spray card texture: a twig along U with dense short needles on both sides (spruce / larch branches)
+func _needle_atlas() -> ImageTexture:
+	var img := Image.create(256, 128, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 9
+	var twigs := [[Vector2(0, 64), Vector2(255, 60)]]
+	for k in 7:  # side shoots
+		var x := rng.randf_range(30, 220)
+		twigs.append([Vector2(x, 63), Vector2(x + rng.randf_range(30, 60), 63 + (1 if k % 2 == 0 else -1) * rng.randf_range(25, 45))])
+	for tw in twigs:
+		var a: Vector2 = tw[0]
+		var b: Vector2 = tw[1]
+		var n := int(a.distance_to(b) / 2.0)
+		for t in n:
+			var q := a.lerp(b, float(t) / n)
+			var dir := (b - a).normalized()
+			for sgn in [-1.0, 1.0]:
+				var nd := dir.rotated(sgn * rng.randf_range(0.7, 1.2))
+				var ln := rng.randf_range(7.0, 13.0) * (1.0 - 0.4 * float(t) / n)
+				var v := rng.randf_range(0.55, 1.0)
+				for u in int(ln):
+					var p := q + nd * u
+					if p.x >= 0 and p.y >= 0 and p.x < 256 and p.y < 128:
+						img.set_pixel(int(p.x), int(p.y), Color(v, v, v, 1))
+			img.set_pixel(clampi(int(q.x), 0, 255), clampi(int(q.y), 0, 127), Color(0.3, 0.25, 0.2, 1))
+	img.generate_mipmaps()
+	return ImageTexture.create_from_image(img)
+
+var _leaf_mat_cards: StandardMaterial3D
+var _needle_mat_cards: StandardMaterial3D
+
+func _card_mat(tex: Texture2D) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = tex
+	m.vertex_color_use_as_albedo = true
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	m.alpha_scissor_threshold = 0.35
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	m.roughness = 0.85
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	return m
+
+func _bark_mat(tex: String) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = load("res://assets/textures/%s_diff.jpg" % tex)
+	m.normal_enabled = true
+	m.normal_texture = load("res://assets/textures/%s_nor.jpg" % tex)
+	m.roughness_texture = load("res://assets/textures/%s_rough.jpg" % tex)
+	return m
+
+# trunk / limb with bark UVs (u around, v along; ~1.5 m of bark texture per repeat)
+func _bark_limb(st: SurfaceTool, a: Vector3, b: Vector3, r0: float, r1: float, v0: float) -> float:
+	var d := (b - a).normalized()
+	var side := d.cross(Vector3.UP if absf(d.y) < 0.95 else Vector3.RIGHT).normalized()
+	var up := side.cross(d)
+	var v1 := v0 + a.distance_to(b) / 1.5
+	var around := TAU * maxf(r0, 0.05) / 1.5
+	for i in 6:
+		var a0 := TAU * i / 6
+		var a1 := TAU * (i + 1) / 6
+		var n0 := side * cos(a0) + up * sin(a0)
+		var n1 := side * cos(a1) + up * sin(a1)
+		for v in [[a + n0 * r0, n0, Vector2(i / 6.0 * around, v0)], [b + n0 * r1, n0, Vector2(i / 6.0 * around, v1)], [b + n1 * r1, n1, Vector2((i + 1) / 6.0 * around, v1)],
+				[a + n0 * r0, n0, Vector2(i / 6.0 * around, v0)], [b + n1 * r1, n1, Vector2((i + 1) / 6.0 * around, v1)], [a + n1 * r0, n1, Vector2((i + 1) / 6.0 * around, v0)]]:
+			st.set_normal(v[1])
+			st.set_uv(v[2])
+			st.add_vertex(v[0])
+	return v1
+
+# one foliage card: quad of `size` m at c, facing roughly `n`, normal bent outward from the crown centre for soft shading
+func _card(st: SurfaceTool, c: Vector3, n: Vector3, size_u: float, size_v: float, col: Color, nrm: Vector3, uv := Rect2(0, 0, 1, 1), along := Vector3.ZERO) -> void:
+	var t := along if along != Vector3.ZERO else n.cross(Vector3.UP if absf(n.y) < 0.9 else Vector3.RIGHT).normalized()
+	var b := n.cross(t).normalized()
+	var q := [c - b * size_v * 0.5, c + t * size_u - b * size_v * 0.5, c + t * size_u + b * size_v * 0.5, c + b * size_v * 0.5] if along != Vector3.ZERO \
+			else [c - t * size_u * 0.5 - b * size_v * 0.5, c + t * size_u * 0.5 - b * size_v * 0.5, c + t * size_u * 0.5 + b * size_v * 0.5, c - t * size_u * 0.5 + b * size_v * 0.5]
+	var uvs := [uv.position + Vector2(0, uv.size.y), uv.position + uv.size, uv.position + Vector2(uv.size.x, 0), uv.position]
+	st.set_color(col)
+	st.set_normal(nrm)
+	for k in [0, 1, 2, 0, 2, 3]:
+		st.set_uv(uvs[k])
+		st.add_vertex(q[k])
+
+func _two_surfaces(bark: SurfaceTool, bark_mat: Material, leaves: SurfaceTool, leaf_mat: Material) -> ArrayMesh:
+	var m := bark.commit()
+	leaves.commit(m)
+	m.surface_set_material(0, bark_mat)
+	m.surface_set_material(1, leaf_mat)
+	return m
+
+# European beech as in the video: tall smooth grey trunk bare for half its height, limbs angled up and out, a fine
+# crown of ~250 alpha-cut leaf-cluster cards around their tips (leaf = crown colour: green .. yellow .. orange)
+func _make_beech(seed_: int, leaf: Color) -> Mesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_
+	var bk := SurfaceTool.new()
+	bk.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var lf := SurfaceTool.new()
+	lf.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var h := rng.randf_range(14.0, 21.0)
+	var pts: Array[Vector3] = [Vector3.ZERO]
+	for k in 6:
+		pts.append(Vector3(rng.randf_range(-0.35, 0.35), h * 0.88 * (k + 1) / 6.0, rng.randf_range(-0.35, 0.35)))
+	var v := 0.0
+	for k in 6:
+		v = _bark_limb(bk, pts[k], pts[k + 1], lerpf(0.3, 0.07, k / 6.0), lerpf(0.3, 0.07, (k + 1) / 6.0), v)
+	var tips: Array[Vector3] = [pts[6] + Vector3(0, 0.8, 0)]
+	for k in rng.randi_range(7, 10):
+		var t := rng.randf_range(0.35, 0.85)
+		var a := rng.randf() * TAU
+		var base := pts[int(t * 6.0)].lerp(pts[int(t * 6.0) + 1], fmod(t * 6.0, 1.0))
+		var tip := base + Vector3(cos(a) * rng.randf_range(2.2, 4.0), rng.randf_range(1.0, 3.0), sin(a) * rng.randf_range(2.2, 4.0))
+		_bark_limb(bk, base, tip, 0.09, 0.03, 0.0)
+		tips.append(tip)
+	var crown := Vector3(0, h * 0.72, 0)
+	for k in rng.randi_range(22, 28):
+		var mc: Vector3 = tips[k % tips.size()] + Vector3(rng.randf_range(-1.6, 1.6), rng.randf_range(-1.2, 1.2), rng.randf_range(-1.6, 1.6))
+		var r := rng.randf_range(1.3, 2.1)
+		for j in 17:
+			var off := Vector3(rng.randf_range(-1, 1), rng.randf_range(-0.7, 0.8), rng.randf_range(-1, 1)) * r
+			var c := mc + off
+			var out := (c - crown).normalized()
+			var lit := clampf(0.5 + 0.35 * out.y + 0.25 * off.y / r, 0.0, 1.0)
+			var col := leaf * lerpf(0.5, 1.15, lit) * rng.randf_range(0.85, 1.1)
+			var sz := rng.randf_range(1.1, 1.8)
+			_card(lf, c, Vector3(rng.randf_range(-1, 1), rng.randf_range(-0.4, 1), rng.randf_range(-1, 1)).normalized(), sz, sz, col, (out + Vector3.UP * 0.6).normalized())
+	return _two_surfaces(bk, _bark_beech, lf, _leaf_mat_cards)
+
+# forest conifer as in the video: tall straight trunk, bare below `bare` of the height, dense tiers of drooping branches
+# made of crossed needle-spray cards; palette = [shade, mid, tip] (spruce dark green, larch autumn yellow)
+func _make_conifer(seed_: int, bare: float, palette: Array, density: float, bark_mat: Material) -> Mesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_
+	var bk := SurfaceTool.new()
+	bk.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var lf := SurfaceTool.new()
+	lf.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var h := rng.randf_range(19.0, 27.0)
+	var v := 0.0
+	for k in 5:
+		v = _bark_limb(bk, Vector3(0, h * k / 5.0, 0), Vector3(0, h * (k + 1) / 5.0, 0), lerpf(0.34, 0.04, k / 5.0), lerpf(0.34, 0.04, (k + 1) / 5.0), v)
+	var y_low := bare * h
+	var rmax := rng.randf_range(2.2, 2.9)
+	var y := y_low
+	while y < h - 0.3:
+		var t := (y - y_low) / (h - y_low)
+		var r := rmax * pow(1.0 - t, 0.9) + 0.25
+		for k in int(rng.randi_range(6, 9) * density):
+			var a := rng.randf() * TAU
+			var dir := Vector3(cos(a), -0.15 - 0.35 * (1.0 - t) * rng.randf_range(0.6, 1.2), sin(a)).normalized()
+			var base := Vector3(0, y, 0)
+			var shade := clampf(0.35 + 0.65 * t + rng.randf_range(-0.15, 0.15), 0.0, 1.0)
+			var col: Color = (palette[0] as Color).lerp(palette[1], shade).lerp(palette[2], maxf(shade - 0.6, 0.0) * 1.5)
+			var w := 0.45 + r * 0.22
+			var flat := dir.cross(Vector3.UP).normalized()
+			_card(lf, base, Vector3.UP, r, w, col, (dir + Vector3.UP * 0.8).normalized(), Rect2(0, 0, 1, 1), dir)
+			_card(lf, base, flat, r, w * 0.8, col * 0.85, (dir + Vector3.UP * 0.5).normalized(), Rect2(0, 0, 1, 1), dir)
+		y += rng.randf_range(0.45, 0.7)
+	return _two_surfaces(bk, bark_mat, lf, _needle_mat_cards)
+
+# hazel / young beech: 6-9 thin stems fanning out from the ground, leaf-cluster cards along their upper half
+func _make_hazel(seed_: int, leaf: Color) -> Mesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_
+	var bk := SurfaceTool.new()
+	bk.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var lf := SurfaceTool.new()
+	lf.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var h := rng.randf_range(2.5, 4.5)
+	for k in rng.randi_range(6, 9):
+		var a := rng.randf() * TAU
+		var tip := Vector3(cos(a) * rng.randf_range(0.8, 1.8), h * rng.randf_range(0.75, 1.0), sin(a) * rng.randf_range(0.8, 1.8))
+		_bark_limb(bk, Vector3(cos(a) * 0.1, 0.0, sin(a) * 0.1), tip, 0.035, 0.015, 0.0)
+		for j in 10:
+			var c := tip * rng.randf_range(0.45, 1.05) + Vector3(rng.randf_range(-0.4, 0.4), rng.randf_range(-0.2, 0.3), rng.randf_range(-0.4, 0.4))
+			var col := leaf * lerpf(0.6, 1.1, clampf(c.y / h, 0.0, 1.0)) * rng.randf_range(0.85, 1.1)
+			var sz := rng.randf_range(0.5, 0.8)
+			_card(lf, c, Vector3(rng.randf_range(-1, 1), rng.randf_range(-0.3, 1), rng.randf_range(-1, 1)).normalized(), sz, sz, col, (c.normalized() + Vector3.UP).normalized())
+	return _two_surfaces(bk, _bark_beech, lf, _leaf_mat_cards)
+
+# reed clump on the waterline: ~46 thin straw blades 1.4-2.4 m, leaning a little, with brown plumes
+func _make_reeds(seed_: int) -> Mesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for k in 46:
+		var a := rng.randf() * TAU
+		var base := Vector3(cos(a), 0.0, sin(a)) * rng.randf_range(0.0, 0.6)
+		var top := base + Vector3(rng.randf_range(-0.25, 0.25), rng.randf_range(1.4, 2.4), rng.randf_range(-0.25, 0.25))
+		var side := Vector3(cos(a + 1.57), 0.0, sin(a + 1.57)) * 0.025
+		for v in [[base - side, Color(0.2, 0.17, 0.07)], [base + side, Color(0.2, 0.17, 0.07)], [top, Color(0.55, 0.43, 0.2)]]:
+			st.set_color(v[1])
+			st.add_vertex(v[0])
+		var p0 := top.lerp(base, 0.15)
+		for v in [[p0 - side * 2.0, Color(0.3, 0.2, 0.1)], [p0 + side * 2.0, Color(0.3, 0.2, 0.1)], [top + Vector3(0, 0.05, 0), Color(0.38, 0.27, 0.14)]]:
+			st.set_color(v[1])
+			st.add_vertex(v[0])
+	st.generate_normals()
+	var m := st.commit()
+	m.surface_set_material(0, _leaf_mat())
+	return m
+
+# fallen trunk, 7 m long along X, lying on the ground
+func _make_log() -> Mesh:
+	var c := CylinderMesh.new()
+	c.top_radius = 0.2
+	c.bottom_radius = 0.28
+	c.height = 7.0
+	c.radial_segments = 7
+	var arr := c.get_mesh_arrays()
+	var verts: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+	for i in verts.size():
+		verts[i] = Vector3(verts[i].y, verts[i].x + 0.22, verts[i].z)
+	arr[Mesh.ARRAY_VERTEX] = verts
+	arr[Mesh.ARRAY_NORMAL] = null
+	arr[Mesh.ARRAY_TANGENT] = null
+	var st := SurfaceTool.new()
+	st.create_from_arrays(arr)
+	st.generate_normals()
+	var m := st.commit()
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.36, 0.31, 0.26)
+	mat.roughness = 0.95
+	m.surface_set_material(0, mat)
+	return m
+
+# weissensee forest per section (forest_mix): trees by the section's beech / spruce / larch shares ("yellow" = share of
+# autumn-coloured beech crowns), out to "depth" m from the path; "hazel" bushes crowding the path edge, "reeds" on the
+# waterline, fallen "logs", "scree" rubble across the trail. Counts are per chunk.
+func _forest(holder: Node3D, rng: RandomNumberGenerator, s0: float, origin: Vector3, sec: Dictionary) -> void:
+	var groups := {}
+	var add := func(m: Mesh, s: float, u: float, sc: float, sink: float) -> void:
+		var p := _route.pos_at(s) + _route.left_at(s) * u
+		p.y = _route.ground_y(s, u) - sink
+		if not groups.has(m):
+			groups[m] = []
+		groups[m].append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * sc), p - origin))
+	var pick := func(arr: Array[Mesh]) -> Mesh:
+		return arr[rng.randi() % arr.size()]
+	var side_u := func(s: float, from: float, to: float, power: float, lake_share := 0.5) -> float:  # beside the path, never in the lake
+		var bank := _route.water_edge_u(s) - 0.8 - _route.half_left(s) - from
+		var lake := rng.randf() < lake_share * clampf(bank / 15.0, 0.0, 1.0)  # the wooded bank, as many trees as it has room for
+		var edge := (_route.half_left(s) if lake else _route.half_right(s)) + from
+		if lake:  # spread over the bank between the path and the water (clamping would line them up on the shore)
+			return lerpf(edge, minf(to, _route.water_edge_u(s) - 0.8), pow(rng.randf(), power))
+		return -lerpf(edge, maxf(to, edge + 0.5), pow(rng.randf(), power))
+	var wb := float(sec.get("beech", 0.5))
+	var ws := float(sec.get("spruce", 0.4))
+	var wl := float(sec.get("larch", 0.1))
+	var yellow := float(sec.get("yellow", 0.5))
+	var depth := float(sec.get("depth", max_dist))
+	for i in int(trees_per_chunk * float(sec.get("trees", 1.0))):
+		var s := s0 + rng.randf() * chunk_length
+		var r := rng.randf() * maxf(wb + ws + wl, 0.001)
+		var m: Mesh = pick.call(_beech_yellow if rng.randf() < yellow else _beech_green) if r < wb else (pick.call(_fspruce) if r < wb + ws else pick.call(_larch))
+		add.call(m, s, side_u.call(s, 0.6, depth, 1.15), rng.randf_range(0.75, 1.15), 0.2)
+	for i in int(sec.get("hazel", 0)):
+		var s := s0 + rng.randf() * chunk_length
+		add.call(pick.call(_hazel_yellow if rng.randf() < yellow else _hazel_green), s, side_u.call(s, 2.0, 9.0, 1.8, 0.7), rng.randf_range(0.7, 1.3), 0.1)  # crowns stay out of the walker's face
+	for i in int(sec.get("reeds", 0)):
+		var s := s0 + rng.randf() * chunk_length
+		if _route.sea_grass(s) or _route.water_level(s) > _route.pos_at(s).y - 4.0:
+			add.call(_reed, s, _route.water_edge_u(s) + rng.randf_range(-2.0, 4.0), rng.randf_range(0.8, 1.3), 0.3)  # a belt out into the shallows
+	for i in int(sec.get("logs", 0)):
+		var s := s0 + rng.randf() * chunk_length
+		add.call(_logm, s, side_u.call(s, 0.6, 14.0, 1.2), rng.randf_range(0.6, 1.3), 0.08)
+	for i in int(sec.get("scree", 0)):
+		var s := s0 + rng.randf() * chunk_length
+		add.call(pick.call(_rocks_small), s, rng.randf_range(-8.0, 8.0), rng.randf_range(0.1, 0.35), 0.05)
+	for m: Mesh in groups:
+		var xf: Array = groups[m]
+		var mm := _new_mm(m, xf.size())
+		for k in xf.size():
+			mm.set_instance_transform(k, xf[k])
+		_add_mm(holder, mm, origin, tree_view_distance)
 
 # meadow grass clump: a tuft of thin, tapered, curved blades (2 segments each). UV.y = height fraction,
 # used by grass.gdshader for wind bending and the root-to-tip colour ramp.
@@ -656,9 +1035,12 @@ func _make_clump() -> Mesh:
 @export var trail_pebbles := 45      # per chunk
 @export var trail_roots := 2         # per chunk
 func _trail_debris(holder: Node3D, rng: RandomNumberGenerator, s0: float, origin: Vector3) -> void:
+	var sec := _route.section_at(s0 + chunk_length * 0.5)
+	var n_peb := int(sec.get("pebbles", trail_pebbles))
+	var n_root := int(sec.get("roots", trail_roots))
 	for m in _rocks_small:
-		var mm := _new_mm(m, trail_pebbles)
-		for i in trail_pebbles:
+		var mm := _new_mm(m, n_peb)
+		for i in n_peb:
 			var s := s0 + rng.randf() * chunk_length
 			var u := rng.randf_range(-_route.half_right(s), _route.half_left(s)) * 0.95
 			var p := _route.pos_at(s) + _route.left_at(s) * u
@@ -678,8 +1060,8 @@ func _trail_debris(holder: Node3D, rng: RandomNumberGenerator, s0: float, origin
 		mat.roughness = 0.9
 		c.material = mat
 		_root_mesh = c
-	var rm := _new_mm(_root_mesh, trail_roots)
-	for i in trail_roots:
+	var rm := _new_mm(_root_mesh, n_root)
+	for i in n_root:
 		var s := s0 + rng.randf() * chunk_length
 		var p := _route.pos_at(s) + _route.left_at(s) * rng.randf_range(-0.3, 0.3)
 		p.y = _route.ground_y(s, 0.0) - 0.02

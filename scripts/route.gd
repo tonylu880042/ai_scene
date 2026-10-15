@@ -29,8 +29,11 @@ extends Path3D
 @export var real_shore := ""        # assets/terrain/<dem>_shore.json (tools/real_shore.py): the inland columns from 190 m
                                      # to 3 km take the real mountains along that shoreline (heights above the lake), and
                                      # rock vs vegetation from its orthophoto; replaces mountain_height's procedural wall
+@export var real_min_rise := 0.3     # real_shore: inland land rises at least this much per metre over the first 100 m (Garda towns)
+@export var real_blend := Vector2(15.0, 110.0)  # real_shore: metres behind the path edge over which the near band hands over to the DEM
 @export var sections_file := ""      # json timeline of scene sections (garda_sections.json): per-section widths, surface, roadside lane, slope
 @export var terrain_params := {}     # terrain.gdshader overrides, e.g. {"grass_tint": Color(...), "rock_tint": ...}
+@export var sand_texture := "coast_sand_01"  # terrain.gdshader "sand" slot (coastal); weissensee: forest leaf litter (sections "litter")
 @export_group("Boardwalk deck")
 @export var deck := false            # plank deck (route-aligned boards, no road markings) instead of asphalt
 @export var deck_texture := "wood_planks_grey"
@@ -95,6 +98,7 @@ var _quay := PackedByteArray()           # per-row: harbour quay wall straight i
 var _cf := PackedFloat32Array()          # per-row distance behind the path edge where the cliff face starts (sections "cliff_from")
 var _br := PackedFloat32Array()          # per-row lake-bank run per metre of drop (sections "bank_ratio", else bank_ratio)
 var _cliff := PackedFloat32Array()       # per-row height of the natural rock face rising from the inland edge (sections "cliff")
+var _lit := PackedFloat32Array()         # per-row forest-floor leaf litter 0..1 (sections "litter"): terrain "sand" slot instead of grass
 var _land_u: Array[float] = LAND_U_COAST
 var _ni := 5    # inland columns before the road
 var _no := 5    # seaward strips after the road edge
@@ -161,7 +165,7 @@ func _ready() -> void:
 	var terrain_mat := ShaderMaterial.new()
 	terrain_mat.shader = load("res://shaders/terrain.gdshader")
 	for k in ["sand_d", "sand_n", "grass_d", "grass_n", "rock_d", "rock_n"]:
-		var f := "coast_sand_01" if k.begins_with("sand") else (ground_texture if k.begins_with("grass") else "rock_boulder_dry")
+		var f := sand_texture if k.begins_with("sand") else (ground_texture if k.begins_with("grass") else "rock_boulder_dry")
 		if alpine_trail and k.begins_with("sand"):
 			f = trail_texture  # the "sand" slot is the dirt patch along the trail edge
 		terrain_mat.set_shader_parameter(k, load("res://assets/textures/%s_%s.jpg" % [f, "diff" if k.ends_with("d") else "nor"]))
@@ -244,18 +248,21 @@ func landmarks() -> Array:
 		out.append([float(e[0]) / _video_km * length, e[1]])
 	return out
 
-# scene section at route offset s: the reference video's timeline (sections: [[video_km, type], ...]) stretched over
-# this course's length. Returns that type's settings plus "name"; empty without a sections file.
+# scene section at route offset s: the reference video's timeline (sections: [[video_km, type, {overrides}?, ...], ...])
+# stretched over this course's length. Returns that type's settings, the entry's overrides on top, plus "name";
+# empty without a sections file.
 func section_at(s: float) -> Dictionary:
 	if _secs.is_empty():
 		return {}
 	var km := clampf(s / length, 0.0, 1.0) * _video_km
-	var name: String = _secs[0][1]
+	var e0: Array = _secs[0]
 	for e in _secs:
 		if km >= float(e[0]):
-			name = e[1]
-	var t: Dictionary = _sec_types[name].duplicate()
-	t["name"] = name
+			e0 = e
+	var t: Dictionary = _sec_types[e0[1]].duplicate()
+	if e0.size() > 2 and e0[2] is Dictionary:
+		t.merge(e0[2], true)
+	t["name"] = e0[1]
 	return t
 
 func _mtn() -> bool:  # mountain mode: finer near columns, cliff ledges, rock by steepness
@@ -366,6 +373,8 @@ func _build_widths() -> void:
 	_cf.fill(6.0)
 	_quay.resize(_n)
 	_quay.fill(0)
+	_lit.resize(_n)
+	_lit.fill(0.0)
 	for i in _n:
 		var s := i * ROW
 		var base := road_left
@@ -380,6 +389,7 @@ func _build_widths() -> void:
 			_cliff[i] = float(sec.get("cliff", 0.0))
 			_br[i] = float(sec.get("bank_ratio", bank_ratio))
 			_cf[i] = float(sec.get("cliff_from", 6.0))
+			_lit[i] = float(sec.get("litter", 0.0))
 			continue
 		if alpine_trail:
 			_hl[i] = clampf(trail_half * (1.0 + width_jitter * _noise.get_noise_1d(s * 0.025 + 700.0)) + 0.08 * _noise.get_noise_1d(s * 0.17 + 40.0), 0.6, 1.15)
@@ -402,6 +412,7 @@ func _build_widths() -> void:
 		_cliff = _smooth(_cliff, 15)
 		_br = _smooth(_br, 15)
 		_cf = _smooth(_cf, 15)
+		_lit = _smooth(_lit, 10)
 
 # outer edge of the walkable/blend surface at row i (u > 0 left, u < 0 right)
 func _edge(i: int, left: bool) -> float:
@@ -466,8 +477,8 @@ func _build_columns() -> void:
 				if not _real.is_empty():  # real mountains from 190 m; the near band hands over to them from ~15 m inland
 					# never below a rise of 30 m over the first 100 m: flat real shore land (towns, deltas) at lake level
 					# would leave a trough behind the path that reads as a dark strip on the water across a bend
-					var rh := maxf(wy + _real_height(i * ROW, -u), shoulder + 0.3 * minf(a, 100.0))
-					ys[ys.size() - 1] = rh if u <= -190.0 else lerpf(ys[ys.size() - 1], rh, smoothstep(15.0, 110.0, a))
+					var rh := maxf(wy + _real_height(i * ROW, -u), shoulder + real_min_rise * minf(a, 100.0))
+					ys[ys.size() - 1] = rh if u <= -190.0 else lerpf(ys[ys.size() - 1], rh, smoothstep(real_blend.x, real_blend.y, a))
 		if not _real.is_empty():  # never a hollow between the near slope and the real mountains
 			for j in range(_ni - 2, -1, -1):
 				ys[j] = maxf(ys[j], ys[j + 1] - 25.0)
@@ -533,7 +544,12 @@ func _col(i: int, j: int) -> Color:
 	var steep_rock := 1.0 - _co[i][j].a  # a: real mountains use the orthophoto mask only (fades in with the photo colour)
 	if j > _ni and _br[i] > bank_ratio + 0.1:
 		steep_rock = 0.0  # wide (section) lake banks are scrub-covered, not bare rock: no pale strip on the water across a bay
-	return Color(1.0 if (j <= _ni or grass_bank) else _ck[i], _cr[i][j], dirt, steep_rock)
+	var g := 1.0 if (j <= _ni or grass_bank) else _ck[i]
+	if _lit[i] > 0.01 and absf(_cu[i][j]) < 150.0:  # forest floor: leaf litter with patches of green herbs, near the path only
+		var q := _pt(i, j)
+		var herbs := smoothstep(-0.05, 0.4, _noise.get_noise_2d(q.x * 10.0 + 77.0, q.z * 10.0))  # ~10 m patches (noise frequency 0.01)
+		g = minf(g, 1.0 - _lit[i] * (1.0 - 0.75 * herbs))
+	return Color(g, _cr[i][j], dirt, steep_rock)
 
 
 # Columns far from the path hang off a smoothed centre line (window ~ twice their distance): an offset curve folds over itself

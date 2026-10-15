@@ -1,0 +1,99 @@
+{
+ "templates": {
+  "weissensee": {
+   "Path3D": {
+    "hill_height": 40,
+    "inland_slope": 1.0
+   },
+   "Foliage": {
+    "trees_per_chunk": 70
+   }
+  }
+ },
+ "courses": {
+  "recovery_walk": {
+   "template": "weissensee",
+   "tod": [
+    0.35,
+    0.6
+   ]
+  },
+  "power_walk": {
+   "template": "weissensee",
+   "tod": [
+    0.35,
+    0.6
+   ]
+  },
+  "walk_run": {
+   "template": "weissensee",
+   "tod": [
+    0.35,
+    0.6
+   ]
+  },
+  "fat_burn": {
+   "template": "weissensee",
+   "tod": [
+    0.35,
+    0.6
+   ]
+  },
+  "glute_blast": {
+   "template": "weissensee",
+   "tod": [
+    0.35,
+    0.6
+   ]
+  },
+  "rolling_hills": {
+   "template": "weissensee",
+   "tod": [
+    0.35,
+    0.6
+   ]
+  },
+  "five_k_ready": {
+   "template": "weissensee",
+   "tod": [
+    0.35,
+    0.6
+   ]
+  },
+  "speed_lab": {
+   "template": "weissensee",
+   "tod": [
+    0.35,
+    0.6
+   ]
+  },
+  "summit": {
+   "template": "weissensee",
+   "tod": [
+    0.35,
+    0.6
+   ]
+  },
+  "endurance_60": {
+   "template": "weissensee",
+   "tod": [
+    0.35,
+    0.6
+   ]
+  },
+  "endurance_75": {
+   "template": "weissensee",
+   "tod": [
+    0.35,
+    0.6
+   ]
+  },
+  "endurance_90": {
+   "template": "weissensee",
+   "tod": [
+    0.35,
+    0.6
+   ]
+  }
+ }
+}
