@@ -98,6 +98,7 @@ var _quay := PackedByteArray()           # per-row: harbour quay wall straight i
 var _cf := PackedFloat32Array()          # per-row distance behind the path edge where the cliff face starts (sections "cliff_from")
 var _br := PackedFloat32Array()          # per-row lake-bank run per metre of drop (sections "bank_ratio", else bank_ratio)
 var _cliff := PackedFloat32Array()       # per-row height of the natural rock face rising from the inland edge (sections "cliff")
+var _ridge := PackedFloat32Array()       # per-row wooded rise on the lake bank (sections "ridge", m above the path): hides the water
 var _lit := PackedFloat32Array()         # per-row forest-floor leaf litter 0..1 (sections "litter"): terrain "sand" slot instead of grass
 var _land_u: Array[float] = LAND_U_COAST
 var _ni := 5    # inland columns before the road
@@ -375,6 +376,8 @@ func _build_widths() -> void:
 	_quay.fill(0)
 	_lit.resize(_n)
 	_lit.fill(0.0)
+	_ridge.resize(_n)
+	_ridge.fill(0.0)
 	for i in _n:
 		var s := i * ROW
 		var base := road_left
@@ -390,6 +393,7 @@ func _build_widths() -> void:
 			_br[i] = float(sec.get("bank_ratio", bank_ratio))
 			_cf[i] = float(sec.get("cliff_from", 6.0))
 			_lit[i] = float(sec.get("litter", 0.0))
+			_ridge[i] = float(sec.get("ridge", 0.0))
 			continue
 		if alpine_trail:
 			_hl[i] = clampf(trail_half * (1.0 + width_jitter * _noise.get_noise_1d(s * 0.025 + 700.0)) + 0.08 * _noise.get_noise_1d(s * 0.17 + 40.0), 0.6, 1.15)
@@ -413,6 +417,7 @@ func _build_widths() -> void:
 		_br = _smooth(_br, 15)
 		_cf = _smooth(_cf, 15)
 		_lit = _smooth(_lit, 10)
+		_ridge = _smooth(_ridge, 20)
 
 # outer edge of the walkable/blend surface at row i (u > 0 left, u < 0 right)
 func _edge(i: int, left: bool) -> float:
@@ -510,7 +515,10 @@ func _build_columns() -> void:
 				var knob := 0.0  # wide (section) banks: outcrops and hollows, not one smooth sweep down to the water
 				if _br[i] > bank_ratio + 0.1 and f < 1.0:
 					knob = 0.12 * alt * _noise.get_noise_2d(i * ROW * 0.05, f * 7.0) * 4.0 * f * (1.0 - f)
-				ys.append(lerpf(shoulder, wy - 0.5, f * f * (3.0 - 2.0 * f)) + knob)
+				var y_bank := lerpf(shoulder, wy - 0.5, f * f * (3.0 - 2.0 * f)) + knob
+				if _ridge[i] > 0.01 and f < 0.6:  # level wooded ground rising to ~ridge m, then the drop to the water
+					y_bank = lerpf(y_bank, shoulder + (0.6 if f < 0.3 else 1.0) * _ridge[i], clampf(_ridge[i] / 1.5, 0.0, 1.0))
+				ys.append(y_bank)
 			us.append(lip + w + 3.0)  # skirt below the water: no bank edge in the air when the lake sits lower elsewhere
 			ys.append(wy - 40.0)
 		var rs := PackedFloat32Array()

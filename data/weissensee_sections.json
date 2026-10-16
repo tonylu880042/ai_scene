@@ -12,7 +12,7 @@
    ],
    "road": 0,
    "slope": 0.17,
-   "trees": 0.15,
+   "trees": 1.1,
    "water_gap": 5,
    "lake_trees": true,
    "lake": "boardfence",
@@ -21,12 +21,12 @@
    "litter": 0.0,
    "grass": 0.62,
    "ferns": 0.5,
-   "beech": 0.5,
+   "beech": 0.35,
    "spruce": 0.4,
-   "larch": 0.1,
+   "larch": 0.25,
    "hazel": 2,
    "reeds": 0,
-   "depth": 35,
+   "depth": 60,
    "clumps": 2.5
   },
   "plaza": {
@@ -1302,15 +1302,24 @@
    0.0,
    "board_path",
    {
-    "yellow": 0.49
+    "ridge": 1.5,
+    "bank_ratio": 11.0,
+    "yellow": 0.49,
+    "trees": 0.68,
+    "spruce": 0.35,
+    "depth": 60.0
    },
-   "00:55 gravel path, weathered board fence on the lake side, meadow and road inland"
+   "00:55 gravel path, weathered board fence on the lake side, meadow and road inland, lake out of sight"
   ],
   [
    0.075,
    "plaza",
    {
-    "yellow": 0.52
+    "yellow": 0.52,
+    "bank_ratio": 13.75,
+    "ridge": 1.5,
+    "depth": 60.0,
+    "lake_band": 35
    },
    "01:25 road crossing, gravel square with flagpole, info boards, birches"
   ],
@@ -1318,7 +1327,11 @@
    0.2,
    "reed_path",
    {
-    "yellow": 0.69
+    "yellow": 0.69,
+    "bank_ratio": 27.5,
+    "ridge": 1.5,
+    "depth": 60.0,
+    "lake_band": 35
    },
    "02:10 footbridge over the inlet, gravel path between reeds and bushes"
   ],
@@ -1328,7 +1341,10 @@
    {
     "yellow": 0.22,
     "trees": 1.87,
-    "spruce": 0.63
+    "spruce": 0.63,
+    "bank_ratio": 9.17,
+    "ridge": 1.5,
+    "depth": 60.0
    },
    "02:50 gravel path into tall spruce forest, grassy verges"
   ],
@@ -1336,7 +1352,11 @@
    0.418,
    "meadow_gravel",
    {
-    "yellow": 0.47
+    "yellow": 0.47,
+    "bank_ratio": 18.33,
+    "ridge": 1.5,
+    "depth": 60.0,
+    "lake_band": 35
    },
    "03:32 open lakeside meadow, info board, wire fence"
   ],
@@ -1344,7 +1364,11 @@
    0.523,
    "parking",
    {
-    "yellow": 0.41
+    "yellow": 0.41,
+    "bank_ratio": 18.33,
+    "ridge": 1.5,
+    "depth": 60.0,
+    "lake_band": 35
    },
    "04:12 gravel car park, pavilion and lodge with red roof"
   ],
@@ -1360,7 +1384,11 @@
    0.99,
    "hamlet",
    {
-    "yellow": 0.36
+    "yellow": 0.36,
+    "bank_ratio": 11.0,
+    "ridge": 1.5,
+    "depth": 60.0,
+    "lake_band": 35
    },
    "06:42 gravel lane past the lodge, chalets, carport"
   ],
@@ -1368,7 +1396,11 @@
    1.093,
    "hazel_path",
    {
-    "yellow": 0.83
+    "yellow": 0.83,
+    "bank_ratio": 11.0,
+    "ridge": 1.5,
+    "depth": 60.0,
+    "lake_band": 35
    },
    "07:22 path into yellow hazel bushes"
   ],
@@ -1378,7 +1410,10 @@
    {
     "yellow": 0.29,
     "trees": 1.75,
-    "spruce": 0.55
+    "spruce": 0.55,
+    "bank_ratio": 11.0,
+    "ridge": 1.5,
+    "depth": 60.0
    },
    "07:32 board fence on the left, dense green broadleaf"
   ],
@@ -1388,7 +1423,10 @@
    {
     "yellow": 0.2,
     "trees": 2.0,
-    "spruce": 0.63
+    "spruce": 0.63,
+    "bank_ratio": 9.17,
+    "ridge": 1.5,
+    "depth": 60.0
    },
    "07:52 spruce / larch, tall trunks"
   ],
@@ -1397,7 +1435,11 @@
    "meadow_gravel",
    {
     "trees": 0.3,
-    "yellow": 0.76
+    "yellow": 0.76,
+    "bank_ratio": 18.33,
+    "ridge": 1.5,
+    "depth": 60.0,
+    "lake_band": 35
    },
    "08:12 open meadow both sides, small hut"
   ],
@@ -1407,7 +1449,9 @@
    {
     "yellow": 0.69,
     "trees": 1.63,
-    "spruce": 0.27
+    "spruce": 0.27,
+    "bank_ratio": 7.5,
+    "depth": 60.0
    },
    "08:32 NORTH SHORE: gravel trail in mixed forest"
   ],
@@ -1433,7 +1477,9 @@
    {
     "yellow": 0.76,
     "trees": 2.38,
-    "spruce": 0.15
+    "spruce": 0.15,
+    "bank_ratio": 2.0,
+    "depth": 60.0
    },
    "10:02 beech forest, leaf-covered trail, slope up right, lake through the trunks"
   ],
@@ -1444,7 +1490,10 @@
     "grass": 2.5,
     "yellow": 0.33,
     "trees": 1.85,
-    "spruce": 0.53
+    "spruce": 0.53,
+    "bank_ratio": 6.88,
+    "ridge": 1.5,
+    "depth": 60.0
    },
    "13:22 spruce / larch over a grassy slope, trail markers"
   ],
@@ -1501,7 +1550,9 @@
     "water_gap": 5,
     "yellow": 0.9,
     "trees": 1.75,
-    "spruce": 0.15
+    "spruce": 0.15,
+    "bank_ratio": 6.0,
+    "depth": 60.0
    },
    "18:22 yellow beech"
   ],
@@ -1522,7 +1573,10 @@
     "water_gap": 6,
     "yellow": 0.87,
     "trees": 2.3,
-    "spruce": 0.15
+    "spruce": 0.15,
+    "bank_ratio": 9.17,
+    "ridge": 1.5,
+    "depth": 60.0
    },
    "19:08 dense autumn beech / hazel"
   ],
@@ -1532,7 +1586,10 @@
    {
     "yellow": 0.5,
     "trees": 2.48,
-    "spruce": 0.28
+    "spruce": 0.28,
+    "bank_ratio": 1.83,
+    "ridge": 1.5,
+    "depth": 60.0
    },
    "19:52 LAKESIDE HIGH ROUTE: climbing, roots across the trail"
   ],
@@ -1542,7 +1599,10 @@
    {
     "yellow": 0.34,
     "trees": 1.25,
-    "spruce": 0.33
+    "spruce": 0.33,
+    "bank_ratio": 1.45,
+    "ridge": 1.5,
+    "depth": 60.0
    },
    "20:52 pale limestone scree across the trail"
   ],
@@ -1552,7 +1612,9 @@
    {
     "yellow": 0.43,
     "trees": 2.06,
-    "spruce": 0.34
+    "spruce": 0.34,
+    "ridge": 1.5,
+    "depth": 60.0
    },
    "21:22 very steep slope, log edge, steel cable, root steps"
   ],
@@ -1563,7 +1625,8 @@
     "water_gap": 62,
     "yellow": 0.49,
     "trees": 1.3,
-    "spruce": 0.28
+    "spruce": 0.28,
+    "depth": 60.0
    },
    "22:52 viewpoint bench, lake far below"
   ],
@@ -1573,7 +1636,8 @@
    {
     "yellow": 0.9,
     "trees": 1.37,
-    "spruce": 0.25
+    "spruce": 0.25,
+    "depth": 60.0
    },
    "23:12 grey limestone wall beside the trail"
   ],
@@ -1583,7 +1647,8 @@
    {
     "yellow": 0.58,
     "trees": 2.19,
-    "spruce": 0.25
+    "spruce": 0.25,
+    "depth": 60.0
    },
    "23:52 steep traverse, yellow beech, lake glimpses far below"
   ],
@@ -1595,7 +1660,8 @@
     "lake": "none",
     "yellow": 0.76,
     "trees": 1.53,
-    "spruce": 0.26
+    "spruce": 0.26,
+    "depth": 60.0
    },
    "24:12 steel cable handrail"
   ],
@@ -1605,7 +1671,9 @@
    {
     "yellow": 0.77,
     "trees": 2.33,
-    "spruce": 0.2
+    "spruce": 0.2,
+    "ridge": 1.5,
+    "depth": 60.0
    },
    "24:22 mixed beech / larch / spruce on a steep slope"
   ],
@@ -1615,7 +1683,8 @@
    {
     "yellow": 0.58,
     "trees": 2.16,
-    "spruce": 0.4
+    "spruce": 0.4,
+    "depth": 60.0
    },
    "25:52 root steps, uprooted root plate, fallen logs"
   ],
@@ -1625,7 +1694,8 @@
    {
     "yellow": 0.81,
     "trees": 1.15,
-    "spruce": 0.25
+    "spruce": 0.25,
+    "depth": 60.0
    },
    "26:42 grassy steep slope, larch / pine, lake far below, cable"
   ],
@@ -1636,7 +1706,8 @@
     "water_gap": 42,
     "yellow": 0.88,
     "trees": 1.69,
-    "spruce": 0.25
+    "spruce": 0.25,
+    "depth": 60.0
    },
    "27:42 descending, viewpoint through yellow branches"
   ],
@@ -1647,7 +1718,10 @@
     "water_gap": 25,
     "yellow": 0.54,
     "trees": 2.35,
-    "spruce": 0.28
+    "spruce": 0.28,
+    "bank_ratio": 2.2,
+    "ridge": 1.5,
+    "depth": 60.0
    },
    "28:30 mixed forest, fallen trees"
   ],
@@ -1657,7 +1731,10 @@
    {
     "yellow": 0.37,
     "trees": 2.37,
-    "spruce": 0.4
+    "spruce": 0.4,
+    "bank_ratio": 4.58,
+    "ridge": 1.5,
+    "depth": 60.0
    },
    "29:02 flatter, wider trail in spruce / beech"
   ],
@@ -1667,7 +1744,9 @@
    {
     "yellow": 0.81,
     "trees": 1.95,
-    "spruce": 0.25
+    "spruce": 0.25,
+    "bank_ratio": 2.5,
+    "depth": 60.0
    },
    "30:02 roots, trail markers, lake close below"
   ],
@@ -1705,7 +1784,9 @@
    {
     "yellow": 0.63,
     "trees": 1.6,
-    "spruce": 0.37
+    "spruce": 0.37,
+    "bank_ratio": 7.5,
+    "depth": 60.0
    },
    "32:52 larch / spruce at lake level, grassy floor"
   ],
@@ -1715,7 +1796,10 @@
    {
     "yellow": 0.64,
     "trees": 1.88,
-    "spruce": 0.48
+    "spruce": 0.48,
+    "bank_ratio": 11.0,
+    "ridge": 1.5,
+    "depth": 60.0
    },
    "35:12 scree cone beside the trail"
   ],
@@ -1727,7 +1811,10 @@
     "roots": 10,
     "yellow": 0.3,
     "trees": 2.07,
-    "spruce": 0.6
+    "spruce": 0.6,
+    "bank_ratio": 4.58,
+    "ridge": 1.5,
+    "depth": 60.0
    },
    "35:32 wider trail, spruce, hazel"
   ],
@@ -1738,7 +1825,8 @@
     "roots": 70,
     "yellow": 0.19,
     "trees": 1.97,
-    "spruce": 0.62
+    "spruce": 0.62,
+    "depth": 60.0
    },
    "36:42 root network"
   ],
@@ -1748,7 +1836,10 @@
    {
     "yellow": 0.19,
     "trees": 2.04,
-    "spruce": 0.62
+    "spruce": 0.62,
+    "bank_ratio": 2.75,
+    "ridge": 1.5,
+    "depth": 60.0
    },
    "36:52 tall spruce, open needle floor, fallen logs"
   ],
@@ -1759,7 +1850,8 @@
     "water_gap": 25,
     "yellow": 0.31,
     "trees": 1.91,
-    "spruce": 0.39
+    "spruce": 0.39,
+    "depth": 60.0
    },
    "37:32 mixed forest on a slope"
   ],
@@ -1780,7 +1872,10 @@
     "roots": 100,
     "yellow": 0.12,
     "trees": 2.08,
-    "spruce": 0.58
+    "spruce": 0.58,
+    "bank_ratio": 2.75,
+    "ridge": 1.5,
+    "depth": 60.0
    },
    "38:52 massive root network"
   ],
@@ -1792,7 +1887,9 @@
     "scree": 60,
     "yellow": 0.15,
     "trees": 1.23,
-    "spruce": 0.38
+    "spruce": 0.38,
+    "bank_ratio": 1.67,
+    "depth": 60.0
    },
    "39:12 descending over rubble"
   ],
@@ -1844,7 +1941,9 @@
    {
     "yellow": 0.85,
     "trees": 1.76,
-    "spruce": 0.2
+    "spruce": 0.2,
+    "bank_ratio": 7.5,
+    "depth": 60.0
    },
    "41:32 autumn mixed forest along the shore"
   ],
@@ -1862,7 +1961,10 @@
    {
     "yellow": 0.64,
     "trees": 1.86,
-    "spruce": 0.2
+    "spruce": 0.2,
+    "bank_ratio": 13.75,
+    "ridge": 1.5,
+    "depth": 60.0
    },
    "43:42 beech, bracken"
   ],
@@ -1879,7 +1981,11 @@
    6.514,
    "dry_grass",
    {
-    "yellow": 0.63
+    "yellow": 0.63,
+    "bank_ratio": 11.0,
+    "ridge": 1.5,
+    "depth": 60.0,
+    "lake_band": 35
    },
    "45:32 dry grass slope"
   ],
@@ -1887,7 +1993,11 @@
    6.623,
    "meadow_track",
    {
-    "yellow": 0.46
+    "yellow": 0.46,
+    "bank_ratio": 9.17,
+    "ridge": 1.5,
+    "depth": 60.0,
+    "lake_band": 35
    },
    "46:22 track along a steep meadow"
   ],
@@ -1897,7 +2007,9 @@
    {
     "yellow": 0.71,
     "trees": 1.28,
-    "spruce": 0.26
+    "spruce": 0.26,
+    "bank_ratio": 10.0,
+    "depth": 60.0
    },
    "47:42 forest road along the lake"
   ],
@@ -1905,7 +2017,10 @@
    7.092,
    "cottage",
    {
-    "yellow": 0.58
+    "yellow": 0.58,
+    "bank_ratio": 7.5,
+    "depth": 38.0,
+    "lake_band": 35
    },
    "49:12 woodpile, lattice fence"
   ],
@@ -1913,7 +2028,10 @@
    7.157,
    "inn",
    {
-    "yellow": 0.52
+    "yellow": 0.52,
+    "bank_ratio": 7.5,
+    "depth": 38.0,
+    "lake_band": 35
    },
    "49:32 Ronacherfels inn, car park"
   ],
@@ -1931,7 +2049,11 @@
    7.514,
    "meadow_road",
    {
-    "yellow": 0.44
+    "yellow": 0.44,
+    "bank_ratio": 22.0,
+    "ridge": 1.5,
+    "depth": 60.0,
+    "lake_band": 35
    },
    "51:42 meadow slope, yellow bushes, bench"
   ],
@@ -1939,7 +2061,11 @@
    7.623,
    "fence_road",
    {
-    "yellow": 0.68
+    "yellow": 0.68,
+    "bank_ratio": 13.75,
+    "ridge": 1.5,
+    "depth": 60.0,
+    "lake_band": 35
    },
    "52:32 post-and-rail fence, hedge, chalet"
   ],
@@ -1965,7 +2091,10 @@
    8.393,
    "village",
    {
-    "yellow": 0.46
+    "yellow": 0.46,
+    "bank_ratio": 5.0,
+    "depth": 38.0,
+    "lake_band": 35
    },
    "56:42 asphalt lane through the village, chalets, hedges, lamps"
   ],
@@ -1973,7 +2102,11 @@
    9.057,
    "end_path",
    {
-    "yellow": 0.69
+    "yellow": 0.69,
+    "bank_ratio": 18.33,
+    "ridge": 1.5,
+    "depth": 60.0,
+    "lake_band": 35
    },
    "60:12 car park, gravel path between fences, footbridge"
   ]

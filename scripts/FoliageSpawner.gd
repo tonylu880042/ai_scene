@@ -906,25 +906,41 @@ func _make_hazel(seed_: int, leaf: Color) -> Mesh:
 			_card(lf, c, Vector3(rng.randf_range(-1, 1), rng.randf_range(-0.3, 1), rng.randf_range(-1, 1)).normalized(), sz, sz, col, (c.normalized() + Vector3.UP).normalized())
 	return _two_surfaces(bk, _bark_beech, lf, _leaf_mat_cards)
 
-# reed clump on the waterline: ~46 thin straw blades 1.4-2.4 m, leaning a little, with brown plumes
+# reed clump on the waterline, colours sampled from the video's reed belt (linear): ~150 stems 1.6-2.4 m, brown in
+# their own shade, 1-2 long leaves each angled out (sunlit yellow or straw), a silvery-pink feathery plume on top.
+# Normals lean up and out so the belt shades softly like a mass, not as single dark blades.
 func _make_reeds(seed_: int) -> Mesh:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for k in 46:
+	var base_c := Color(0.03, 0.022, 0.01)
+	var stem_c := Color(0.16, 0.1, 0.035)
+	var plume_c := Color(0.36, 0.29, 0.26) * 0.75  # sampled colour; the cards face the sun, the real plumes partly shade each other
+	var blade := func(a: Vector3, b: Vector3, w: float, ca: Color, cb: Color, nrm: Vector3) -> void:
+		var side := (b - a).cross(nrm).normalized() * w * 0.5
+		st.set_normal(nrm)
+		for v in [[a - side, ca], [a + side, ca], [b, cb]]:
+			st.set_color(v[1])
+			st.add_vertex(v[0])
+	for k in 150:
 		var a := rng.randf() * TAU
-		var base := Vector3(cos(a), 0.0, sin(a)) * rng.randf_range(0.0, 0.6)
-		var top := base + Vector3(rng.randf_range(-0.25, 0.25), rng.randf_range(1.4, 2.4), rng.randf_range(-0.25, 0.25))
-		var side := Vector3(cos(a + 1.57), 0.0, sin(a + 1.57)) * 0.025
-		for v in [[base - side, Color(0.2, 0.17, 0.07)], [base + side, Color(0.2, 0.17, 0.07)], [top, Color(0.55, 0.43, 0.2)]]:
-			st.set_color(v[1])
-			st.add_vertex(v[0])
-		var p0 := top.lerp(base, 0.15)
-		for v in [[p0 - side * 2.0, Color(0.3, 0.2, 0.1)], [p0 + side * 2.0, Color(0.3, 0.2, 0.1)], [top + Vector3(0, 0.05, 0), Color(0.38, 0.27, 0.14)]]:
-			st.set_color(v[1])
-			st.add_vertex(v[0])
-	st.generate_normals()
+		var out := Vector3(cos(a), 0.0, sin(a))
+		var base := out * rng.randf_range(0.0, 1.2)
+		var h := rng.randf_range(1.6, 2.4)
+		var top := base + out * rng.randf_range(0.05, 0.3) + Vector3(rng.randf_range(-0.1, 0.1), h, rng.randf_range(-0.1, 0.1))
+		var nrm := (Vector3.UP * 1.5 + out).normalized()
+		blade.call(base, top, 0.025, base_c, stem_c * rng.randf_range(0.8, 1.3), nrm)
+		for j in rng.randi_range(2, 3):  # leaves: long narrow blades from the lower half, angled out and up
+			var la := base.lerp(top, rng.randf_range(0.2, 0.55))
+			var dir := (out.rotated(Vector3.UP, rng.randf_range(-0.8, 0.8)) + Vector3.UP * rng.randf_range(0.6, 1.4)).normalized()
+			var lit := rng.randf() < 0.55
+			var lc := Color(0.55, 0.37, 0.03) if lit else Color(0.24, 0.16, 0.05)
+			blade.call(la, la + dir * rng.randf_range(0.6, 0.95), 0.035, lc * 0.5, lc * rng.randf_range(0.85, 1.15), nrm)
+		for j in 5:  # plume: fine feathery panicle fanning from the top, drooping a little
+			var pd := (Vector3.UP * 1.4 + out * rng.randf_range(0.3, 1.0) + Vector3(rng.randf_range(-0.5, 0.5), 0.0, rng.randf_range(-0.5, 0.5))).normalized()
+			var p0 := top - pd * rng.randf_range(0.2, 0.35)
+			blade.call(p0, top + pd * rng.randf_range(0.0, 0.08), 0.035, plume_c * 0.55, plume_c * rng.randf_range(0.85, 1.15), Vector3.UP)
 	var m := st.commit()
 	m.surface_set_material(0, _leaf_mat())
 	return m
@@ -983,6 +999,14 @@ func _forest(holder: Node3D, rng: RandomNumberGenerator, s0: float, origin: Vect
 		var r := rng.randf() * maxf(wb + ws + wl, 0.001)
 		var m: Mesh = pick.call(_beech_yellow if rng.randf() < yellow else _beech_green) if r < wb else (pick.call(_fspruce) if r < wb + ws else pick.call(_larch))
 		add.call(m, s, side_u.call(s, 0.6, depth, 1.15), rng.randf_range(0.75, 1.15), 0.2)
+	for i in int(sec.get("lake_band", 0)):  # tree strip between an open path and a hidden lake (lake side only)
+		var s := s0 + rng.randf() * chunk_length
+		var a0 := _route.half_left(s) + 10.0
+		var a1 := _route.water_edge_u(s) - 1.0
+		if a1 > a0:
+			var r := rng.randf() * maxf(wb + ws + wl, 0.001)
+			var m: Mesh = pick.call(_beech_yellow if rng.randf() < yellow else _beech_green) if r < wb else (pick.call(_fspruce) if r < wb + ws else pick.call(_larch))
+			add.call(m, s, lerpf(a0, a1, rng.randf()), rng.randf_range(0.75, 1.15), 0.2)
 	for i in int(sec.get("hazel", 0)):
 		var s := s0 + rng.randf() * chunk_length
 		add.call(pick.call(_hazel_yellow if rng.randf() < yellow else _hazel_green), s, side_u.call(s, 2.0, 9.0, 1.8, 0.7), rng.randf_range(0.7, 1.3), 0.1)  # crowns stay out of the walker's face
