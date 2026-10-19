@@ -118,18 +118,7 @@ func _ready() -> void:
 			start_time = float(a.substr(12)) * 60.0
 		elif a == "--quit-at-end":
 			quit_at_end = true
-	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/programs.json"))
-	_segs = data[course]
-	for s in _segs:
-		total_minutes += s[0]
-	speed = 1000.0 / (pace_min_per_km * 60.0)
-	length = total_minutes * 60.0 * speed
-	start_offset = start_time * speed
-	_t = start_time
-	_n = ceili(length / ROW) + 1
-	_noise.seed = random_seed
-	_rock.seed = random_seed
-	_rock.frequency = 1.0
+	setup_course()
 	if alpine_trail:
 		road_left = trail_half
 		road_right = trail_half
@@ -185,6 +174,21 @@ func _ready() -> void:
 	for i0 in range(0, _n - 1, CHUNK_ROWS):
 		_chunk(i0, mini(i0 + CHUNK_ROWS, _n - 1), surface_mat, terrain_mat)
 
+# course length and incline from programs.json (tools/dump_route.gd calls this without building the terrain)
+func setup_course() -> void:
+	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/programs.json"))
+	_segs = data[course]
+	for s in _segs:
+		total_minutes += s[0]
+	speed = 1000.0 / (pace_min_per_km * 60.0)
+	length = total_minutes * 60.0 * speed
+	start_offset = start_time * speed
+	_t = start_time
+	_n = ceili(length / ROW) + 1
+	_noise.seed = random_seed
+	_rock.seed = random_seed
+	_rock.frequency = 1.0
+
 func _process(delta: float) -> void:
 	_t += delta
 	if quit_at_end and _t > total_minutes * 60.0 + 3.0:
@@ -204,14 +208,51 @@ func info_at(t: float) -> Dictionary:
 	var last: Array = _segs[-1]
 	return {"phase": last[2], "incline": float(last[1]), "minute": m}
 
+# sections' "turn" (in a type or an entry's overrides): the video's bends as heading change over the section in degrees,
+# + left / - right, or a list of them for S-bends (the section is split evenly). Each bend eases in and out (curvature 0
+# at its ends) so neighbours join smoothly. Returns heading change per row (radians, + left); empty when no section
+# has "turn" -> the sine bends below.
+# ponytail: near terrain columns are exact offsets up to FAR_SMOOTH_FROM, so a bend tighter than that folds the inside
+# terrain; split a hairpin over a longer section, or add per-bend clamping if hairpins must be exact.
+func _turn_rates() -> PackedFloat32Array:
+	var rate := PackedFloat32Array()
+	rate.resize(_n)
+	var any := false
+	for k in _secs.size():
+		var s0: float = float(_secs[k][0]) / _video_km * length
+		var s1: float = float(_secs[k + 1][0]) / _video_km * length if k + 1 < _secs.size() else length
+		var turn = section_at(0.5 * (s0 + s1)).get("turn")
+		if turn == null or s1 <= s0:
+			continue
+		any = true
+		var bends: Array = turn if turn is Array else [turn]
+		var span := (s1 - s0) / bends.size()
+		for b in bends.size():
+			var a := s0 + b * span
+			for i in range(int(ceilf(a / ROW)), mini(int(ceilf((a + span) / ROW)), _n)):
+				rate[i] += deg_to_rad(float(bends[b])) * PI / 2.0 * sin(PI * (i * ROW - a) / span) * ROW / span
+	if not any:
+		return PackedFloat32Array()
+	var kmax := 0.0
+	for r in rate:
+		kmax = maxf(kmax, absf(r))
+	print("route: section turns, tightest bend radius %.0f m" % (ROW / kmax if kmax > 0.0 else INF))
+	return rate
+
 func _build_centreline() -> void:
 	var p := Vector3(0, start_height, 0)
 	var g := 0.0
+	var turns := _turn_rates()
+	var heading := 0.0
 	for i in _n:
 		var s := i * ROW
 		var h := bend * (0.7 * sin(s / 500.0) + 0.35 * sin(s / 220.0 + 1.0))  # gentle bends, min radius ~330 m
 		if alpine_trail:
 			h = bend * (0.9 * sin(s / 260.0) + 0.5 * sin(s / 110.0 + 1.0))  # winding trail, min radius ~125 m
+		if not turns.is_empty():
+			h = heading  # the video's bends from sections' "turn"; heading grows to the right of travel, so a left turn subtracts
+			heading -= turns[i]
+		if alpine_trail:
 			h += wiggle * (0.18 * _noise.get_noise_1d(s * 0.02) + 0.06 * _noise.get_noise_1d(s * 0.09 + 100.0))  # irregular meanders
 		var f := Vector3(cos(h), 0, sin(h))
 		if alpine_trail:
