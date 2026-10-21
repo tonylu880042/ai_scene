@@ -15,6 +15,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build_route as br  # noqa: E402
+import build_semantics as bs  # noqa: E402
 import road_terrain as rt  # noqa: E402
 import route_model as rm  # noqa: E402
 import semantics as sm  # noqa: E402
@@ -381,6 +382,46 @@ class SemanticsTest(unittest.TestCase):
     def test_generated_weissensee_example(self):
         route, sem = sm._load_pkg("export/packages/weissensee_rolling_hills")
         self.assertEqual(sm.validate(sem, route), [])
+
+
+class BuildSemanticsTest(unittest.TestCase):
+    """tools/build_semantics.py: tools/export_semantics.gd's zones without Godot."""
+    def test_noise_matches_godot(self):  # FastNoiseLite.new(), seed 5, get_noise_2d (Godot 4.7)
+        for (x, y), want in [((0.0, 1.4), -0.0212239064), ((37.0, 3.5), 0.1320121735), ((-250.3, 77.7), 0.2233056873),
+                             ((4000.0, 1.4), -0.2036522627), ((1234.5, -987.6), 0.0625508800)]:
+            self.assertAlmostEqual(bs.noise2(5, x, y), want, delta=1e-5)
+
+    def test_weissensee_matches_godot_adapter(self):
+        root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
+        with open(os.path.join(root, "weissensee_sections.json")) as f:
+            secs = json.load(f)
+        with open(os.path.join(root, "programs.json")) as f:
+            segs = json.load(f)["rolling_hills"]
+        route = br.build(segs, secs, route_id="weissensee_rolling_hills", bend=0.6, start_height=0.0,
+                         road_left=1.4, road_right=1.4)
+        # MainScene_weissensee.tscn's Path3D / Foliage / Buildings exports
+        sem = bs.build(secs, route, "data/weissensee_sections.json", sea_y=-12.0, inland_slope=1.0, bank_ratio=0.45,
+                       bank_run=3.0, cliff_lip=0.4, max_dist=38.0, trees_per_chunk=70, buildings=True)
+        self.assertEqual(sm.validate(sem, route), [])
+        counts = {}
+        for z in sem["zones"]:
+            counts[z["semantic_type"]] = counts.get(z["semantic_type"], 0) + 1
+        self.assertEqual(counts, {"bridge": 2, "building_zone": 12, "cliff": 2, "fence": 19, "forest": 127, "grass": 114,
+                                  "guardrail": 6, "open_space": 2, "road": 4, "sidewalk": 4, "slope": 171, "trail": 82,
+                                  "vegetation_zone": 169, "water": 90})
+        # zones as tools/export_semantics.gd writes them (Godot 4.7); z0446's lake edge depends on the bank noise
+        by_id = {z["id"]: z for z in sem["zones"]}
+        for zid, t, a, lat, vert, edge in [
+                ("z0165", "trail", 836.81, [-0.7, 0.7], [0.0, 0.0], None),
+                ("z0169", "water", 836.81, [13.43, 150.0], [-15.0, -8.4], [13.4, 28.1]),
+                ("z0319", "cliff", 1883.52, [-16.1, -2.1], [0.0, 26.0], None),
+                ("z0446", "water", 2757.14, [40.82, 150.0], [-16.2, -8.3], [40.8, 56.4]),
+                ("z0603", "grass", 3765.93, [1.25, 24.59], [-3.2, 0.0], None)]:
+            z = by_id[zid]
+            self.assertEqual((z["semantic_type"], z["from_s"], z["vertical_offset_m"], z["attributes"].get("edge_m")),
+                             (t, a, vert, edge))
+            for g, w in zip(z["lateral_offset_m"], lat):
+                self.assertAlmostEqual(g, w, delta=0.02)
 
 
 class VegetationTest(unittest.TestCase):

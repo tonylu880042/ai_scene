@@ -8,8 +8,9 @@ Engine-independent; no rendering.
 |---|---|
 | Schema | [`schemas/semantics.schema.json`](../schemas/semantics.schema.json) |
 | Validation + queries (Python, stdlib) | [`tools/semantics.py`](../tools/semantics.py) |
-| Producer from a sections-file Godot scene | [`tools/export_semantics.gd`](../tools/export_semantics.gd) |
-| Tests | `SemanticsTest` in [`tools/test_scene_package.py`](../tools/test_scene_package.py) |
+| Producer from a sections-file scene (Python, stdlib) | [`tools/build_semantics.py`](../tools/build_semantics.py) |
+| Same, Godot adapter (reference / fallback) | [`tools/export_semantics.gd`](../tools/export_semantics.gd) |
+| Tests | `SemanticsTest`, `BuildSemanticsTest` in [`tools/test_scene_package.py`](../tools/test_scene_package.py) |
 
 ## 1. Coordinates
 
@@ -106,6 +107,8 @@ At s=1520 m, lake water begins 5.0-150.0 m left of the centreline (2.0 m beyond 
 course `rolling_hills`, on the route.json of [ROUTE_SCHEMA §6](ROUTE_SCHEMA.md):
 
 ```bash
+python3 tools/build_semantics.py data/weissensee_sections.json export/packages/weissensee_rolling_hills --sea-y=-12 --inland-slope=1 --bank-ratio=0.45 --bank-run=3 --cliff-lip=0.4 --max-dist=38 --trees-per-chunk=70 --buildings
+# or, with Godot:
 godot --headless --path . --script tools/export_semantics.gd -- --scene=res://scenes/MainScene_weissensee.tscn --course=rolling_hills --package=export/packages/weissensee_rolling_hills
 ```
 
@@ -133,6 +136,16 @@ Zones S16 (beech trail) and S30 (rock wall) as written:
 {"id": "z0169", "semantic_type": "water", "side": "left", "from_s": 836.81, "to_s": 923.26, "lateral_offset_m": [13.43, 150.0], "vertical_offset_m": [-15.0, -8.4], "confidence": 0.9, "attributes": {"kind": "lake", "edge_m": [13.4, 28.1]}, "source": {"kind": "scene_generator", "ref": "data/weissensee_sections.json S16 beech_trail", "estimated": true}}
 {"id": "z0319", "semantic_type": "cliff", "side": "right", "from_s": 1883.52, "to_s": 1920.33, "lateral_offset_m": [-16.1, -2.1], "vertical_offset_m": [0.0, 26.0], "confidence": 0.8, "attributes": {"height_m": 26.0}, "source": {"kind": "scene_generator", "ref": "data/weissensee_sections.json S30 rock_wall", "estimated": true, "note": "23:12 grey limestone wall beside the trail"}}
 ```
+
+**Python vs Godot.** `build_semantics.py` reproduces route.gd's cross-section from the sections file + route.json
+(flags = the scene's exports) and gives the adapter's 804 zones with the same ids, s ranges, attributes and lateral
+offsets (0 cm at the 1 cm snap, `BuildSemanticsTest`). The one Godot-only input to the offsets is `water_edge_u`:
+route.gd's lake-bank columns bend by FastNoiseLite "knobs" on wide-bank sections (up to 1.7 m of lake edge here);
+the tool ports that noise (OpenSimplex2S FBm, Godot defaults, seed 5; matches `get_noise_2d` to 1e-6).
+`vertical_offset_m` is exact on the lake side, water, route surfaces, cliffs and bridges; for inland ground zones
+(grass, slope, forest, building, shrubs right of a north-shore route) it uses the inland slope rule + mean cliff face
+without the noise hills and the real DEM (`real_shore`, not in git), so it differs by ~1 m (buildings) to ~30 m (median)
+(150 m-wide slope / grass zones). No later stage reads it yet.
 
 **Caveat:** this producer describes the Godot scene as built (`source.kind: scene_generator`), not the video. Where
 the scene differs from the video, so do the semantics (S14 "lake 1–3 m left" in the video: the scene's lake edge is
