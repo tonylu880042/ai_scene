@@ -76,6 +76,7 @@ var total_minutes := 0.0
 var _segs: Array = []
 var _n := 0
 var _pos := PackedVector3Array()   # centre line, y = road height
+var _elev := PackedFloat32Array()  # physical elevation above the start (m): the program's grade, without grade_scale / micro_relief
 var _left := PackedVector3Array()
 var _cpos := PackedVector3Array()  # prefix sums of _pos / _left (box-filtered centre line for far columns, backdrop yaw)
 var _cleft := PackedVector3Array()
@@ -242,6 +243,8 @@ func _turn_rates() -> PackedFloat32Array:
 func _build_centreline() -> void:
 	var p := Vector3(0, start_height, 0)
 	var g := 0.0
+	var gp := 0.0  # physical grade (g = gp * grade_scale: same easing, unscaled)
+	var e := 0.0
 	var turns := _turn_rates()
 	var heading := 0.0
 	for i in _n:
@@ -260,8 +263,11 @@ func _build_centreline() -> void:
 		else:
 			_pos.append(p)
 		_left.append(Vector3(f.z, 0, -f.x) * (-1.0 if sea_right else 1.0))
-		var target := float(info_at(s / speed)["incline"]) / 100.0 * grade_scale
-		g += (target - g) * minf(1.0, ROW / 20.0)  # ~20 m to ease between grades
+		_elev.append(e)
+		var incline := float(info_at(s / speed)["incline"]) / 100.0
+		g += (incline * grade_scale - g) * minf(1.0, ROW / 20.0)  # ~20 m to ease between grades
+		gp += (incline - gp) * minf(1.0, ROW / 20.0)
+		e += gp * ROW
 		p += f * ROW + Vector3(0, g * ROW, 0)
 	_cpos.resize(_n + 1)
 	_cleft.resize(_n + 1)
@@ -795,6 +801,12 @@ func _row(s: float) -> Vector2:  # (row index, fraction)
 func pos_at(s: float) -> Vector3:
 	var r := _row(s)
 	return _pos[int(r.x)].lerp(_pos[int(r.x) + 1], r.y)
+
+# physical elevation above the start at s (route.json elevation_m): what gameplay grade is measured on.
+# pos_at(s).y is the rendered road (x grade_scale, + alpine micro_relief) and is not physical.
+func elevation_at(s: float) -> float:
+	var r := _row(s)
+	return lerpf(_elev[int(r.x)], _elev[int(r.x) + 1], r.y)
 
 func left_at(s: float) -> Vector3:
 	var r := _row(s)

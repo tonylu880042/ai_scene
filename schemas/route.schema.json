@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ai_scene/route/0.1",
+  "title": "AI Scene Package canonical route (route.json)",
+  "description": "Distance-based route: physical facts only. Structure here; invariants (continuity, derived fields, start/finish) are checked by tools/route_model.py. See docs/ROUTE_SCHEMA.md.",
+  "type": "object",
+  "required": ["route_id", "version", "coordinate_system", "units", "total_length_m", "sample_interval_m",
+               "start", "finish", "checkpoints", "samples"],
+  "properties": {
+    "route_id": {"type": "string", "minLength": 1},
+    "version": {"const": "0.1"},
+    "coordinate_system": {
+      "type": "object",
+      "required": ["handedness", "up", "east", "north", "elevation_datum_m", "origin"],
+      "properties": {
+        "handedness": {"const": "right"},
+        "up": {"const": "+Y"},
+        "east": {"const": "+X"},
+        "north": {"const": "-Z"},
+        "elevation_datum_m": {"type": "number"},
+        "elevation_reference": {"enum": ["msl", "route_local"]},
+        "origin": {"type": ["object", "null"]}
+      }
+    },
+    "units": {
+      "type": "object",
+      "required": ["length", "angle", "grade", "curvature"],
+      "properties": {
+        "length": {"const": "m"},
+        "angle": {"const": "deg"},
+        "grade": {"const": "percent"},
+        "curvature": {"const": "1/m"}
+      }
+    },
+    "total_length_m": {"type": "number", "exclusiveMinimum": 0},
+    "sample_interval_m": {"type": "number", "exclusiveMinimum": 0},
+    "closed": {"type": "boolean"},
+    "start": {"$ref": "#/$defs/marker"},
+    "finish": {"$ref": "#/$defs/marker"},
+    "checkpoints": {"type": "array", "items": {"$ref": "#/$defs/marker"}},
+    "sections": {
+      "type": "array",
+      "items": {"type": "object", "required": ["id", "from_s", "to_s"],
+                "properties": {"id": {"type": "string"}, "from_s": {"type": "number"}, "to_s": {"type": "number"}}}
+    },
+    "visual": {
+      "type": "object",
+      "description": "How a legacy renderer distorts the route for looks. Never used for grade or gameplay.",
+      "properties": {
+        "vertical_exaggeration": {"type": "number", "exclusiveMinimum": 0},
+        "relief_amplitude_m": {"type": "number", "minimum": 0}
+      }
+    },
+    "source": {"type": "object"},
+    "samples": {
+      "type": "object",
+      "required": ["s", "x", "y", "z", "elevation_m", "grade_percent", "heading_deg", "curvature",
+                   "width_left_m", "width_right_m", "surface_type"],
+      "properties": {
+        "s": {"$ref": "#/$defs/numbers"},
+        "x": {"$ref": "#/$defs/numbers"},
+        "y": {"$ref": "#/$defs/numbers"},
+        "z": {"$ref": "#/$defs/numbers"},
+        "elevation_m": {"$ref": "#/$defs/numbers"},
+        "grade_percent": {"$ref": "#/$defs/numbers"},
+        "heading_deg": {"$ref": "#/$defs/numbers"},
+        "curvature": {"$ref": "#/$defs/numbers"},
+        "width_left_m": {"$ref": "#/$defs/numbers"},
+        "width_right_m": {"$ref": "#/$defs/numbers"},
+        "surface_type": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/surface"}}
+      }
+    }
+  },
+  "$defs": {
+    "numbers": {"type": "array", "minItems": 2, "items": {"type": "number"}},
+    "surface": {"enum": ["asphalt", "concrete", "cobblestone", "gravel", "dirt", "grass", "boardwalk", "sand",
+                         "snow", "ice", "unknown"]},
+    "marker": {
+      "type": "object",
+      "required": ["id", "s", "position"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "s": {"type": "number"},
+        "name": {"type": "string"},
+        "position": {"type": "array", "minItems": 3, "items": {"type": "number"}}
+      }
+    }
+  }
+}
