@@ -43,8 +43,9 @@ def smooth(a, r):  # route.gd _smooth: box filter over 2r+1 rows, clamped at the
 
 class Route:
     def __init__(self, segs, secs=None, bend=1.0, start_height=-0.2, sea_right=False, road_left=2.25,
-                 road_right=10.0, pace=6.0):
+                 road_right=10.0, pace=6.0, grade_scale=1.5):
         self.segs, self.bend, self.start_height, self.sea_right = segs, bend, start_height, sea_right
+        self.grade_scale = grade_scale
         self.video_km = float(secs["video_km"]) if secs else 1.0
         self.types = secs["types"] if secs else {}
         self.secs = secs["sections"] if secs else []
@@ -102,9 +103,10 @@ class Route:
 
     def _centreline(self):
         turns = self._turn_rates()
-        px, pz = 0.0, 0.0  # f32, like Godot's Vector3
-        gp = e = heading = 0.0
+        px, pz, py = 0.0, 0.0, f32(self.start_height)  # f32, like Godot's Vector3
+        g = gp = e = heading = 0.0
         self.x, self.z, self.elev = [], [], []
+        self.heading, self.y = [], []  # per row: route.gd h (rad) and rendered road height (x grade_scale)
         ease = min(1.0, ROW / 20.0)
         for i in range(self.n):
             s = i * ROW
@@ -115,8 +117,13 @@ class Route:
             self.x.append(px)
             self.z.append(pz)
             self.elev.append(f32(e))
-            gp += (self.info_at(s / self.speed) / 100.0 - gp) * ease  # ~20 m to ease between grades
+            self.heading.append(h)
+            self.y.append(py)
+            inc = self.info_at(s / self.speed) / 100.0
+            g += (inc * self.grade_scale - g) * ease
+            gp += (inc - gp) * ease  # ~20 m to ease between grades
             e += gp * ROW
+            py = f32(py + f32(g * ROW))
             fx, fz = f32(math.cos(h)), f32(math.sin(h))
             px = f32(px + f32(fx * ROW))
             pz = f32(pz + f32(fz * ROW))
