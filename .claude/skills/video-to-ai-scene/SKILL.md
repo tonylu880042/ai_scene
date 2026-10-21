@@ -133,9 +133,13 @@ hint or the upstream layer. Gate: VALID + L3 ≥ 80 % (each landmark present, co
 
 Real mountains: `python3 tools/fetch_real_terrain.py <name> <lat> <lon> <km>` (DEM + orthophoto, attribution
 required); HDRI: Poly Haven CC0 via `tools/download_assets.py`. Scene facts as `environment/hints.json`
-(`docs/ENVIRONMENT.md`); *adapter (Godot, temporary):*
+(`docs/ENVIRONMENT.md`). *Engine-free (default):*
+`python3 tools/environment_hints.py scenes/MainScene_<name>.tscn --course=<c> --package=export/packages/<id>`
+— reads the .tscn text (WorldEnvironment, Sun, CourseSetup, LakeFar, RealBackdrop/RealTerrain), the course template
+and the route (build_route.py), and places the sun as CourseSetup does at the start; matches the Godot adapter to
+< 1e-4. With no scene, write hints.json from the video in the same format. *Fallback adapter (Godot):*
 `godot --headless --path . --script tools/export_environment_hints.gd -- --scene=res://scenes/MainScene_<name>.tscn --course=<c> --package=export/packages/<id>`
-then `python3 tools/environment.py build export/packages/<id>`. Data only (sun direction / intensity, fog density,
+(relative `--package` only; needs the scene's assets present, else it hangs). Then `python3 tools/environment.py build export/packages/<id>`. Data only (sun direction / intensity, fog density,
 sky reference, cloud coverage …), never shader code. Gate: VALID + L1 distant items (mountain side / skyline, sky
 opening, sun side) ≥ 90 %.
 

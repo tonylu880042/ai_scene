@@ -5,8 +5,8 @@
   python3 tools/environment.py validate <package_dir>
 
 Comes after route, road/terrain, semantics, vegetation and structures (all must exist and validate). Input: scene
-facts as plain values (tools/export_environment_hints.gd for a Godot scene, or the same format from video / AI
-analysis). Output is environment DATA only - sun direction, intensities, fog density, sky reference, cloud coverage,
+facts as plain values (tools/environment_hints.py from a scene's text, tools/export_environment_hints.gd inside Godot,
+or the same format from video / AI analysis). Output is environment DATA only - sun direction, intensities, fog density, sky reference, cloud coverage,
 distant terrain mesh, water bodies, skyline; no shader code or engine settings. Format: docs/ENVIRONMENT.md.
 """
 import array

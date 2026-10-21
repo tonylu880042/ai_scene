@@ -8,12 +8,15 @@ settings are canonical scene data.
 | Piece | File |
 |---|---|
 | Stage (build + validate, Python stdlib) | [`tools/environment.py`](../tools/environment.py) |
-| Scene facts from a Godot scene | [`tools/export_environment_hints.gd`](../tools/export_environment_hints.gd) |
-| Tests | `EnvironmentTest` in [`tools/test_scene_package.py`](../tools/test_scene_package.py) |
+| Scene facts from a scene (.tscn text, Python stdlib) | [`tools/environment_hints.py`](../tools/environment_hints.py) |
+| Same, Godot fallback adapter | [`tools/export_environment_hints.gd`](../tools/export_environment_hints.gd) |
+| Tests | `EnvironmentTest`, `EnvironmentHintsTest` in [`tools/test_scene_package.py`](../tools/test_scene_package.py) |
 
 ```bash
-godot --headless --path . --script tools/export_environment_hints.gd -- --scene=res://scenes/MainScene_weissensee.tscn --course=rolling_hills --package=export/packages/weissensee_rolling_hills
+python3 tools/environment_hints.py scenes/MainScene_weissensee.tscn --course=rolling_hills --package=export/packages/weissensee_rolling_hills
 ```
+
+(Godot fallback, same output: `godot --headless --path . --script tools/export_environment_hints.gd -- --scene=res://scenes/MainScene_weissensee.tscn --course=rolling_hills --package=export/packages/weissensee_rolling_hills`.)
 
 ```bash
 python3 tools/environment.py build export/packages/weissensee_rolling_hills
@@ -24,8 +27,8 @@ python3 tools/environment.py build export/packages/weissensee_rolling_hills
 route → road/terrain → semantics → vegetation → structures → **environment**: `build` refuses to run unless every
 earlier layer exists and validates. Its input is `environment/hints.json` — plain scene facts (sun vector and
 energy, HDRI file and where its sun is, fog values, real-terrain placement, water planes, water level below the
-road along the route). `export_environment_hints.gd` reads them from a Godot scene after `CourseSetup` has placed
-the sun; a video / AI analysis can write the same file. The hints are input, not package data.
+road along the route). `environment_hints.py` reads them from the scene text and places the sun as `CourseSetup`
+does at the start (`export_environment_hints.gd` does the same inside Godot); a video / AI analysis can write the same file. The hints are input, not package data.
 
 Existing capabilities kept:
 

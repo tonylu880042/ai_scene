@@ -19,6 +19,7 @@ import road_terrain as rt  # noqa: E402
 import route_model as rm  # noqa: E402
 import semantics as sm  # noqa: E402
 import environment as en  # noqa: E402
+import environment_hints as eh  # noqa: E402
 import validate_package as vp  # noqa: E402
 import structures as stc  # noqa: E402
 import vegetation as vg  # noqa: E402
@@ -196,6 +197,39 @@ class BuildRouteTest(unittest.TestCase):
         self.assertTrue(1.0 < smp["width_left_m"][1000] < 3.0)  # eased over ~14 m at the change
         self.assertEqual([(x["from_s"], x["to_s"]) for x in r["sections"]],
                          [(0.0, 1000.0), (1000.0, 2000.0), (2000.0, 3000.0)])
+
+
+class EnvironmentHintsTest(unittest.TestCase):
+    """tools/environment_hints.py: environment/hints.json from the .tscn text, without Godot."""
+    def test_weissensee_matches_godot_adapter(self):
+        h = eh.build("res://scenes/MainScene_weissensee.tscn", "rolling_hills")
+        # values from tools/export_environment_hints.gd (Godot 4.7) on that scene / course
+        for g, w in zip(h["sun"]["direction_to_sun"], [0.310525, 0.681998, -0.662157]):
+            self.assertAlmostEqual(g, w, delta=1e-4)
+        self.assertEqual((h["sun"]["color"], h["sun"]["left_of_travel_deg"], h["sun"]["elevation_from_hdri"]),
+                         ([1.0, 0.95, 0.88], 75.0, True))
+        self.assertAlmostEqual(h["sun"]["energy"], 1.5)
+        self.assertAlmostEqual(h["ambient"]["energy"], 1.4)  # CourseSetup's lerp, not the scene's 1.2
+        self.assertEqual((h["fog"]["color"], h["fog"]["mist"], h["grading"]["tonemap"]), ([0.62, 0.75, 0.9], None, "agx"))
+        self.assertAlmostEqual(h["fog"]["density"], 0.00035)
+        self.assertEqual([round(x, 4) for x in h["time_of_day"]["phase"]], [0.35, 0.6])
+        self.assertTrue(h["sky"]["hdri"].endswith("assets/hdri/kloofendal_43d_clear_puresky_4k.hdr"))
+        self.assertEqual((h["sky"]["sun_u"], h["sky"]["sun_elevation_deg"]), (0.6005, 43.0))
+        rtd = h["real_terrain"]
+        self.assertEqual((rtd["name"], rtd["anchor"], rtd["sink_west_of"], rtd["hole_depth"], rtd["follow"]),
+                         ("weissensee", [3152.0, 1123.0], 1660.0, -600.0, {"base_y": 0.0, "route_water": True, "route_yaw": True}))
+        self.assertEqual(h["water"], [{"name": "LakeFar", "size_m": [40000.0, 40000.0], "base_y": -0.08, "follows_route_water": True,
+                                       "deep_color": [0.03, 0.34, 0.46], "shallow_color": [0.12, 0.6, 0.58], "roughness": 0.12}])
+        self.assertEqual(len(h["water_offset_m"]), 201)
+        self.assertEqual([h["water_offset_m"][i] for i in (0, 1, -1)], [[0.0, -4.773], [25.0, -4.607], [5000.0, -4.04]])
+        self.assertEqual([h["godot_backdrop_yaw_rad"][i] for i in (1, -2, -1)], [[25.0, -0.00511], [4975.0, 0.57712], [5000.0, 0.59463]])
+        self.assertEqual(h["cloud_volumes"], [])
+
+    def test_value_parser(self):
+        self.assertEqual(eh.value('Color(0.1, 0.2, 0.3, 1)'), [0.1, 0.2, 0.3])
+        self.assertEqual(eh.value('NodePath("../Path3D")'), "../Path3D")
+        self.assertEqual(eh.value('{"a": Vector2(1, 2), "b": true}'), {"a": [1.0, 2.0], "b": True})
+        self.assertEqual((eh.value("-INF"), eh.value("Vector2.ZERO")), (-math.inf, [0, 0]))
 
 
 class RoadTerrainTest(unittest.TestCase):
