@@ -108,9 +108,13 @@ Zones in route coordinates: `s` range × signed lateral offset, side, vertical o
 open_space, bridge, tunnel, road / trail / sidewalk.
 
 - From the analysis directly: write `semantics/semantics.json` with `source.kind: video` / `ai` and honest confidence.
-- *Adapter (Godot, temporary)* for a sections-file scene:
-  `godot --headless --path . --script tools/export_semantics.gd -- --scene=res://scenes/MainScene_<name>.tscn --course=<c> --package=export/packages/<id>`
-  (it describes the scene as built, not the video — check where they differ).
+- For a sections-file scene (default, no Godot), on the package's route.json from Phase 2:
+  `python3 tools/build_semantics.py data/<name>_sections.json export/packages/<id> [scene flags]` — the flags are
+  the scene's Path3D / Foliage / Buildings exports (weissensee: `--sea-y=-12 --inland-slope=1 --bank-ratio=0.45
+  --bank-run=3 --cliff-lip=0.4 --max-dist=38 --trees-per-chunk=70 --buildings`; see the tool's docstring). Same
+  zones as the Godot adapter; inland `vertical_offset_m` is approximate (no DEM / noise hills).
+  *Fallback (Godot adapter)*: `godot --headless --path . --script tools/export_semantics.gd -- --scene=res://scenes/MainScene_<name>.tscn --course=<c> --package=export/packages/<id>`
+  (relative `--package`). Both describe the scene as built, not the video — check where they differ.
 - Review: `python3 tools/semantics.py describe export/packages/<id> <s> …` at each section's midpoint against the
   checklist's L2 side items. Gate: VALID + L2 side relations ≥ 80 %.
 

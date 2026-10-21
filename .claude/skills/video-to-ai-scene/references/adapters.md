@@ -29,7 +29,7 @@ shared scripts (`route.gd`, `FoliageSpawner.gd`, `Buildings.gd`, `Boardwalk.gd`,
 | Adapter | Writes |
 |---|---|
 | `tools/export_route.gd` | `route/route.json` (+ finalize + round trip through `scripts/route_data.gd`) |
-| `tools/export_semantics.gd` | `semantics/semantics.json` from the scene's generator rules (`source.kind: scene_generator`) |
+| `tools/export_semantics.gd` | `semantics/semantics.json` from the scene's generator rules (`source.kind: scene_generator`); fallback / reference for the default engine-free `tools/build_semantics.py` |
 | `tools/export_environment_hints.gd` | `environment/hints.json` (sun, sky, fog, real-terrain placement, water) |
 | `tools/dump_route.gd` + `tools/plot_route.py` | top-down route map per section (L0 picture; route.json heading changes are the engine-free check) |
 
