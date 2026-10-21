@@ -10,3 +10,11 @@ node_modules/
 export_unity/
 export_blender/
 __pycache__/
+unity/AIScenePlayer/Library/
+unity/AIScenePlayer/Temp/
+unity/AIScenePlayer/Logs/
+unity/AIScenePlayer/obj/
+unity/AIScenePlayer/UserSettings/
+unity/CoreTests/bin/
+unity/CoreTests/obj/
+!unity/AIScenePlayer/Assets/

@@ -1,0 +1,27 @@
+{
+  "name": "AIScene.Runtime",
+  "rootNamespace": "AIScene.Runtime",
+  "references": [
+    "AIScene.Core",
+    "Unity.Splines",
+    "Unity.Mathematics",
+    "Unity.InputSystem"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "Newtonsoft.Json.dll"
+  ],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [
+    {
+      "name": "com.unity.inputsystem",
+      "expression": "1.0.0",
+      "define": "AISCENE_INPUT_SYSTEM"
+    }
+  ],
+  "noEngineReferences": false
+}
