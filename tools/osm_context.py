@@ -4,7 +4,9 @@ draped on the shipped P1 terrain and written as tiles/<NN>/roadside.glb. Never t
 
   python3 tools/osm_context.py fetch <package> <osm.json> [margin_m]   Overpass query around the route
   python3 tools/osm_context.py build <package> <osm.json>              roadside.glb + manifest + licence
-  python3 tools/osm_context.py buildings <package> <osm.json>          tiles/<NN>/buildings.glb (P4) + licence
+  python3 tools/osm_context.py fetch-skyline <package> <skyline.json>  measured-height buildings within 1.5 km
+  python3 tools/osm_context.py buildings <package> <osm.json> [skyline.json]
+                                    tiles/<NN>/buildings.glb (P4), environment/skyline_buildings.glb (P5) + licence
 
 Geometry is OSM-measured in plan (ODbL); widths are tag-derived or per-class estimates; heights are draped on
 P1 terrain (estimated). Quads within the route's own road footprint (+ margin) are dropped, so the P0 road always
@@ -44,7 +46,7 @@ def to_latlon(origin, x, z):
             origin["lon"] + x / (METRES_PER_DEGREE * math.cos(math.radians(origin["lat"]))))
 
 
-def fetch(pkg, out_path, margin_m=150.0):
+def fetch(pkg, out_path, margin_m=150.0, skyline=False):
     route = json.load(open(os.path.join(pkg, "route", "route.json")))
     origin = route["coordinate_system"]["origin"]
     xs, zs = route["samples"]["x"], route["samples"]["z"]
@@ -53,6 +55,8 @@ def fetch(pkg, out_path, margin_m=150.0):
     bbox = f"{south:.6f},{west:.6f},{north:.6f},{east:.6f}"
     query = (f'[out:json][timeout:180];(way["highway"~"^({"|".join(CLASS_WIDTH_M)})$"]({bbox});'
              f'way["amenity"="parking"]({bbox});way["building"]({bbox}););out geom tags;')
+    if skyline:  # only buildings that carry a measured height or level count
+        query = f'[out:json][timeout:180];(way["building"]["height"]({bbox});way["building"]["building:levels"]({bbox}););out geom tags;'
     request = urllib.request.Request(OVERPASS, data=urllib.parse.urlencode({"data": query}).encode(),
                                      headers={"User-Agent": "ai_scene osm_context (research)"})
     with urllib.request.urlopen(request, timeout=240) as response:
@@ -260,21 +264,30 @@ def _inside(x, z, tri):
     return not ((d1 < 0 or d2 < 0 or d3 < 0) and (d1 > 0 or d2 > 0 or d3 > 0))
 
 
-# ------------------------------------------------------------------ P4 buildings
-BUILDING_REACH_M = 200.0   # footprint centroid within this distance of the route
+# ------------------------------------------------------------------ P4 buildings / P5 skyline
+BUILDING_REACH_M = 200.0   # P4: footprint centroid within this distance of the route
+SKYLINE_REACH_M = 1500.0   # P5: measured towers beyond the P4 reach, up to this distance
+SKYLINE_MIN_HEIGHT_M = 25.0
 LEVEL_M = 3.1
-# Levels when OSM has no height / building:levels (estimated). Generic "yes" is mostly detached housing here.
+NEIGHBOUR_RADIUS_M = 120.0  # unmeasured heights: median of measured OSM neighbours within this radius ...
+NEIGHBOUR_MIN = 3           # ... when at least this many exist, else the class estimate below
+NEIGHBOUR_MIN_AREA_M2 = 150.0  # gazebos, kiosks and sheds next to towers keep their class estimate
+NEIGHBOUR_MAX_M = 6 * 3.1 + 1.0  # an inherited height never makes an unmeasured footprint a tower
 CLASS_LEVELS = {"apartments": 6, "hotel": 8, "residential": 3, "commercial": 3, "retail": 2, "office": 4,
                 "house": 2, "detached": 2, "semidetached_house": 2, "terrace": 2, "garage": 1, "garages": 1,
                 "shed": 1, "roof": 1, "carport": 1, "kiosk": 1, "toilets": 1, "church": 3, "school": 2}
+LOW_CLASSES = {"garage", "garages", "shed", "roof", "carport", "kiosk", "toilets"}  # never inherit tower heights
+HOUSE_CLASSES = {"yes", "house", "detached", "semidetached_house", "terrace", "residential", "bungalow"}
 WALL_TINTS = [(0.82, 0.80, 0.74), (0.88, 0.87, 0.84), (0.75, 0.70, 0.62), (0.70, 0.72, 0.73), (0.85, 0.78, 0.66)]
+ROOF_TINTS = [(0.45, 0.22, 0.14), (0.32, 0.32, 0.33), (0.52, 0.29, 0.18), (0.24, 0.26, 0.28)]  # terracotta / grey
 FACADE = {"name": "facade_osm", "color": [1.0, 1.0, 1.0], "roughness": 0.8}  # tint per vertex (COLOR_0)
 ROOF = {"name": "roof_osm", "color": [0.30, 0.30, 0.31], "roughness": 0.9}
+ROOF_TILE = {"name": "roof_tile_osm", "color": [1.0, 1.0, 1.0], "roughness": 0.85}
 ESTIMATED_BUILDING_PROTOTYPES = "coastal_apartment_"  # video-estimated P4 boxes that OSM footprints supersede
 
 
-def building_height(tags):
-    """(height_m, source) — measured tags first, then levels, then a class estimate."""
+def measured_height(tags):
+    """(height_m, source) from OSM height / levels tags, or None."""
     for key in ("height", "building:height"):
         try:
             return float(tags[key].split()[0]), "osm height tag"
@@ -283,19 +296,24 @@ def building_height(tags):
     try:
         return float(tags["building:levels"]) * LEVEL_M + 1.0, "osm building:levels"
     except (KeyError, ValueError):
-        return CLASS_LEVELS.get(tags.get("building"), 2) * LEVEL_M + 0.6, "estimated from building class"
+        return None
 
 
-def buildings(pkg, osm_path):
-    route, man, sem = veg._load(pkg)
-    origin = route["coordinate_system"]["origin"]
-    space = veg.Space(pkg, route, man, sem)
-    index = RouteIndex(route, cell=20.0)
-    tiles = man["tiles"]
-    tile_of = lambda s: next((t for t in tiles if t["from_s"] <= s <= t["to_s"]), tiles[-1])
-    meshes = {t["id"]: {"positions": [], "uv": [], "color": [], "facade": [], "roof": []} for t in tiles}
-    stats = {"buildings": 0, "dropped_far": 0, "dropped_route": 0, "height_sources": {}}
-    footprints, covered = [], {}
+def building_height(tags, neighbours=(), area_m2=0.0):
+    """(height_m, source): measured tags, else the (capped) median of measured neighbours for a sizeable plain
+    building, else a class estimate."""
+    measured = measured_height(tags)
+    if measured:
+        return measured
+    if len(neighbours) >= NEIGHBOUR_MIN and tags.get("building") not in LOW_CLASSES and "amenity" not in tags \
+            and area_m2 >= NEIGHBOUR_MIN_AREA_M2:
+        ordered = sorted(neighbours)
+        return min(ordered[len(ordered) // 2], NEIGHBOUR_MAX_M), "estimated: median of measured OSM neighbours"
+    return CLASS_LEVELS.get(tags.get("building"), 2) * LEVEL_M + 0.6, "estimated from building class"
+
+
+def footprints_of(osm_path, origin):
+    """(way, tags, ccw ring in xz, centroid) for every closed building way."""
     for way in json.load(open(osm_path))["elements"]:
         tags = way.get("tags", {})
         if "building" not in tags or tags.get("building") in {"no", "construction"} or len(way.get("geometry", [])) < 4:
@@ -305,7 +323,67 @@ def buildings(pkg, osm_path):
             ring = ring[:-1]
         if rt._polygon_area2_xz(ring) < 0:
             ring.reverse()  # counter-clockwise seen from above (+Y), in x/z
+        yield way, tags, ring, (sum(p[0] for p in ring) / len(ring), sum(p[1] for p in ring) / len(ring))
+
+
+def extrude(m, ring, base, top, tint, roof_tint, hipped):
+    """Walls (UV metres) + flat or hipped roof into mesh dict m; returns the roof footprint triangles (xz)."""
+    run = 0.0
+    for (ax, az), (bx, bz) in zip(ring, ring[1:] + ring[:1]):
+        length = math.hypot(bx - ax, bz - az)
+        k = len(m["positions"])
+        m["positions"] += [(ax, base, az), (bx, base, bz), (bx, top, bz), (ax, top, az)]
+        m["uv"] += [(run, 0.0), (run + length, 0.0), (run + length, top - base), (run, top - base)]
+        m["color"] += [tint] * 4
+        m["facade"] += [k, k + 2, k + 1, k, k + 3, k + 2]  # outward for a ccw ring
+        run += length
+    footprint = rt._triangulate_xz(ring)
+    if hipped:  # pyramid hip to the centroid: reads as a tiled house roof from the street
         cx, cz = sum(p[0] for p in ring) / len(ring), sum(p[1] for p in ring) / len(ring)
+        rise = min(3.0, 0.25 * math.sqrt(abs(rt._polygon_area2_xz(ring)) / 2))
+        for (ax, az), (bx, bz) in zip(ring, ring[1:] + ring[:1]):
+            k = len(m["positions"])
+            m["positions"] += [(ax, top, az), (bx, top, bz), (cx, top + rise, cz)]
+            m["uv"] += [(ax, az), (bx, bz), (cx, cz)]
+            m["color"] += [roof_tint] * 3
+            m["tile_roof"] += [k, k + 2, k + 1]  # upward for a ccw ring
+        return footprint
+    k = len(m["positions"])
+    m["positions"] += [(x, top, z) for x, z in ring]
+    m["uv"] += [(x, z) for x, z in ring]
+    m["color"] += [tint] * len(ring)
+    lookup = {p: i for i, p in enumerate(ring)}
+    for tri in footprint:
+        ids = [k + lookup.get(p, min(range(len(ring)), key=lambda i: math.dist(ring[i], p))) for p in tri]
+        m["roof"] += [ids[0], ids[2], ids[1]] if rt._polygon_area2_xz(tri) > 0 else ids
+    return footprint
+
+
+def write_buildings_glb(path, name, m):
+    prims = [{"material": FACADE, "indices": m["facade"]}]
+    if m["roof"]:
+        prims.append({"material": ROOF, "indices": m["roof"]})
+    if m["tile_roof"]:
+        prims.append({"material": ROOF_TILE, "indices": m["tile_roof"]})
+    rt.write_glb(path, {"name": name, "translation": [0.0, 0.0, 0.0],
+                        "attributes": {"POSITION": m["positions"], "TEXCOORD_0": m["uv"], "COLOR_0": m["color"]},
+                        "primitives": prims})
+
+
+def buildings(pkg, osm_path, skyline_path=None):
+    route, man, sem = veg._load(pkg)
+    origin = route["coordinate_system"]["origin"]
+    space = veg.Space(pkg, route, man, sem)
+    index = RouteIndex(route, cell=20.0)
+    water_level = min((c.get("water_level_m", 0.0) for c in man["visual_terrain"].get("coast_profiles", [])), default=0.0)
+    tiles = man["tiles"]
+    tile_of = lambda s: next((t for t in tiles if t["from_s"] <= s <= t["to_s"]), tiles[-1])
+    new_mesh = lambda: {"positions": [], "uv": [], "color": [], "facade": [], "roof": [], "tile_roof": []}
+    meshes = {t["id"]: new_mesh() for t in tiles}
+    stats = {"buildings": 0, "dropped_far": 0, "dropped_route": 0, "dropped_on_p1_water": [], "hipped_roofs": 0,
+             "height_sources": {}}
+    footprints, covered, kept, measured = [], {}, [], {}
+    for way, tags, ring, (cx, cz) in footprints_of(osm_path, origin):
         distance, s, _ = index.nearest(cx, cz, math.ceil(BUILDING_REACH_M / 20.0))
         if s is None or distance > BUILDING_REACH_M:
             stats["dropped_far"] += 1
@@ -313,45 +391,37 @@ def buildings(pkg, osm_path):
         if min(index.clearance(x, z) for x, z in ring) < 1.0:
             stats["dropped_route"] += 1  # P0 wins (e.g. passages over the path)
             continue
-        ground = [space.ground_world(x, z) for x, z in ring + [(cx, cz)]]
-        ground = [y for y in ground if y is not None]
-        base = (min(ground) if ground else rm_elevation(route, s)) - 0.3  # sunk: no floating corners on slopes
-        height, source = building_height(tags)
+        ground = [y for y in (space.ground_world(x, z) for x, z in ring + [(cx, cz)]) if y is not None]
+        if ground and max(ground) < water_level + 0.1:  # P1 says water here: P4 may not contradict it
+            stats["dropped_on_p1_water"].append({"osm_way": way["id"], "s": round(s, 1), "building": tags.get("building")})
+            continue
+        kept.append((way, tags, ring, cx, cz, s, ground))
+        h = measured_height(tags)
+        if h:
+            measured.setdefault((math.floor(cx / NEIGHBOUR_RADIUS_M), math.floor(cz / NEIGHBOUR_RADIUS_M)), []).append((cx, cz, h[0]))
+    for way, tags, ring, cx, cz, s, ground in kept:
+        gx, gz = math.floor(cx / NEIGHBOUR_RADIUS_M), math.floor(cz / NEIGHBOUR_RADIUS_M)
+        neighbours = [h for dx in (-1, 0, 1) for dz in (-1, 0, 1) for x, z, h in measured.get((gx + dx, gz + dz), ())
+                      if math.hypot(x - cx, z - cz) <= NEIGHBOUR_RADIUS_M]
+        area = abs(rt._polygon_area2_xz(ring)) / 2
+        height, source = building_height(tags, neighbours, area)
         stats["height_sources"][source] = stats["height_sources"].get(source, 0) + 1
-        tint = WALL_TINTS[way["id"] % len(WALL_TINTS)]
-        m = meshes[tile_of(s)["id"]]
-        top = base + 0.3 + height
-        run = 0.0
-        for (ax, az), (bx, bz) in zip(ring, ring[1:] + ring[:1]):
-            length = math.hypot(bx - ax, bz - az)
-            k = len(m["positions"])
-            m["positions"] += [(ax, base, az), (bx, base, bz), (bx, top, bz), (ax, top, az)]
-            m["uv"] += [(run, 0.0), (run + length, 0.0), (run + length, top - base), (run, top - base)]  # metres
-            m["color"] += [tint] * 4
-            m["facade"] += [k, k + 2, k + 1, k, k + 3, k + 2]  # outward for a ccw ring
-            run += length
-        k = len(m["positions"])
-        m["positions"] += [(x, top, z) for x, z in ring]
-        m["uv"] += [(x, z) for x, z in ring]
-        m["color"] += [tint] * len(ring)
-        lookup = {p: i for i, p in enumerate(ring)}
-        roof_tris = rt._triangulate_xz(ring)
-        covered.setdefault(tile_of(s)["id"], []).extend(tuple(tri) for tri in roof_tris)
-        for tri in roof_tris:
-            ids = [k + lookup.get(p, min(range(len(ring)), key=lambda i: math.dist(ring[i], p))) for p in tri]
-            m["roof"] += [ids[0], ids[2], ids[1]] if rt._polygon_area2_xz(tri) > 0 else ids
+        base = (min(ground) if ground else rm_elevation(route, s)) - 0.3  # sunk: no floating corners on slopes
+        hipped = tags.get("building") in HOUSE_CLASSES and height <= 2 * LEVEL_M + 1.0 and area < 400 and len(ring) <= 12 \
+            and tags.get("roof:shape", "hipped") != "flat"
+        stats["hipped_roofs"] += hipped
+        footprint = extrude(meshes[tile_of(s)["id"]], ring, base, base + 0.3 + height,
+                            WALL_TINTS[way["id"] % len(WALL_TINTS)], ROOF_TINTS[way["id"] % len(ROOF_TINTS)], hipped)
+        covered.setdefault(tile_of(s)["id"], []).extend(tuple(tri) for tri in footprint)
         footprints.append((cx, cz))
         stats["buildings"] += 1
+    stats["dropped_on_p1_water_count"] = len(stats["dropped_on_p1_water"])
     for tile in tiles:
         m = meshes[tile["id"]]
-        path = os.path.join(pkg, "tiles", tile["id"], "buildings.glb")
         if not m["facade"]:
             tile["files"].pop("buildings", None)
             continue
-        rt.write_glb(path, {"name": f"{tile['id']}_buildings", "translation": [0.0, 0.0, 0.0],
-                            "attributes": {"POSITION": m["positions"], "TEXCOORD_0": m["uv"], "COLOR_0": m["color"]},
-                            "primitives": [{"material": FACADE, "indices": m["facade"]},
-                                           {"material": ROOF, "indices": m["roof"]}]})
+        write_buildings_glb(os.path.join(pkg, "tiles", tile["id"], "buildings.glb"), f"{tile['id']}_buildings", m)
         tile["files"]["buildings"] = f"tiles/{tile['id']}/buildings.glb"
     stats["estimated_p4_removed"] = remove_superseded_structures(pkg, man, footprints)
     stats["p3_instances_removed"] = remove_covered_vegetation(pkg, man, covered)  # P4 outranks P3
@@ -360,17 +430,48 @@ def buildings(pkg, osm_path):
         layer["files"].append("tiles/*/buildings.glb")
     layer["osm_buildings"] = {
         "source": {"kind": "osm", "ref": "OpenStreetMap contributors, ODbL 1.0"},
-        "plan_geometry": "measured (OSM footprints)", "height": "OSM height / levels tags, else estimated per class",
-        "base": "lowest P1 terrain under the footprint - 0.3 m (estimated)", "uv": "metres (u along the facade, v up)",
-        "reach_m": BUILDING_REACH_M, "stats": stats}
+        "plan_geometry": "measured (OSM footprints)",
+        "height": "OSM height / levels tags; else median of measured OSM neighbours within %g m; else per-class estimate" % NEIGHBOUR_RADIUS_M,
+        "roof": "flat; estimated pyramid hip on small houses (<= 2 levels, < 400 m2) unless roof:shape=flat",
+        "base": "lowest P1 terrain under the footprint - 0.3 m (estimated); footprints on P1 water are dropped",
+        "uv": "metres (u along the facade, v up; roofs world x/z)", "reach_m": BUILDING_REACH_M, "stats": stats}
+    if skyline_path:
+        skyline(pkg, man, route, index, skyline_path)
     with open(os.path.join(pkg, "manifest.json"), "w") as f:
         json.dump(man, f, indent=1)
     credits = os.path.join(pkg, "CREDITS.md")
-    line = "- Buildings (tiles/*/buildings.glb): OpenStreetMap contributors, ODbL 1.0; heights partly estimated.\n"
+    line = "- Buildings (tiles/*/buildings.glb, environment/skyline_buildings.glb): OpenStreetMap contributors, ODbL 1.0; heights partly estimated.\n"
     text = open(credits).read()
     if line not in text:
         open(credits, "w").write(text.rstrip("\n") + "\n" + line)
-    print(json.dumps(stats))
+    print(json.dumps({k: v for k, v in stats.items() if k != "dropped_on_p1_water"}))
+
+
+def skyline(pkg, man, route, index, osm_path):
+    """P5: measured towers (>= SKYLINE_MIN_HEIGHT_M) beyond the P4 reach, one static mesh for the whole route."""
+    origin = route["coordinate_system"]["origin"]
+    m = {"positions": [], "uv": [], "color": [], "facade": [], "roof": [], "tile_roof": []}
+    count = 0
+    for way, tags, ring, (cx, cz) in footprints_of(osm_path, origin):
+        h = measured_height(tags)
+        if not h or h[0] < SKYLINE_MIN_HEIGHT_M:
+            continue
+        distance, s, _ = index.nearest(cx, cz, math.ceil(SKYLINE_REACH_M / 20.0))
+        if s is None or not BUILDING_REACH_M < distance <= SKYLINE_REACH_M:
+            continue
+        base = rm_elevation(route, s) - 1.0  # beyond P1: estimated from the nearest route elevation
+        extrude(m, ring, base, base + 1.0 + h[0], WALL_TINTS[way["id"] % len(WALL_TINTS)], None, False)
+        count += 1
+    path = os.path.join(pkg, "environment", "skyline_buildings.glb")
+    if not count:
+        return
+    write_buildings_glb(path, "skyline_buildings", m)
+    layer = man["layers"].setdefault("P5_distant", {"status": "generated", "files": []})
+    if "environment/skyline_buildings.glb" not in layer.setdefault("files", []):
+        layer["files"].append("environment/skyline_buildings.glb")
+    layer["skyline_buildings"] = {"source": {"kind": "osm", "ref": "OpenStreetMap contributors, ODbL 1.0"},
+                                  "selection": "OSM height / levels >= %g m, %g-%g m from the route" % (SKYLINE_MIN_HEIGHT_M, BUILDING_REACH_M, SKYLINE_REACH_M),
+                                  "base": "nearest route elevation - 1 m (estimated)", "count": count}
 
 
 def rm_elevation(route, s):
@@ -416,7 +517,9 @@ if __name__ == "__main__":
     command, pkg, osm = sys.argv[1:4]
     if command == "fetch":
         fetch(pkg, osm, *(float(a) for a in sys.argv[4:5]))
+    elif command == "fetch-skyline":
+        fetch(pkg, osm, SKYLINE_REACH_M, skyline=True)
     elif command == "buildings":
-        buildings(pkg, osm)
+        buildings(pkg, osm, *sys.argv[4:5])
     else:
         build(pkg, osm)

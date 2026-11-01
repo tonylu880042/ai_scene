@@ -30,6 +30,15 @@ class OsmContextTest(unittest.TestCase):
         self.assertEqual(source, "estimated from building class")
         self.assertAlmostEqual(height, oc.CLASS_LEVELS["apartments"] * oc.LEVEL_M + 0.6)
 
+    def test_neighbour_height_is_bounded(self):
+        towers = [38.2, 38.2, 25.8]
+        self.assertEqual(oc.building_height({"building": "yes"}, towers, 400.0),
+                         (oc.NEIGHBOUR_MAX_M, "estimated: median of measured OSM neighbours"))
+        for tags, area in (({"building": "yes", "amenity": "shelter"}, 400.0), ({"building": "yes"}, 85.0),
+                           ({"building": "garage"}, 400.0)):
+            self.assertEqual(oc.building_height(tags, towers, area)[1], "estimated from building class")
+        self.assertEqual(oc.building_height({"building": "yes"}, towers[:2], 400.0)[1], "estimated from building class")
+
     def test_vegetation_removal_keeps_arrays_aligned(self):
         with tempfile.TemporaryDirectory() as pkg:
             os.makedirs(os.path.join(pkg, "tiles", "00"))

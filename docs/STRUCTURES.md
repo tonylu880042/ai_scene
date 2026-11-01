@@ -28,12 +28,16 @@ python3 tools/structures.py validate export/packages/<candidate>
 `--only` writes just the named structure mesh and updates that prototype's asset reference; it does not rebuild other
 prototype meshes or vegetation. It is intended for one new procedural structure prototype after a focused P4 append.
 
-OSM buildings (`python3 tools/osm_context.py buildings <package> <osm.json>`): footprints within 200 m of the route
-are extruded into `tiles/NN/buildings.glb` (materials `facade_osm`, `roof_osm`; UV in metres, COLOR_0 tint). Height:
-OSM `height`, else `building:levels` × 3.1 m, else a per-class estimate; base = lowest P1 terrain under the footprint
-− 0.3 m. Footprints within 1 m of the P0 road are dropped. Low, video-estimated `coastal_apartment_*` objects with an
-OSM footprint within 60 m are removed as superseded, and P3 instances inside footprints are removed. Stats and
-provenance: `manifest.layers.P4_structures.osm_buildings`.
+OSM buildings (`python3 tools/osm_context.py buildings <package> <osm.json> [skyline.json]`): footprints within
+200 m of the route are extruded into `tiles/NN/buildings.glb` (materials `facade_osm`, `roof_osm`, `roof_tile_osm`;
+UV in metres, COLOR_0 tint). Height: OSM `height`, else `building:levels` × 3.1 m, else the median of measured OSM
+neighbours within 120 m (only for plain footprints >= 150 m², capped at 6 levels), else a per-class estimate. Small
+houses (<= 2 levels, < 400 m²) get an estimated pyramid hip roof. Base = lowest P1 terrain under the footprint − 0.3 m;
+footprints whose P1 surface is all below water level are dropped (P1 outranks P4; the list is kept as shoreline
+evidence), as are footprints within 1 m of the P0 road. Low, video-estimated `coastal_apartment_*` objects with an OSM
+footprint within 60 m are removed as superseded, and P3 instances inside footprints are removed. With a skyline file
+(`fetch-skyline`), measured towers >= 25 m at 200–1500 m go to `environment/skyline_buildings.glb` (P5). Stats and
+provenance: `manifest.layers.P4_structures.osm_buildings`, `manifest.layers.P5_distant.skyline_buildings`.
 
 ## 1. Order and inputs
 

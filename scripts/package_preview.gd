@@ -26,6 +26,9 @@ const SURFACE_LIBRARY := {
 	"road_asphalt": {"set": "asphalt_02", "repeat_m": 4.0, "macro": .08, "normal": .7},
 	"parking_asphalt": {"set": "asphalt_02", "repeat_m": 4.0, "macro": .08, "normal": .7},
 	"context_asphalt": {"set": "asphalt_02", "repeat_m": 4.0, "macro": .08, "normal": .7},
+	# Detail sets for the building shaders below (FACADE_SHADER / ROOF_TILE_SHADER), not the triplanar one.
+	"facade_osm": {"set": "painted_plaster_wall", "repeat_m": 2.5, "macro": 0.0, "normal": 0.0},
+	"roof_tile_osm": {"set": "clay_roof_tiles", "repeat_m": 2.0, "macro": 0.0, "normal": 0.0},
 	"road_concrete": {"set": "brushed_concrete", "repeat_m": 3.0, "macro": .08, "normal": .5},
 	"road_gravel": {"set": "gravel_floor_02", "repeat_m": 2.0, "macro": .10, "normal": .7},
 	"road_dirt": {"set": "rocky_trail", "repeat_m": 2.5, "macro": .12, "normal": .8},
@@ -629,6 +632,12 @@ func _setup_environment() -> void:
 	sun.shadow_enabled = true
 	sun.directional_shadow_max_distance = 200.0
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
+	# P5 skyline towers: one static mesh for the whole route (never streamed).
+	var skyline_path := package_dir.path_join("environment/skyline_buildings.glb")
+	if FileAccess.file_exists(skyline_path):
+		var skyline := _load_glb(skyline_path)
+		_style_meshes(skyline)
+		add_child(skyline)
 	# World water is data; land and the explicit coastal terrain conceal it inland.
 	for body in facts.get("distant", {}).get("water", []):
 		var mesh := PlaneMesh.new()
@@ -658,12 +667,18 @@ func _style_meshes(node: Node, tile_id := "", layer := "", tile_from_s := 0.0, t
 			var original: Material = node.mesh.surface_get_material(i)
 			if original == null: continue
 			var key := original.resource_name
-			if key == "facade_osm":
+			if key == "facade_osm" or key == "roof_tile_osm":
 				if not material_cache.has(key):
-					var facade_shader := Shader.new()
-					facade_shader.code = FACADE_SHADER
-					material_cache[key] = ShaderMaterial.new()
-					material_cache[key].shader = facade_shader
+					var building_shader := Shader.new()
+					building_shader.code = FACADE_SHADER if key == "facade_osm" else ROOF_TILE_SHADER
+					var building_material := ShaderMaterial.new()
+					building_material.shader = building_shader
+					var maps := _surface_library_textures(key)
+					if maps.size() == 3:
+						building_material.set_shader_parameter("detail", maps[0])
+						building_material.set_shader_parameter("detail_mean", maxf(maps[0].get_meta("mean_linear").get_luminance(), .01))
+						building_material.set_shader_parameter("detail_per_m", 1.0 / float(SURFACE_LIBRARY[key].repeat_m))
+					material_cache[key] = building_material
 				node.set_surface_override_material(i, material_cache[key])
 				continue
 			# Preserve package-authored PBR for surfaces this preview does not adapt. In
@@ -878,16 +893,32 @@ NORMAL=normalize((VIEW_MATRIX*vec4(normalize(mix(n,top_n,w.y)),0.0)).xyz);
 
 # P4 OSM buildings: UV is metres (u along the facade, v up), COLOR_0 the wall tint. Window bays every 3.2 m
 # on 3.1 m floors with a slab line per floor; glass varies per window. Adapter-only appearance.
+# Plaster luminance detail (no new hue), darker base course, faint rain streaks under each window column.
 const FACADE_SHADER := """shader_type spatial;
+uniform sampler2D detail : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform float detail_mean = 1.0;
+uniform float detail_per_m = 0.4;
 float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 void fragment(){
 vec2 cell=vec2(UV.x/3.2,UV.y/3.1);vec2 f=fract(cell);vec2 id=floor(cell);
 float window=step(.2,f.x)*step(f.x,.8)*step(.3,f.y)*step(f.y,.84);
 float slab=1.0-step(.07,f.y);
-vec3 wall=COLOR.rgb*.5*(.94+.06*hash(floor(UV*.5)));
+float plaster=clamp(dot(texture(detail,UV*detail_per_m).rgb,vec3(.2126,.7152,.0722))/detail_mean,.6,1.4);
+float base_course=mix(.72,1.0,smoothstep(.2,1.0,UV.y));
+float streak=1.0-.1*step(.3,f.x)*step(f.x,.7)*(1.0-f.y)*hash(vec2(id.x,0.0));
+vec3 wall=COLOR.rgb*.44*plaster*base_course*streak*(.94+.06*hash(floor(UV*.5)));
 vec3 glass=mix(vec3(.07,.09,.11),vec3(.22,.27,.31),hash(id));
 ALBEDO=mix(mix(wall,glass,window),wall*.8,slab);
 ROUGHNESS=mix(.85,.12,window);METALLIC=mix(0.,.25,window);
+}"""
+
+const ROOF_TILE_SHADER := """shader_type spatial;
+uniform sampler2D detail : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform float detail_mean = 1.0;
+uniform float detail_per_m = 0.5;
+void fragment(){
+float tiles=clamp(dot(texture(detail,UV*detail_per_m).rgb,vec3(.2126,.7152,.0722))/detail_mean,.5,1.5);
+ALBEDO=COLOR.rgb*tiles;ROUGHNESS=.8;
 }"""
 
 func _sand_pbr_road_shader(base_color: Vector3, override: Dictionary) -> String:
