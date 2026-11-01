@@ -789,8 +789,9 @@ def _write(pkg, route, man, objs, protos, skipped):
 
 def resettle(pkg, tile_ids, water_level=0.0):
     """After a P1 change in tile_ids: re-ground low / medium point objects on their lowest footprint corner (the
-    legacy base rule); drop those now over water (< water_level + 0.1 m) or off the terrain. High-importance
-    objects are never moved or dropped. Returns (moved, dropped ids)."""
+    legacy base rule) and linear polyline points on the terrain; drop point objects now over water
+    (< water_level + 0.1 m), off the terrain or inside a P2 water zone. High-importance objects are never moved or dropped.
+    Returns (moved points / objects, dropped ids)."""
     route, man, sem = _load(pkg)
     site = Site(pkg, route, man, sem)
     path = os.path.join(pkg, "structures", "structures.json")
@@ -802,11 +803,23 @@ def resettle(pkg, tile_ids, water_level=0.0):
             continue
         b = o["footprints_route"][0]
         hs = [site.ground(s, u) for s in (b[0], b[1]) for u in (b[2], b[3])]
-        if None in hs or min(hs) < water_level + 0.1:
+        if None in hs or min(hs) < water_level + 0.1 or (o["semantic_type"] not in ("bridge", "pier") and site.zones(tuple(b), {"water"})):
             gone.add(o["object_id"])
         elif abs(o["transform"]["position"][1] - min(hs)) > 1e-4:
             o["transform"]["position"][1] = new_y[o["object_id"]] = round(min(hs), 4)
             moved += 1
+    relaid = {}  # linear objects: re-ground polyline points inside the changed tiles (x, z unchanged)
+    for o in data["objects"]:
+        if o["placement"] != "linear":
+            continue
+        pl = o["polyline"]
+        for k, (s, u) in enumerate(zip(pl["s"], pl["lateral_offset_m"])):
+            if any(t["from_s"] <= s <= t["to_s"] for t in tiles):
+                g = site.ground(s, u)
+                if g is not None and abs(pl["points"][k][1] - g) > 1e-4:
+                    pt = pl["points"][k]
+                    pt[1] = round(g, 4)
+                    relaid[(o["object_id"], round(pt[0], 3), round(pt[2], 3))] = pt[1]
     data["objects"] = [o for o in data["objects"] if o["object_id"] not in gone]
     json.dump(data, open(path, "w"), indent=1)
     for t in man["tiles"]:
@@ -826,10 +839,13 @@ def resettle(pkg, tile_ids, water_level=0.0):
             g["object_id"] = [g["object_id"][i] for i in keep]
             g["count"] = len(keep)
         td["groups"] = [g for g in td["groups"] if g["count"]]
+        for line in td.get("linear", []):
+            for pt in line["points"]:
+                pt[1] = relaid.get((line["object_id"], round(pt[0], 3), round(pt[2], 3)), pt[1])
         json.dump(td, open(tpath, "w"))
     with open(os.path.join(pkg, "manifest.json"), "w") as f:
         json.dump(man, f, indent=1)
-    return moved, sorted(gone)
+    return moved + len(relaid), sorted(gone)
 
 
 # ------------------------------------------------------------------ validation

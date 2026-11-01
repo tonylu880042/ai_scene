@@ -343,6 +343,100 @@ def _load(pkg):
     return route, man, sem
 
 
+def place_zone(space, zone, seed=11):
+    """Instances (proto, s, u, x, y, z, yaw, scale, zone id) for one vegetation zone; fills each mix entry's counts."""
+    instances = []
+    for entry in zone["mix"]:
+        proto = PROTOTYPES[entry["prototype"]]
+        cat = proto["category"]
+        area, (a, b) = free_area_ha(space, zone, entry, cat)
+        n = int(round(entry["density_per_ha"] * area))
+        entry["free_area_ha"] = round(area, 4)
+        entry["target_count"] = n
+        rng = random.Random(seed * 1000003 + zlib.crc32(f"{zone['id']}/{entry['prototype']}".encode()))
+        placed, grid, tries = 0, {}, 0
+        sp = proto["min_spacing_m"]
+        while placed < n and tries < 40 * n + 100:
+            tries += 1
+            s = rng.uniform(zone["from_s"], zone["to_s"])
+            u = rng.uniform(a, b)
+            if space.excluded(s, u, cat, margin=0.01):
+                continue
+            x, z = space.world_xz(s, u)
+            if sp > 0:  # dart throwing: keep the zone's trees / shrubs / boulders apart
+                cell = (int(x // sp), int(z // sp))
+                if any(math.hypot(x - q[0], z - q[1]) < sp for dx in (-1, 0, 1) for dz in (-1, 0, 1)
+                       for q in grid.get((cell[0] + dx, cell[1] + dz), [])):
+                    continue
+            y = space.ground(s, u, x, z)
+            if y is None:
+                continue
+            if sp > 0:
+                grid.setdefault(cell, []).append((x, z))
+            instances.append((entry["prototype"], s, u, x, y, z, rng.uniform(0, 2 * math.pi),
+                              rng.uniform(*proto["scale"]), zone["id"]))
+            placed += 1
+        entry["count"] = placed
+    return instances
+
+
+def regenerate(pkg, removed_semantic_ids, seed=11):
+    """Local P3 refresh after a P2 edit: vegetation zones derived from removed semantic zones lose their zone and
+    instances; semantic zones without a vegetation zone yet get new ones (ids appended after the current maximum)
+    and fresh instances. Every other zone and instance is left exactly as it is. Returns (removed, added) counts."""
+    route, man, sem = _load(pkg)
+    vpath = os.path.join(pkg, "vegetation", "zones.json")
+    vdoc = json.load(open(vpath))
+    gone = {z["id"] for z in vdoc["zones"] if z["semantic_zone"] in removed_semantic_ids}
+    vdoc["zones"] = [z for z in vdoc["zones"] if z["id"] not in gone]
+    covered = {z["semantic_zone"] for z in vdoc["zones"]}
+    fresh = vegetation_zones({"zones": [z for z in sem["zones"] if z["id"] not in covered]})
+    next_id = max([int(z["id"][1:]) for z in vdoc["zones"]] + [0]) + 1
+    for k, z in enumerate(fresh):
+        z["id"] = "v%04d" % (next_id + k)
+    space = Space(pkg, route, man, sem)
+    instances = [i for z in fresh for i in place_zone(space, z, seed)]
+    vdoc["zones"] += fresh
+    json.dump(vdoc, open(vpath, "w"), indent=1)
+    starts = [t["from_s"] for t in man["tiles"]]
+    removed = 0
+    for t in man["tiles"]:
+        path = os.path.join(pkg, t["files"]["vegetation"])
+        doc = json.load(open(path))
+        refs = doc["zone_refs"]
+        for g in doc["groups"]:
+            n = g["count"]
+            keep = [k for k in range(n) if refs[g["zone"][k]] not in gone]
+            removed += n - len(keep)
+            for key, values in g.items():
+                if key != "data" and isinstance(values, list) and len(values) == n:
+                    g[key] = [values[i] for i in keep]
+            g["data"] = [v for i in keep for v in g["data"][10 * i:10 * i + 10]]
+            g["count"] = len(keep)
+        mine = [i for i in instances if man["tiles"][min(max(bisect.bisect_right(starts, i[1]) - 1, 0), len(starts) - 1)]["id"] == t["id"]]
+        for (proto, s, u, x, y, z, yaw, sc, zid) in mine:
+            g = next((g for g in doc["groups"] if g["proto"] == proto), None)
+            if g is None:
+                g = {"proto": proto, "category": PROTOTYPES[proto]["category"], "count": 0, "data": [], "s": [],
+                     "lateral_offset_m": [], "zone": []}
+                doc["groups"].append(g)
+            if zid not in refs:
+                refs.append(zid)
+            g["data"] += [round(x, 3), round(y, 3), round(z, 3), 0.0, round(math.sin(yaw / 2), 5), 0.0,
+                          round(math.cos(yaw / 2), 5), round(sc, 3), round(sc, 3), round(sc, 3)]
+            g["s"].append(round(s, 3))
+            g["lateral_offset_m"].append(round(u, 3))
+            g["zone"].append(refs.index(zid))
+            g["count"] += 1
+        doc["groups"] = [g for g in doc["groups"] if g["count"]]
+        json.dump(doc, open(path, "w"), separators=(",", ":"))
+        t["vegetation"] = {}
+        for g in doc["groups"]:
+            t["vegetation"][g["category"]] = t["vegetation"].get(g["category"], 0) + g["count"]
+    json.dump(man, open(os.path.join(pkg, "manifest.json"), "w"), indent=1)
+    return removed, len(instances)
+
+
 def build(pkg, seed=11):
     for need in ("route/route.json", "manifest.json", "semantics/semantics.json"):
         if not os.path.isfile(os.path.join(pkg, need)):
@@ -355,37 +449,7 @@ def build(pkg, seed=11):
     zones = vegetation_zones(sem)
     instances = []  # (proto, s, u, x, y, z, yaw, scale, zone id)
     for zone in zones:
-        for entry in zone["mix"]:
-            proto = PROTOTYPES[entry["prototype"]]
-            cat = proto["category"]
-            area, (a, b) = free_area_ha(space, zone, entry, cat)
-            n = int(round(entry["density_per_ha"] * area))
-            entry["free_area_ha"] = round(area, 4)
-            entry["target_count"] = n
-            rng = random.Random(seed * 1000003 + zlib.crc32(f"{zone['id']}/{entry['prototype']}".encode()))
-            placed, grid, tries = 0, {}, 0
-            sp = proto["min_spacing_m"]
-            while placed < n and tries < 40 * n + 100:
-                tries += 1
-                s = rng.uniform(zone["from_s"], zone["to_s"])
-                u = rng.uniform(a, b)
-                if space.excluded(s, u, cat, margin=0.01):
-                    continue
-                x, z = space.world_xz(s, u)
-                if sp > 0:  # dart throwing: keep the zone's trees / shrubs / boulders apart
-                    cell = (int(x // sp), int(z // sp))
-                    if any(math.hypot(x - q[0], z - q[1]) < sp for dx in (-1, 0, 1) for dz in (-1, 0, 1)
-                           for q in grid.get((cell[0] + dx, cell[1] + dz), [])):
-                        continue
-                y = space.ground(s, u, x, z)
-                if y is None:
-                    continue
-                if sp > 0:
-                    grid.setdefault(cell, []).append((x, z))
-                instances.append((entry["prototype"], s, u, x, y, z, rng.uniform(0, 2 * math.pi),
-                                  rng.uniform(*proto["scale"]), zone["id"]))
-                placed += 1
-            entry["count"] = placed
+        instances += place_zone(space, zone, seed)
     # write: zones, prototypes, per-tile instances
     vdir = os.path.join(pkg, "vegetation")
     os.makedirs(vdir, exist_ok=True)
@@ -589,6 +653,35 @@ def resettle(pkg, tile_ids, water_level=0.0):
         with open(path, "w") as f:
             json.dump(doc, f)
     return moved, dropped
+
+
+def remove_in_boxes(pkg, boxes, pad=0.2):
+    """Drop instances whose footprint touches a route-relative box [s0, s1, u0, u1] (P4 objects outrank P3);
+    same rule as the structures validator's collision check. Returns the number removed."""
+    removed = 0
+    route, man, sem = _load(pkg)
+    for t in man["tiles"]:
+        mine = [b for b in boxes if b[1] >= t["from_s"] - 10 and b[0] <= t["to_s"] + 10]
+        if not mine:
+            continue
+        path = os.path.join(pkg, t["files"]["vegetation"])
+        doc = json.load(open(path))
+        for g in doc["groups"]:
+            r = PROTOTYPES.get(g["proto"], {}).get("footprint_radius_m", 0.5)
+            n = g["count"]
+            keep = [k for k in range(n) if not any(b[0] - r - pad < g["s"][k] < b[1] + r + pad and
+                                                   b[2] - r - pad < g["lateral_offset_m"][k] < b[3] + r + pad for b in mine)]
+            if len(keep) == n:
+                continue
+            removed += n - len(keep)
+            for key, values in g.items():
+                if key != "data" and isinstance(values, list) and len(values) == n:
+                    g[key] = [values[i] for i in keep]
+            g["data"] = [v for i in keep for v in g["data"][10 * i:10 * i + 10]]
+            g["count"] = len(keep)
+        doc["groups"] = [g for g in doc["groups"] if g["count"]]
+        json.dump(doc, open(path, "w"), separators=(",", ":"))
+    return removed
 
 
 def validate(pkg):

@@ -54,6 +54,17 @@ class OsmContextTest(unittest.TestCase):
             self.assertFalse(water(-20, 0))
             self.assertTrue(water(-55, 0))   # inside the pond, on the land side of the coast
 
+    def test_coastal_water_band(self):
+        import road_terrain as rt
+        coast = {"water_edge_m": 10.0, "water_level_m": 0.0, "bank_width_m": 4.0}
+        band = dict(coast, water_far_m=30.0)
+        for u in (2.0, 20.0, 60.0):  # without water_far_m the profile is unchanged by the new option
+            self.assertEqual(rt.coastal_height(3.0, 3.0, 1.6, u, coast), rt.coastal_height(3.0, 3.0, 1.6, u, dict(coast, water_far_m=None)))
+        self.assertAlmostEqual(rt.coastal_height(3.0, 3.0, 1.6, 20.0, band), -0.8)  # inside the band: water bed
+        self.assertAlmostEqual(rt.coastal_height(3.0, 3.0, 1.6, 60.0, band), 3.0)   # land again beyond it
+        self.assertAlmostEqual(rt.coastal_height(3.0, 3.0, 1.6, 60.0, coast), -0.8)
+        self.assertTrue(rt.coastal_sand(band, 29.0) and not rt.coastal_sand(band, 40.0) and rt.coastal_sand(coast, 40.0))
+
     def test_vegetation_removal_keeps_arrays_aligned(self):
         with tempfile.TemporaryDirectory() as pkg:
             os.makedirs(os.path.join(pkg, "tiles", "00"))

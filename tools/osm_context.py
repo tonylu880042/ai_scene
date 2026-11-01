@@ -586,10 +586,37 @@ def water_edge(route, water, s, side, reach_m=150.0, step_m=0.5):
     return None
 
 
-def shoreline(pkg, water_path, from_s, to_s, out_path, chunk_m=2.0, bank_width_m=6.0):
-    """Replace every coast profile inside [from_s, to_s] (both sides) with OSM-measured 2 m chunks (median of 3).
-    A chunk with no OSM water within reach is land: no profile. Profiles outside the span are kept byte-identical
-    in value (straddling ones are clipped at the span ends), so terrain outside it does not change."""
+def water_band(route, water, s, side, reach_m=150.0, step_m=0.5):
+    """(near, far) of the first OSM water interval along the left/right normal; far None if it reaches reach_m;
+    None if no water within reach."""
+    import route_model as rm
+    p = rm.sample(route, s)
+    lx, lz = rm.left_vector(p["heading_deg"])
+    sign = 1 if side == "left" else -1
+    u, near = p["width_left_m" if side == "left" else "width_right_m"], None
+    while u <= reach_m:
+        wet = water(p["x"] + sign * lx * u, p["z"] + sign * lz * u)
+        if wet and near is None:
+            near = u
+        elif not wet and near is not None:
+            return near, u
+        u += step_m
+    return (near, None) if near is not None else None
+
+
+def _median(values):
+    values = sorted(values)
+    return values[len(values) // 2] if values else None
+
+
+def shoreline(pkg, water_path, from_s, to_s, out_path, chunk_m=2.0, bank_width_m=6.0, max_route_y_m=5.0):
+    """Replace every coast profile inside [from_s, to_s] (both sides) with OSM-measured 2 m chunks: the first OSM
+    water interval along the route normal, near and far edges each a median of 5 chunks (10 m) so the waterline
+    does not flip between terrain columns. A band with land beyond it (creek / channel) sets water_far_m. A chunk
+    with no OSM water within reach is land: no profile. Where an original two-sided (bridge) profile covers a
+    route above max_route_y_m (the deck or its ramps) the original profiles are kept: P1 terrain follows the deck height, so a narrow measured band would
+    become a trench. Profiles outside the span keep their values (straddling ones are clipped at the span ends),
+    so terrain outside it does not change."""
     route = json.load(open(os.path.join(pkg, "route", "route.json")))
     man = json.load(open(os.path.join(pkg, "manifest.json")))
     water = Water(water_path, route["coordinate_system"]["origin"])
@@ -605,26 +632,119 @@ def shoreline(pkg, water_path, from_s, to_s, out_path, chunk_m=2.0, bank_width_m
         if prof["to_s"] > to_s:
             out.append(dict(prof, from_s=to_s))
     template = replaced[0] if replaced else {"water_level_m": 0, "sand_width_m": 2}
+    import route_model as rm
+    elevated = [rm.sample(route, s + chunk_m / 2)["y"] > max_route_y_m and
+                any(p["side"] == "both" and p["from_s"] <= s + chunk_m / 2 <= p["to_s"] for p in replaced) for s in stations]
+    report["kept_original_on_elevated_chunks"] = sum(elevated)
+    for i, a in enumerate(stations):
+        if elevated[i]:
+            b = min(a + chunk_m, to_s)
+            out += [dict(p, from_s=round(max(a, p["from_s"]), 4), to_s=round(min(b, p["to_s"]), 4))
+                    for p in replaced if p["from_s"] < b and p["to_s"] > a]
     for side in ("left", "right"):
-        edges = [water_edge(route, water, s + chunk_m / 2, side) for s in stations]
-        report["measured"][side] = edges
+        bands = [water_band(route, water, s + chunk_m / 2, side) for s in stations]
+        report["measured"][side] = bands
         for i, a in enumerate(stations):
-            window = [v for v in edges[max(0, i - 1):i + 2] if v is not None]
-            if edges[i] is None or not window:
+            window = [v for v in bands[max(0, i - 2):i + 3] if v is not None]
+            if elevated[i] or bands[i] is None or not window:
                 continue  # OSM: land on this side
-            edge = sorted(window)[len(window) // 2]
+            near = _median([v[0] for v in window])
+            fars = [v[1] for v in window]
+            far = None if any(f is None for f in fars) else _median(fars)
             width = rm_width(route, a, side)
-            out.append({"from_s": round(a, 4), "to_s": round(min(a + chunk_m, to_s), 4), "side": side, "water_edge_m": round(edge, 2),
-                        "water_level_m": template.get("water_level_m", 0), "bank_width_m": round(min(bank_width_m, max(0.5, edge - width)), 2),
-                        "sand_width_m": template.get("sand_width_m", 2),
-                        "source": {"kind": "osm", "estimated": False, "confidence": 0.75,
-                                   "ref": "OpenStreetMap natural=coastline / natural=water, ODbL 1.0",
-                                   "note": "plan-view water edge measured along the route normal (0.5 m steps, median of 3 x 2 m); bank shape is the estimated profile model"}})
+            prof = {"from_s": round(a, 4), "to_s": round(min(a + chunk_m, to_s), 4), "side": side, "water_edge_m": round(near, 2),
+                    "water_level_m": template.get("water_level_m", 0), "bank_width_m": round(min(bank_width_m, max(0.5, near - width)), 2),
+                    "sand_width_m": template.get("sand_width_m", 2),
+                    "source": {"kind": "osm", "estimated": False, "confidence": 0.75,
+                               "ref": "OpenStreetMap natural=coastline / natural=water, ODbL 1.0",
+                               "note": "plan-view water band measured along the route normal (0.5 m steps, median of 5 x 2 m); bank shape is the estimated profile model"}}
+            if far is not None and far > near + 2.0:
+                prof["water_far_m"] = round(far, 2)
+            out.append(prof)
     out.sort(key=lambda p: (p["from_s"], p["side"]))
     json.dump({"coast_profiles": out, "report": dict(report, replaced_profiles=replaced)}, open(out_path, "w"), indent=1)
     for side in ("left", "right"):
-        v = [e for e in report["measured"][side] if e is not None]
-        print(side, f"{len(v)}/{len(stations)} chunks with water", (min(v), sorted(v)[len(v) // 2], max(v)) if v else "")
+        v = [b for b in report["measured"][side] if b is not None]
+        print(side, f"{len(v)}/{len(stations)} chunks with water, {sum(b[1] is not None for b in v)} with land beyond")
+
+
+def semantics_from_coast(pkg, spans, piece_m=10.0, tree_reach_m=40.0):
+    """P2 follows P1 inside spans: on each side, grass / water / vegetation_zone zones are rebuilt per piece_m from
+    the shipped coast profiles (grass to the near water edge, water to the far edge of a band, grass beyond it;
+    trees on the land side up to tree_reach_m or 1 m short of the water). Zones straddling a span end are clipped;
+    every other zone is untouched. Returns the removed semantic zone ids (for vegetation.regenerate)."""
+    route = json.load(open(os.path.join(pkg, "route", "route.json")))
+    man = json.load(open(os.path.join(pkg, "manifest.json")))
+    path = os.path.join(pkg, "semantics", "semantics.json")
+    sem = json.load(open(path))
+    profiles, ext = man["visual_terrain"]["coast_profiles"], sem.get("extent_m", 100.0)
+    types = {"grass", "water", "vegetation_zone"}
+    inside = lambda z: any(z["from_s"] < b and z["to_s"] > a for a, b in spans)
+    removed = [z for z in sem["zones"] if z["semantic_type"] in types and z["side"] in ("left", "right") and inside(z)]
+    keep = [z for z in sem["zones"] if z not in removed]
+    next_id = [max(int(z["id"][1:]) for z in sem["zones"] if z["id"][1:].isdigit()) + 1]
+
+    def zone(t, side, a, b, lo, hi, attrs, source, confidence):
+        if hi - lo < 0.05 or b - a < 0.05:
+            return None
+        lat = [round(lo, 3), round(hi, 3)] if side == "left" else [round(-hi, 3), round(-lo, 3)]
+        z = {"id": "z%04d" % next_id[0], "semantic_type": t, "side": side, "from_s": round(a, 4), "to_s": round(b, 4),
+             "lateral_offset_m": lat, "vertical_offset_m": None, "confidence": confidence, "attributes": attrs, "source": source}
+        next_id[0] += 1
+        return z
+
+    added = []
+    for z in removed:  # parts outside every span keep their original values
+        cuts = [(z["from_s"], z["to_s"])]
+        for a, b in spans:
+            cuts = [piece for lo, hi in cuts for piece in ((lo, min(hi, a)), (max(lo, b), hi)) if piece[1] - piece[0] > 0.05]
+        for lo, hi in cuts:
+            added.append(dict(z, id="z%04d" % next_id[0], from_s=round(lo, 4), to_s=round(hi, 4)))
+            next_id[0] += 1
+    derived = {"kind": "procedural", "estimated": True, "ref": "P1 OSM-measured coast profiles (tools/osm_context.py shoreline)",
+               "note": "ground cover follows the shipped shoreline; tree species / density carried over from the replaced video zone"}
+    osm = {"kind": "map", "estimated": False, "ref": "OpenStreetMap natural=coastline / natural=water, ODbL 1.0"}
+    for a, b in spans:
+        for side in ("left", "right"):
+            old = [z for z in removed if z["side"] == side and z["from_s"] < b and z["to_s"] > a]
+            first = lambda t: next((z for z in old if z["semantic_type"] == t), None) or \
+                next((z for z in removed if z["semantic_type"] == t), None)
+            grass_t, water_t, tree_t = first("grass"), first("water"), next((z for z in old if z["semantic_type"] == "vegetation_zone"), None)
+            k = a
+            while k < b - 1e-6:
+                e = min(k + piece_m, b)
+                surfaces = [z for z in keep if z["semantic_type"] in ("road", "trail", "sidewalk", "bridge", "tunnel")
+                            and z["from_s"] < e and z["to_s"] > k]
+                inner = max([max(rm_width(route, s, side) for s in (k, (k + e) / 2, e)) + 0.025] +
+                            [z["lateral_offset_m"][1] if side == "left" else -z["lateral_offset_m"][0] for z in surfaces])
+                bands = [rt.coast_profile(profiles, s, side) for s in [k + 0.5 + i for i in range(int(e - k))] or [k]]
+                wet = [p for p in bands if p]
+                near = max(inner, min(p["water_edge_m"] for p in wet)) if wet else None
+                fars = [p.get("water_far_m") for p in wet]
+                far = max(fars) if wet and all(f is not None for f in fars) else None
+                if far is not None and far >= ext:
+                    far = None
+                if near is not None and near >= ext:
+                    near = None  # water only beyond the semantics extent
+                g_attrs, w_attrs = (grass_t or {}).get("attributes", {"kind": "lawn"}), dict((water_t or {}).get("attributes", {"kind": "creek"}))
+                if near is None:
+                    added.append(zone("grass", side, k, e, inner, ext, g_attrs, derived, 0.6))
+                else:
+                    w_attrs.update(level_m=0, edge_m=round(near, 2))
+                    added += [zone("grass", side, k, e, inner, near, g_attrs, derived, 0.6),
+                              zone("water", side, k, e, near, far if far is not None else ext, w_attrs, osm, 0.75)]
+                    if far is not None:
+                        added.append(zone("grass", side, k, e, far, ext, g_attrs, derived, 0.6))
+                if tree_t:
+                    lo = abs(tree_t["lateral_offset_m"][0 if side == "left" else 1])
+                    hi = min(tree_reach_m, near - 1.0) if near is not None else tree_reach_m
+                    added.append(zone("vegetation_zone", side, k, e, lo, hi, tree_t["attributes"], derived, 0.5))
+                k = e
+    sem["zones"] = keep + [z for z in added if z]
+    sem["zones"].sort(key=lambda z: (z["from_s"], z["id"]))
+    json.dump(sem, open(path, "w"), indent=1)
+    print(f"semantics: replaced {len(removed)} zones with {len([z for z in added if z])} in {len(spans)} spans")
+    return {z["id"] for z in removed}
 
 
 def rm_width(route, s, side):

@@ -533,7 +533,19 @@ def coastal_height(height, road_y, width, u, profile):
     # An authored narrow seawall may meet water within the procedural noise's 3 m flat band.
     start = max(width, edge - profile.get("bank_width_m", 4.0))
     blend = smoothstep(start, edge + 0.8, abs(u))
+    far = profile.get("water_far_m")
+    if far is not None:  # optional water band (creek / channel): land rises again beyond its far edge
+        blend *= 1.0 - smoothstep(max(far - 0.8, edge + 0.8), far + profile.get("bank_width_m", 4.0), abs(u))
     return height * (1 - blend) + (profile.get("water_level_m", 0.0) - 0.8) * blend
+
+
+def coastal_sand(profile, u):
+    """Sand band at the water edge(s) of a coast profile (both banks of an optional water band)."""
+    if not profile:
+        return False
+    sand = profile.get("sand_width_m", 2.0)
+    far = profile.get("water_far_m")
+    return abs(u) > profile["water_edge_m"] - sand and (far is None or abs(u) < far + sand)
 
 
 def _terrain_grid_with_coastal_anchors(smp, rows, D, reaches, tp):
@@ -1180,7 +1192,7 @@ def apply_coastal_ownership(pkg,tiles,smp,tp,corridors):
         for k in range(0,len(updated),3):
             tri=updated[k:k+3];sv=sum(ss[j] for j in tri)/3;u=sum(uu[j] for j in tri)/3
             profile=coast_profile(profiles_all,sv,"left" if u>0 else "right")
-            (sand if profile and abs(u)>profile["water_edge_m"]-profile.get("sand_width_m",2.0) else ground).extend(tri)
+            (sand if coastal_sand(profile,u) else ground).extend(tri)
         prims=[]
         if ground:prims.append({"material":TERRAIN_MATERIAL,"indices":ground})
         if sand:prims.append({"material":{"name":"shore_sand","color":[0.68,0.59,0.39],"roughness":0.95},"indices":sand})
@@ -1306,7 +1318,7 @@ def build(pkg, tile_m=500.0, terrain=None):
             tri = tidx[k:k+3]
             sv, u = sum(ts[j] for j in tri)/3, sum(tu[j] for j in tri)/3
             profile = coast_profile(tp.get("coast_profiles", []), sv, "left" if u > 0 else "right")
-            target = sand if (not exact_sand and profile and abs(u) > profile["water_edge_m"] - profile.get("sand_width_m", 2.0)) else ground
+            target = sand if (not exact_sand and coastal_sand(profile, u)) else ground
             target.extend(tri)
         terrain_prims = [{"material": TERRAIN_MATERIAL, "indices": ground}] if ground else []
         if sand:
@@ -2378,6 +2390,8 @@ def _classify_coastal_sand_exact(mesh, profiles, tile_from_s, tile_to_s):
     if "_ROUTE_S" not in attrs or "_ROUTE_U" not in attrs:
         raise ValueError("exact coastal sand classification requires route S/U attributes")
     regions=[]
+    if any(p.get("water_far_m") is not None for p in profiles):
+        raise ValueError("coastal_exact_sand_boundary does not support water_far_m bands yet")
     for profile in profiles:
         start=max(float(tile_from_s),float(profile["from_s"]))
         end=min(float(tile_to_s),float(profile["to_s"]))

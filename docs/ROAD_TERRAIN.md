@@ -335,3 +335,19 @@ confirm only the target tiles' `terrain.glb` changed and every `road.glb` is ide
 `python3 tools/vegetation.py resettle <package> <tiles>` and `python3 tools/structures.py resettle <package> <tiles>`
 re-ground P3 / low-medium P4 on the new terrain and drop what now stands on water (high-importance objects are never
 moved). Provenance: `manifest.osm_shoreline_partial_rebuild`. Evidence: `export/gold_coast/review/osm_shoreline_r49/`.
+
+Optional `water_far_m` on a coast profile makes it a **water band** (creek / channel): water from `water_edge_m` to
+`water_far_m`, land rising again beyond it over `bank_width_m`, sand on both banks. Without it a profile is unchanged.
+`shoreline` sets it from the first OSM water interval and smooths near/far edges over 5 chunks (10 m) so the waterline
+does not flip between terrain columns; banks still cannot be finer than the 15–25 m column spacing at 20–60 m.
+Where an original two-sided (bridge) profile covers a route above 5 m (deck and ramps), the estimated open-water
+profile is kept: terrain follows the deck height, so a narrow measured band would form a trench under the bridge.
+`coastal_exact_sand_boundary` rejects water bands.
+
+After the P1 transplant, `osm_context.semantics_from_coast` rebuilds P2 grass / water / vegetation_zone per 10 m inside
+the spans from the shipped profiles (grass to the water, water to the band's far edge, grass beyond; tree zones keep
+their video species / density and reach at most 40 m or 1 m short of the water), `vegetation.regenerate` refreshes
+only the P3 zones derived from replaced semantic zones (new zone ids appended; all other instances untouched),
+`structures.resettle` also drops low / medium point objects now in P2 water, and `vegetation.remove_in_boxes` clears
+P3 instances under P4 footprints. Gold Coast r50 applies this to s 2260–2740, 5090–5690, 6890–7485 and 10260–10990
+(tiles 09, 10, 20–22, 27–29, 41–43; every road.glb identical); evidence `export/gold_coast/review/osm_shoreline_r50/`.
