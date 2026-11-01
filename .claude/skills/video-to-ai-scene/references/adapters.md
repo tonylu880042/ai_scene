@@ -45,7 +45,7 @@ Validators prove geometry and data. Checklist layers L1–L4 still need eyes on 
   `godot --path . --script tools/verify_unity_export.gd -- export_unity/<name> <scratch>/S05.png <s>` (windowed,
   not headless). A package renderer is planned (MIGRATION_PLAN phase 4).
 - Reference frame and render side by side at the same size, labelled with ID / time / version;
-  `skills/video-scene-reconstruction/scripts/make_comparisons.py` pairs them and records hashes (it does not judge).
+  `tools/make_comparisons.py` pairs them and records hashes (it does not judge).
   If sizes differ, fix the capture, never stretch.
 - Order of judgement: bend / road exit and edge line → landmark side, size, occlusion → distant ridges and sky
   opening → canopy and verges → materials and light. More trees is not a better forest; correct OSM / DEM is not a

@@ -74,13 +74,13 @@ scripts, ~35 scenes, ~30 data files, ~60 tools, per-round review modules) — th
 | `saisies_route.gd`, `saisies_camera.gd`, `saisies_trees.gd`, `saisies_roadside_chalets.gd` | **REFACTOR** | Base classes / helpers still used by the geo scripts (`SaisiesGeoRoute extends SaisiesRoute`, geo camera extends `SaisiesCamera`, release forest loads `saisies_trees.gd`). Fold what is generic into the shared generators before retiring the rest. |
 | v1/v2 scenes and their scripts (`saisies_environment.gd`, `saisies_landscape.gd`, `saisies_village*.gd`, `saisies_upper/lower_scenery.gd`, `saisies_runtime.gd`, `MainScene_saisies*.tscn` non-geo, `data/saisies_route*.json`, `saisies_scene_map.json`) | **RETIRE** | Superseded by the geo version. |
 | Per-round review modules (`saisies_s01_*` … `saisies_s04_*`, `saisies_r37_*`, review controllers, `run_saisies_*.command/.py`, review scenes, `data/saisies_s0*_*.json`, `docs/saisies_revision_round*.md`, `docs/saisies_s0*_*.md`) | **RETIRE** | Their accepted results (S01–S03) are carried by the release; no new rounds in this form. |
-| `skills/video-scene-reconstruction/` | **RETIRE** | Its evidence contract, rendered-acceptance and Saisies lessons are merged into `.claude/skills/video-to-ai-scene/references/`; `scripts/make_comparisons.py` is still referenced from there (move it before deleting). |
+| `skills/video-scene-reconstruction/` | **RETIRE** | Its evidence contract, rendered-acceptance and Saisies lessons are merged into `.claude/skills/video-to-ai-scene/references/`; `scripts/make_comparisons.py` moved to `tools/make_comparisons.py` (2026-11-02); the folder is no longer referenced. |
 
 ### 1.5 Workflow documents
 
 | Component | Class | Notes |
 |---|---|---|
-| `.claude/skills/video-to-virtual-run/SKILL.md` | **REFACTOR** → **RETIRE** after review | Rewritten as `.claude/skills/video-to-ai-scene/` (2026-10-21): output = AI Scene Package, phases 1–9 route-first, Godot scripts marked as temporary adapters, lessons moved to `references/pitfalls.md` / `adapters.md`, whole-package check `tools/validate_package.py`. The old skill stays until the new one is reviewed; both currently match "video to scene" requests. |
+| `.claude/skills/video-to-virtual-run/SKILL.md` | **RETIRED** (2026-11-02) | Rewritten as `.claude/skills/video-to-ai-scene/` (2026-10-21): output = AI Scene Package, phases 1–9 route-first, Godot scripts marked as temporary adapters, lessons moved to `references/pitfalls.md` / `adapters.md`, whole-package check `tools/validate_package.py`. Reviewed 2026-11-02 (Phase 0 data / asset inventory and time → route registration added); the old skill was removed so only the new one matches "video to scene" requests. |
 | `README.md` | **ADAPT** | Link `AGENTS.md` and the architecture docs; trim Saisies round history to a pointer. |
 | `tools/EXPORT_README.md`, `tools/unity/README_UNITY.md` | **ADAPT** | Point to the package format once the writer exists. |
 

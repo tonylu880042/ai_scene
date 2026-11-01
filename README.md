@@ -139,4 +139,4 @@ godot --path . --script res://tools/capture_saisies_aerial.gd -- --view=top --hi
 
 第九輪已完成近路RGE高程、近路森林與護欄高度修正；[最新四張原片對照](export/saisies/review/round9_canopy_final/four_view_comparisons.jpg)仍0/4視覺通過。[第十輪紀錄](docs/saisies_revision_round10.md)已新增局部岩壁、樹根接地、林緣與候選相機；[最新五張對照](export/saisies/review/round10_integrated/five_view_comparisons.jpg)仍0/5視覺通過，9/9技術檢查不能取代畫面驗收。[第十一輪](docs/saisies_revision_round11.md)已補S09低石牆、草坡細節與右林遮擋；[最新五張對照](export/saisies/review/round11_reviewed/five_view_comparisons.jpg)仍0/5通過，另補326／334秒亦退修。本輪4/4技術檢查與原生GPU檢查通過；[後續工作](docs/saisies_revision_round12.md)優先診斷連續彎序與道路投影。
 
-可重用技能：[`video-scene-reconstruction`](skills/video-scene-reconstruction/SKILL.md)，包含影片分鏡、發包、原片／Godot對照驗收及本次錯誤分析；個人技能目錄亦已安裝。
+影片轉場景請用 [`video-to-ai-scene`](.claude/skills/video-to-ai-scene/SKILL.md)（舊的 `video-scene-reconstruction` 與 `video-to-virtual-run` 已退役，教訓併入其 references）。

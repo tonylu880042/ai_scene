@@ -27,8 +27,7 @@ Read before changing anything:
 | [docs/MIGRATION_PLAN.md](docs/MIGRATION_PLAN.md) | KEEP / REFACTOR / ADAPT / REPLACE / RETIRE for every existing component, and the phase order |
 | [unity/AIScenePlayer/README.md](unity/AIScenePlayer/README.md) | Unity runtime MVP that consumes a package (core tests: `dotnet test unity/CoreTests`) |
 | [README.md](README.md) | How to run the existing Godot scenes |
-| [.claude/skills/video-to-ai-scene/SKILL.md](.claude/skills/video-to-ai-scene/SKILL.md) | Video → AI Scene Package workflow (phases 1–9, adapters, pitfalls) — pending review |
-| [.claude/skills/video-to-virtual-run/SKILL.md](.claude/skills/video-to-virtual-run/SKILL.md) | Previous Godot-centred workflow, kept until the new skill is reviewed |
+| [.claude/skills/video-to-ai-scene/SKILL.md](.claude/skills/video-to-ai-scene/SKILL.md) | Video → AI Scene Package workflow (phases 0–9: data + assets + registration first, adapters, pitfalls) — the only scene-building skill |
 
 ## Rules
 
