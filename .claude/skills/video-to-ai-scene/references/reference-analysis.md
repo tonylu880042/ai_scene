@@ -41,6 +41,25 @@ Label every statement as observed, inferred or unknown. HUD altitude, estimated 
 GPS. If the road is identifiable (signs, place names, distinctive junctions), match it on a map before inventing
 geometry — Phase 2A.
 
+## Time → route registration (real roads)
+
+Every later gate compares a frame at time t with the package at distance s; get this mapping right before Phase 2.
+
+1. Pick 5–10 anchors spread over the video that both the frame and the map show unambiguously: junctions,
+   bridges (both sides water), turnarounds, a street meeting the path, an OSM building or coastline corner.
+   One anchor per 2–4 min at least; more where the path bends or repeats.
+2. Write them to `data/<name>_route_alignment.json` (`anchors: [{time_s, lat, lon, turnaround?}]`).
+3. Between anchors, `s` is interpolated by time: check each gap's speed (Δs / Δt) against the activity (run
+   2–4 m/s, ride 4–10 m/s) and that `s` only increases. An implausible gap means a wrong anchor, not a fast rider.
+4. For each section, read the side items off OSM at its registered `s` (street right? water left? buildings?)
+   and compare with the frame. A mismatch here is a registration error: move the anchor (searching only between
+   its neighbours) before anything is built on it. Record rejected positions and why.
+5. Each section gets `from_s` / `to_s` and a confidence (anchored / interpolated / unknown). Show the table to the
+   user with the checklist.
+
+For a repeated traversal (out-and-back, same park path twice), say for each section which pass it is; OSM
+features near one pass also stand near the other.
+
 ## The checklist (frozen)
 
 `data/<name>_checklist.json`, per section, per layer, 2–5 items **visible in that section's frame**:

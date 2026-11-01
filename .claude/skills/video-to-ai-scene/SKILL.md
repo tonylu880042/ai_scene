@@ -1,6 +1,6 @@
 ---
 name: video-to-ai-scene
-description: Turn a reference running / riding / hiking video (plus any map, GPS or elevation data) into an engine-independent AI Scene Package - canonical route, road + terrain tiles, near-route semantics, vegetation, buildings / landmarks, distant environment and atmosphere - validated stage by stage. Route first (playable, physical grade), decoration last; stops when every section meets its gate. Unity / Godot / Web are consumers, not the output. Use when the user gives a video or route and asks for a virtual-run / ride scene, an AI scene package, or a scene "like this video". Trigger words - "video to ai scene", "AI scene package", "/video-to-ai-scene", "用這個影片建立場景包", "影片轉AI場景".
+description: Turn a reference running / riding / hiking video (plus any map, GPS or elevation data) into an engine-independent AI Scene Package - canonical route, road + terrain tiles, near-route semantics, vegetation, buildings / landmarks, distant environment and atmosphere - validated stage by stage. Location, measured data (OSM / DEM) and an external asset library first, then time → route registration, route and terrain (playable, physical grade), decoration last; stops when every section meets its gate. Unity / Godot / Web are consumers, not the output. Use when the user gives a video or route and asks for a virtual-run / ride scene, an AI scene package, or a scene "like this video". Trigger words - "video to ai scene", "AI scene package", "/video-to-ai-scene", "用這個影片建立場景包", "影片轉AI場景".
 ---
 
 # Video → AI Scene Package
@@ -32,6 +32,21 @@ and Unity import are not part of this skill unless the user asks.
 - **Adapters are temporary.** Godot scripts below are *implementation adapters* (producers of facts during the
   migration, or consumers for rendered checks). The package must never depend on them; any producer that writes the
   same JSON is equally valid. Shared generators get new parameters; no per-scene `<name>_*.gd` pipelines.
+- **Measured before estimated.** Route, water, buildings and streets come from OSM / GPS / DEM fetched in Phase 0;
+  a video estimate replaces a measurement only where the frame shows the measurement is generalised (sea wall hard
+  against the path), recorded per span in `source`.
+- **External assets, not drawn ones.** Trees, shrubs, grass, rocks and furniture use existing or downloaded models /
+  textures (Phase 0 library). Writing a mesh generator for a plant is the last resort and needs a written reason
+  (nothing usable found, licence, triangle budget).
+- **Whole route before any section.** No per-section refinement (one section's sand, a chapel's orientation,
+  a paved edge) until every section passes the Phase 3 grey-box layout check. Gold Coast spent r5–r30 on S18/S19
+  while the shoreline and the time → s registration under them were still wrong.
+- **Time boxes.** Phase 0 + 1 ≤ half a day; each later gate ≤ 2 rounds. Over budget: stop and ask the user.
+- **Stop at valid.** Once a stage validator passes, do not chase sub-mm / float32 / triangulation polish unless a
+  validator fails or a gate item depends on it.
+- **One package per milestone.** Work in one package directory; copy to a new `<id>_rNN` only when a gate passes.
+  Delete diagnostic / failed candidates once their finding is written down (Gold Coast left 58 package dirs).
+- **One agent.** Do the work in this session; split across agents only when the user asks.
 
 Layout of a package (`docs/AI_SCENE_PACKAGE.md`):
 
@@ -42,7 +57,30 @@ export/packages/<id>/
   environment/{environment.json, distant_terrain.glb, sky.hdr}  */validation.json
 ```
 
-## Phase 1 — Reference analysis
+## Phase 0 — Location, data and asset inventory (before building anything)
+
+Skim the contact sheet (Phase 1 step 1) only far enough to answer these, then fetch everything once:
+
+1. **Where is it?** Signs, place names, coastline shape, distinctive junctions → a map location, or "synthetic"
+   (2B). A real place found later costs every layer built on the guess.
+2. **Fetch and cache measured data** (once, into `export/<name>/osm/`, `assets/`): DEM, OSM route ways, water /
+   coastline (`tools/osm_context.py fetch-water`), buildings + streets (`fetch`), skyline (`fetch-skyline`), real
+   distant terrain (`tools/fetch_real_terrain.py`), HDRI (`tools/download_assets.py`). The `osm_context.py`
+   commands need a package with route.json, so run them right after Phase 2; decide here which ones apply.
+3. **Route topology:** loop, out-and-back, turnaround, or the same path ridden twice (Gold Coast s 2540 and s 10660
+   are 4 m apart). List the repeated spans now; terrain clearance and P3/P4 exclusions depend on it.
+4. **Asset library** `data/<name>_library.json` — one entry per vegetation / furniture type the video shows,
+   `{"<prototype>": {"file": "assets/models/...gltf", "scale": .., "attribution": ".."}}` (format of
+   `data/gold_coast_library.json`, read by `tools/build_package_assets.py <package> <library.json>`). Search order:
+   `assets/models/` → Poly Haven (CC0, `tools/download_assets.py`) → OpenGameArt / Quaternius / Kenney (CC0) →
+   CC-BY with attribution → procedural (with reason). Grass: Poly Haven grass models or texture cards, not
+   generated tufts. Check per model: licence, triangles (tree ≤ ~3k, grass card ≤ ~200), PBR textures, size;
+   convert non-glTF with Blender. `build_package_assets.py` labels every library entry `CC0` — add a `license`
+   field there before using a CC-BY asset.
+5. **Gate:** location decided; data cached; every vegetation / furniture type has a library entry or a written
+   "procedural because …"; repeated spans listed. Tell the user the location and the asset list in a few lines.
+
+## Phase 1 — Reference analysis and time → route registration
 
 Read [references/reference-analysis.md](references/reference-analysis.md) first. In short:
 
@@ -53,10 +91,16 @@ Read [references/reference-analysis.md](references/reference-analysis.md) first.
    elevation or speed, road width and surface, what is on each side and how far (water, forest edge, wall,
    guardrail, slope, cliff, buildings, open land, bridge, tunnel), vegetation type and density, landmarks (name,
    side, size, order), distant terrain and sky (open / blocked, mountains, clouds, sun side).
-4. Decide the route source: is the real road identifiable (signs, place names, map match)? → Phase 2A, else 2B.
-5. Write `data/<name>_sections.json` (authoring input: `video_km`, `types`, `sections`, `landmarks`, as
+4. Route source from Phase 0: real road → Phase 2A, else 2B.
+5. **Register video time to route distance** (real roads): 5–10 anchors the frame and the map both show
+   (junctions, bridges, turnarounds, OSM buildings, coastline corners) → `data/<name>_route_alignment.json`
+   (`time_s` + lat / lon, as `data/gold_coast_route_alignment.json`). Check every gap between anchors against a
+   plausible speed; each section gets an `s` range with a confidence, unknown stays unknown. Without this, every
+   later gate compares the wrong place: Gold Coast's acceptance stayed 0/24 with registration unresolved, and S03
+   / S11 / S14 turned out 50–200 m off.
+6. Write `data/<name>_sections.json` (authoring input: `video_km`, `types`, `sections`, `landmarks`, as
    `data/weissensee_sections.json`) and `data/<name>_checklist.json` (per section, per layer, only items visible in
-   that frame). **Show the checklist to the user once; then it is frozen.**
+   that frame). **Show the checklist and the section → s table to the user once; then both are frozen.**
 
 Checklist layers (keys kept for `tools/section_sheet.py`): `L0` route (bend order, width, surface; grade only if the
 video gives it) → Phase 2 · `L1` terrain + distant (valley / water side, slopes, mountains, sky opening) → Phases 3, 7
@@ -85,8 +129,9 @@ heading, curvature, widths, surface, start / finish / checkpoints. **It must be 
   `turn` rules: [references/adapters.md](references/adapters.md)), then
   `godot --headless --path . --script tools/export_route.gd -- --scene=res://scenes/MainScene_<name>.tscn --course=<c> --out=export/packages/<id>/route/route.json`
   (writes physical elevation, runs `finalize` and a round trip).
-- **Gate L0 (90 %):** route.json VALID; per-section heading change matches the checklist bend order; tightest bend
-  radius ≥ ~150 m (or split the hairpin over a longer section); widths / surfaces per section plausible; start,
+- **Gate L0 (90 %):** route.json VALID; per-section heading change matches the checklist bend order; bend radii
+  agree with the observed route type; public walkways may have small-radius bends / turnarounds. Never stretch a
+  mapped hairpin to a generic 150 m radius. The full-width offset corridor must validate; widths / surfaces per section plausible; start,
   finish, checkpoints placed. Per-section heading change from route.json alone:
 
 ```bash
@@ -98,8 +143,31 @@ python3 -c "import json,sys; r=json.load(open(sys.argv[1])); s=r['samples']; f=l
 `python3 tools/road_terrain.py build export/packages/<id> --tile-m=500` (250–500 m tiles; also validates).
 Road rows sit exactly on the route; terrain starts on the road edge; hills / noise / exaggeration only beyond 3 m
 (`docs/ROAD_TERRAIN.md`). Gate: VALID (no gaps, seams ≤ 1 mm, road elevation / width / slope = route, no folds,
-start / middle / end probes). The L1 side-specific landform (valley left, wall of rock right) is carried by Phase 4
+start / middle / end probes, plus global centre / 80%-width probes against every terrain tile). Loops and repeated
+traversals use shared `tools/terrain_clearance.py`: clip P1 against foreign P0 road footprints without moving
+P0. Ground consumers must query shipped triangle indices rather than reconstruct the old grid, and P3/P4 must
+exclude other traversals in world space. A local no-fold result alone cannot accept a route. Tight mapped paths use shared `tools/build_osm_route.py` (explicit time/map alignment,
+provenance, optional unobserved-spur removal and declared turnaround radius), then the shared terrain builder's
+adjacent edge-ray reach cap. An impossible full-width corridor must fail before export, not be repaired by flipped
+faces or a narrower road. Coastal brief producer: `tools/build_coastal_layers.py profiles` then
+`road_terrain.py build --terrain=<profiles.json>`; read `docs/ROAD_TERRAIN.md` for the shoreline parameters. The L1 side-specific landform (valley left, wall of rock right) is carried by Phase 4
 `slope` / `cliff` zones; the procedural terrain does not shape sides yet.
+
+**Water first from OSM.** Where Phase 0 found coastline / water, take the shore from
+`osm_context.py shoreline <package> <water.json> <from_s> <to_s> <out.json>` (OSM-measured edge per 2 m) and keep a
+video estimate only for spans the frames prove OSM generalised. One edge distance per side per 2 m cannot draw a
+narrow creek mouth: that needs a 2D water mask (not built yet — note the span, do not hand-tune profiles for it).
+
+Extra gates before Phase 4:
+- **Buildings on land:** run `osm_context.py buildings` on a scratch copy; every OSM building it drops for standing
+  on P1 water marks a P1 shore error (Gold Coast lost 53 real buildings this way at r48). Fix P1, not P4.
+- **Grey-box layout check:** route + terrain + water + OSM building blocks only, one shot per section at its
+  registered `s` (adapter, [references/adapters.md](references/adapters.md)), against the reference frame:
+  water side, road / street side, building side and order, bend direction. All sections must pass L0 + the L1
+  side items here. A section that fails is a registration, route or P1 problem — fix it now, never later with
+  vegetation or props.
+- Then **freeze P0 + P1** (record the route / road / terrain file hashes). A later phase that needs them changed
+  reopens Phase 2 / 3 explicitly and reruns Phases 4–7 on the result.
 
 ## Phase 4 — Near-route scene understanding
 
@@ -107,6 +175,9 @@ Zones in route coordinates: `s` range × signed lateral offset, side, vertical o
 (`docs/SEMANTICS.md`) — water, forest, slope, cliff, wall, guardrail, fence, building_zone, vegetation_zone,
 open_space, bridge, tunnel, road / trail / sidewalk.
 
+- Real road: context streets / parking from OSM first —
+  `python3 tools/osm_context.py build export/packages/<id> <osm.json>` (`tiles/NN/roadside.glb`, ODbL) — then the
+  video's side items for what OSM lacks (walls, guardrails, fences, verges).
 - From the analysis directly: write `semantics/semantics.json` with `source.kind: video` / `ai` and honest confidence.
 - For a sections-file scene (default, no Godot), on the package's route.json from Phase 2:
   `python3 tools/build_semantics.py data/<name>_sections.json export/packages/<id> [scene flags]` — the flags are
@@ -122,12 +193,19 @@ open_space, bridge, tunnel, road / trail / sidewalk.
 
 `python3 tools/vegetation.py build export/packages/<id>` — zones (dense forest, sparse trees, grassland, reed bed,
 roadside shrubs, rocky slope) from the semantics, prototypes, per-tile instances (`docs/VEGETATION.md`).
-Distribution accuracy over per-tree reconstruction. Gate: VALID (road clearance, exclusions, ground, density ±15 %)
-+ L2 vegetation items ≥ 80 %.
+Distribution accuracy over per-tree reconstruction. Then give the prototypes real meshes from the Phase 0 library:
+`python3 tools/build_package_assets.py export/packages/<id> data/<name>_library.json` (copies the model into
+`assets/library/`, records attribution; unmapped prototypes fall back to procedural boxes / cones — the package,
+not only a preview adapter, must carry the real asset, so Unity gets it too). A type with no library entry goes
+back to Phase 0's search, not into a new generator. Gate: VALID (road clearance, exclusions, ground, density
+±15 %) + L2 vegetation items ≥ 80 % + no procedural vegetation prototype without its Phase 0 reason.
 
 ## Phase 6 — Buildings and landmarks
 
-Hints for what the semantics cannot know: named landmarks (`importance: high`, exact s / side / size), furniture
+Real road: ordinary buildings come from OSM footprints and heights —
+`python3 tools/osm_context.py buildings export/packages/<id> <osm.json> [skyline.json]` (`tiles/NN/buildings.glb`
+P4, `environment/skyline_buildings.glb` P5; heights tag → levels → bounded neighbour median → type estimate).
+Hints are only for what OSM and the semantics cannot know: named landmarks (`importance: high`, exact s / side / size), furniture
 (medium), filler (low) — `docs/STRUCTURES.md`.
 `python3 tools/structures.py build export/packages/<id> --hints=<hints.json>` (or `--sections=data/<name>_sections.json`
 to derive hints from the sections file). High-importance objects are never moved: if one fails placement, fix the
@@ -135,8 +213,9 @@ hint or the upstream layer. Gate: VALID + L3 ≥ 80 % (each landmark present, co
 
 ## Phase 7 — Distant environment and atmosphere
 
-Real mountains: `python3 tools/fetch_real_terrain.py <name> <lat> <lon> <km>` (DEM + orthophoto, attribution
-required); HDRI: Poly Haven CC0 via `tools/download_assets.py`. Scene facts as `environment/hints.json`
+Use what Phase 0 fetched. Real mountains: `python3 tools/fetch_real_terrain.py <name> <lat> <lon> <km>` (DEM +
+orthophoto, attribution required); HDRI: Poly Haven CC0 via `tools/download_assets.py`, chosen to match the
+video's sky (clear midday ≠ overcast). Scene facts as `environment/hints.json`
 (`docs/ENVIRONMENT.md`). *Engine-free (default):*
 `python3 tools/environment_hints.py scenes/MainScene_<name>.tscn --course=<c> --package=export/packages/<id>`
 — reads the .tscn text (WorldEnvironment, Sun, CourseSetup, LakeFar, RealBackdrop/RealTerrain), the course template
@@ -148,6 +227,11 @@ sky reference, cloud coverage …), never shader code. Gate: VALID + L1 distant 
 opening, sun side) ≥ 90 %.
 
 ## Phase 8 — AI Scene Package
+
+Before packaging, inspect GLBs for repeated embedded images. Prefer byte-identical shared textures when the
+delivery format and consumer support them; preserve geometry, physical route data and image quality. Read
+[lossless export compaction](references/adapters.md#lossless-export-compaction) for the existing legacy tool,
+its limits and verification. Its flat-folder layout is not an AI Scene Package writer.
 
 The package is complete when `manifest.json` lists every layer with status and files. Zip for hand-off:
 `cd export/packages && zip -r -q <id>.zip <id> -x "*.DS_Store" "*/hints.json"`. `export/` is not in git; give the

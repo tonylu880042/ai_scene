@@ -57,8 +57,10 @@ Validators prove geometry and data. Checklist layers L1–L4 still need eyes on 
 
 - Camera: 1.65 m above the route surface, vertical FOV 75° (adjust only with evidence from the video), no head-bob
   (only tiny `wander_amp` / `breathe_amp`).
-- Time → distance: video time maps to `s` through the section boundaries (`video_km` share of the route). Moving
-  one anchor moves the interpolation of its neighbours: recheck monotonicity and adjacent sections.
+- Time → distance: real roads use the registration anchors
+  ([reference-analysis.md](reference-analysis.md#time--route-registration-real-roads)); synthetic routes map
+  time to `s` through the section boundaries (`video_km` share of the route). Moving one anchor moves the
+  interpolation of its neighbours: recheck monotonicity and adjacent sections.
 - Fixed views and the tour must use the same pose interpolation.
 - Before full scenes, align with a cheap route-only / grey-model probe on two or three consecutive recognisable
   bends; only then build one representative section fully, then extend.
@@ -75,6 +77,65 @@ Validators prove geometry and data. Checklist layers L1–L4 still need eyes on 
   layout is the same as the legacy one.
 - **Web player** (`player_web/`, video + camera.json from `tools/export_course.sh`) is a separate product;
   `tools/check_frozen.py` catches stalled movie-writer frames.
+
+## Lossless export compaction
+
+When delivering GLB tiles, check for repeated embedded images before zipping. Identical images can be extracted
+once into shared texture files, with each GLB using a relative image URI. This preserves the original image bytes,
+encoding and resolution; it does not decimate geometry, remove instances or change distance, elevation or grade.
+Keep the original export and write a separate compact candidate.
+
+In the `ai_scene` repository, `tools/compact_static_unity.py` implements SHA-256 image sharing for the **legacy
+flat export folder**: root-level GLBs, each with one embedded BIN buffer and embedded PNG/JPEG images. It does not
+handle already-external images, texture extensions or compressed/custom buffer views; an unsupported input needs
+an explicit adapter, not ignored assertions. Run it with normal Python (not `python -O`). The destination must not
+exist and must be outside the source folder.
+
+```bash
+python3 -m unittest tools/test_compact_static_unity.py
+python3 tools/compact_static_unity.py ORIGINAL_FOLDER COMPACT_FOLDER
+```
+
+Before accepting the candidate:
+
+- Inspect `OPTIMIZATION.json`: retained geometry buffer views are byte-verified and scene/material/accessor
+  structure is checked after index remapping. Independently compare route and instance JSON hashes and counts
+  against the original; image files must match the original embedded payload hashes.
+- Validate the complete output, including relative texture paths. Render original and compact exports with the
+  same frozen project, camera poses, renderer, resolution and settings; compare decoded pixels at representative
+  sections and start/finish. Record differences; do not claim pixel identity without checking. A Godot round trip
+  does not establish Unity Editor compatibility or appearance.
+- Rebuild validation reports and SHA-256 checksums after compaction; package GLBs **together with `textures/`**,
+  metadata, licences and provenance. Check ZIP CRC, file inventory and checksums after extraction; exclude private
+  video frames and source snapshots. A compact GLB is no longer a standalone file.
+- Report actual original/compact ZIP bytes and `100 * (1 - compact_bytes / original_bytes)`; distinguish this from
+  the GLB-plus-texture byte savings in `OPTIMIZATION.json`. Savings depend on duplication; 90% is not a target or
+  guarantee. File-size savings do not establish an FPS improvement.
+
+**Existing Saisies reproduction only** (commands from the project root; absolute output/evidence paths):
+
+```bash
+python3 tools/validate_static_unity_export.py COMPACT_FOLDER
+godot --path FIXED_PROJECT --resolution 1920x1080 \
+  --script res://tools/verify_static_unity_export.gd -- \
+  COMPACT_FOLDER NEW_COMPACT_EVIDENCE_FOLDER
+python3 tools/package_static_unity.py COMPACT_FOLDER NEW_COMPACT_EVIDENCE_FOLDER
+```
+
+The fixed project needs the verifier and its parent script/shader dependencies. The current static validator
+asserts the Saisies route length; the packager requires Saisies audit/terrain files and writes R37 provenance.
+Reuse them only for that matching export. Other routes need their own validated packaging path and truthful
+provenance. Details and frozen-source restoration: `docs/saisies_unity_export.md`.
+
+**AI Scene Package boundary:** do not run this flat-folder tool on `export/packages/<id>/`. It does not traverse
+`tiles/NN/` or maintain manifest/layer references. Shared textures in a package need a package-aware writer,
+correct GLB-relative URIs to `assets/textures/`, and compatible validators/readers. Keep the validated embedded
+assets until that path exists; then rerun `python3 tools/validate_package.py export/packages/<id>` and consumer
+checks before delivery.
+
+Observed Saisies result (2026-10-21): 1,649 image payloads shared as 84 unique files; ZIP **2,274,776,542 →
+289,625,847 bytes (87.27% smaller)**. The existing record reports five pixel-identical native round-trip views and
+passing ZIP CRC; Unity Editor review remains pending. This is a case result, not a universal preset.
 
 ## Godot adapter mechanics
 

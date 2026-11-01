@@ -25,6 +25,11 @@ the layer where they now apply. Adapter-only mechanics are in [adapters.md](adap
 ## Terrain (Phase 3)
 
 - Ground height is the **displayed terrain triangle**, not a DEM interpolation or an intended function.
+- **First-person slope clearance:** a clear road centre can still have a 2 m-high foreign bank just outside its
+  edge. Probe the verge as well as the band; use shared P1 transition planes (`road_transition_m`,
+  `road_max_bank_grade`) and preserve P0 elevation / grade. Regenerate objects on the changed ground.
+- **Camera through the inside of a bend:** fixed 8 m lookahead can aim through nearby terrain on narrow hairpins.
+  Shorten the rendering camera's lookahead according to curvature; do not stretch the route or raise the road.
 - Terrain never above the road inside the band; it starts on the road edge vertex (shared position, not "close").
 - Tiles share their boundary row; a seam is the same vertices twice, never a re-sampled neighbour.
 - Do not flatten valleys or move mountains to hide an undiagnosed projection / camera error.
@@ -72,6 +77,13 @@ the layer where they now apply. Adapter-only mechanics are in [adapters.md](adap
 - Coarse to fine: layout of the route and two or three bends first, one representative section complete, then
   extend. Many Saisies rounds went into trees, ground contact and rock while time → distance and camera were still
   wrong, so detail accumulated on the wrong stretch.
+- Gold Coast (r3 → r50, 58 package dirs, acceptance 0/24): registration unresolved and the shoreline estimated
+  from the video, while S18/S19 got 25 rounds of sand, chapel, paved-edge and triangulation work. One day of
+  measured data and external assets (OSM streets / buildings / water, HDRI, PBR textures, CC0 palms) then moved
+  the look more than the 47 rounds before it. Measured data and the asset library belong in Phase 0.
+- Procedural plants (box / cone palms, generated Norfolk pines, grass tufts) look worse than any CC0 model and
+  each costs a round of tuning. Real assets wired only into a preview adapter (`package_preview.gd`
+  `PROTOTYPE_LIBRARY`) do not reach Unity; put them in the package via the library file.
 - Change one controlled thing per candidate; keep rejected candidates and why.
 - Freeze a version before testing; tests and shots from the same version.
 - macOS `sed -i ''`; prefer Python for edits. Commit only when asked; never push `assets/`, `export*/`, `video/`.
