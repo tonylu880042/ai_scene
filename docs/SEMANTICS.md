@@ -151,6 +151,10 @@ without the noise hills and the real DEM (`real_shore`, not in git), so it diffe
 the scene differs from the video, so do the semantics (S14 "lake 1–3 m left" in the video: the scene's lake edge is
 7.8 m out). A video/AI producer would write the same format with `source.kind: video` / `ai` and its own confidence.
 
+For an explicitly authored local overlay, `tools/semantics.py append-zones <package_dir> <zones.json>` appends only
+the supplied zones, validates the combined layer, and leaves existing zones intact. Reapplying an identical zone is
+a no-op; reusing an existing id with different content is an error. Validate downstream P3/P4 layers after appending.
+
 ## 7. Not in 0.1
 
 Zones whose offsets vary continuously along `s` (use consecutive zones), polygon footprints, vertical layering

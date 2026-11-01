@@ -15,6 +15,7 @@ import json
 import math
 import os
 import random
+import re
 import sys
 import zlib
 
@@ -60,7 +61,11 @@ PROTOTYPES = {
     "rock_boulder": {"category": "rocks", "height_m": [1.0, 3.0], "scale": [0.6, 1.4], "footprint_radius_m": 1.5,
                      "min_spacing_m": 3.0, "lod": {"lod_distances_m": [60, 200], "cull_distance_m": 600}, "reference_assets": ["boulder_01"]},
 }
-SPECIES_PROTO = {"beech": "deciduous_broadleaf", "birch": "deciduous_broadleaf", "spruce": "conifer_spruce",
+PROTOTYPES["norfolk_pine"] = {"category": "conifer", "height_m": [14, 25], "scale": [.75, 1.15],
+    "footprint_radius_m": .4, "min_spacing_m": 3,
+    "lod": {"lod_distances_m": [50, 150, 400], "cull_distance_m": 1200},
+    "reference_assets": ["procedural tiered Araucaria silhouette"]}
+SPECIES_PROTO = {"norfolk_pine": "norfolk_pine", "beech": "deciduous_broadleaf", "birch": "deciduous_broadleaf", "spruce": "conifer_spruce",
                  "fir": "conifer_spruce", "pine": "conifer_spruce", "larch": "conifer_larch", "palm": "tropical_palm"}
 TREE_DENSITY = {"dense": 300.0, "medium": 150.0, "sparse": 60.0}  # stems / ha when the semantics give no number
 
@@ -119,6 +124,77 @@ def vegetation_zones(sem):
     return out
 
 
+def split_zones_by_semantics(zones, semantic_mapping):
+    """Replace P3 zone records whose semantics were split, scaling area-derived targets."""
+    result = []
+    digits = [int(m.group(1)) for z in zones if (m := re.search(r"(\d+)", z["id"]))]
+    next_id = max(digits, default=0) + 1
+    for zone in zones:
+        pieces = semantic_mapping.get(zone.get("semantic_zone"))
+        if pieces is None:
+            result.append(zone)
+            continue
+        old_area = max(1e-9, (zone["to_s"] - zone["from_s"]) *
+                       (zone["lateral_offset_m"][1] - zone["lateral_offset_m"][0]))
+        for semantic in pieces:
+            if semantic["semantic_type"] == "open_space":
+                continue
+            clone = dict(zone)
+            clone["id"] = f"v{next_id:04d}"; next_id += 1
+            clone["semantic_zone"] = semantic["id"]
+            clone["from_s"], clone["to_s"] = semantic["from_s"], semantic["to_s"]
+            clone["lateral_offset_m"] = list(semantic["lateral_offset_m"])
+            ratio = ((clone["to_s"] - clone["from_s"]) *
+                     (clone["lateral_offset_m"][1] - clone["lateral_offset_m"][0])) / old_area
+            clone["mix"] = [dict(m) for m in zone["mix"]]
+            for mix in clone["mix"]:
+                for key in ("free_area_ha", "target_count", "count"):
+                    if key in mix:
+                        mix[key] = round(mix[key] * ratio, 5 if key == "free_area_ha" else 0)
+            result.append(clone)
+    return result
+
+
+def remap_existing_zone_refs(tile, variants):
+    """Point unchanged tile instances at the split P3 zone that contains each stored s/u."""
+    refs = list(tile["zone_refs"])
+    changed = 0
+    for group in tile["groups"]:
+        for i, ref_index in enumerate(list(group["zone"])):
+            if ref_index >= len(refs):
+                raise ValueError(f"bad zone index for {group['proto']}[{i}]")
+            options = variants.get(refs[ref_index])
+            if not options:
+                continue
+            s, u = group["s"][i], group["lateral_offset_m"][i]
+            matches = [z for z in options
+                       if z["from_s"] - 1e-3 <= s <= z["to_s"] + 1e-3
+                       and z["lateral_offset_m"][0] - 1e-3 <= u <= z["lateral_offset_m"][1] + 1e-3
+                       and any(m["prototype"] == group["proto"] for m in z["mix"])]
+            if len(matches) != 1:
+                raise ValueError(f"expected one split density zone for {group['proto']}[{i}] at {(s,u)}; got {len(matches)}")
+            zone_id = matches[0]["id"]
+            if zone_id not in refs:
+                refs.append(zone_id)
+            group["zone"][i] = refs.index(zone_id)
+            changed += 1
+    used = {index for group in tile["groups"] for index in group["zone"]}
+    drop = {index for index, zone_id in enumerate(refs) if zone_id in variants and index not in used}
+    if drop:
+        kept = [zone_id for index, zone_id in enumerate(refs) if index not in drop]
+        remap = {}
+        new_index = 0
+        for old_index in range(len(refs)):
+            if old_index not in drop:
+                remap[old_index] = new_index
+                new_index += 1
+        for group in tile["groups"]:
+            group["zone"] = [remap[index] for index in group["zone"]]
+        refs = kept
+    tile["zone_refs"] = refs
+    return changed
+
+
 # ------------------------------------------------------------------ space: exclusions and ground
 class Space:
     """Route-relative queries over one package: exclusions (band, semantics) and terrain height."""
@@ -131,14 +207,32 @@ class Space:
             if z["semantic_type"] in EXCLUDE | BARRIERS:
                 for b in range(int(z["from_s"] // 50), int(z["to_s"] // 50) + 1):
                     self.buckets.setdefault(b, []).append(z)
-        self.rows = {}  # (side, sample index) -> [(u, world xyz)] sorted by u, every terrain column of that row
+        positions=[]
+        for i in range(len(self.s)):
+            us=[-self.smp["width_right_m"][i],0.,self.smp["width_left_m"][i]]
+            positions.extend(rt._cross_section(self.smp,i,us,[self.smp["y"][i]]*3))
+        self.road_corridors=rt.RoadCorridors(positions,rt._grid_indices(len(self.s),3,positions=positions),
+                                            [s for s in self.s for _ in range(3)])
+        self.ground_triangles = {}
+        self.ground_triangles_xz = {}
+        self.ground_xz_cell_m = 64.0
         for tile in man["tiles"]:
             m = rt.read_glb(os.path.join(pkg, tile["files"]["terrain"]))
             pos = rt._world(m)
-            for k, (sv, u) in enumerate(zip(m["attributes"]["_ROUTE_S"], m["attributes"]["_ROUTE_U"])):
-                i = min(max(bisect.bisect_left(self.s, sv - 0.01), 0), len(self.s) - 1)
-                self.rows.setdefault((1 if u > 0 else -1, i), {})[round(u, 3)] = pos[k]
-        self.rows = {k: sorted(v.items()) for k, v in self.rows.items()}
+            ss = m["attributes"]["_ROUTE_S"]
+            for primitive in m["primitives"]:
+                idx = primitive["indices"]
+                for k in range(0,len(idx),3):
+                    ids = idx[k:k+3]
+                    a,b = min(ss[i] for i in ids),max(ss[i] for i in ids)
+                    tri = [pos[i] for i in ids]
+                    box = (min(p[0] for p in tri),max(p[0] for p in tri),min(p[2] for p in tri),max(p[2] for p in tri))
+                    for bucket in range(math.floor((a-.01)/2),math.floor((b+.01)/2)+1):
+                        self.ground_triangles.setdefault(bucket,[]).append((box,tri))
+                    cell = self.ground_xz_cell_m
+                    for gx in range(math.floor(box[0] / cell), math.floor(box[1] / cell) + 1):
+                        for gz in range(math.floor(box[2] / cell), math.floor(box[3] / cell) + 1):
+                            self.ground_triangles_xz.setdefault((gx, gz), []).append((box, tri))
 
     def width(self, s, u):
         p = rm.sample(self.route, s)
@@ -156,6 +250,9 @@ class Space:
         w = self.width(s, u)
         if abs(u) < w + CLEARANCE_M[category] + margin:
             return "road clearance"
+        x,z = self.world_xz(s,u)
+        if self.road_corridors.contains_foreign(x,z,s,CLEARANCE_M[category]+margin):
+            return "another route traversal"
         for z in self.buckets.get(int(s // 50), []):
             if not z["from_s"] - margin <= s <= z["to_s"] + margin:
                 continue
@@ -177,20 +274,20 @@ class Space:
 
     def ground(self, s, u, x, z):
         """Height of the terrain triangle under (x, z) (the mesh in terrain.glb), or None outside the terrain."""
-        side = 1 if u > 0 else -1
-        i = min(max(bisect.bisect_right(self.s, s) - 1, 0), len(self.s) - 2)
-        for r in (i, i - 1, i + 1):
-            A, B = self.rows.get((side, r)), self.rows.get((side, r + 1))
-            if not A or not B:
-                continue
-            j = bisect.bisect_left([c[0] for c in A], u)
-            for c in range(max(j - 2, 0), min(j + 2, len(A) - 1)):
-                a, a1, b, b1 = A[c][1], A[c + 1][1], B[c][1], B[c + 1][1]
-                for tri in ((a, b, a1), (b, b1, a1)):
-                    y = _bary_y(tri, x, z)
-                    if y is not None:
-                        return y
-        return None
+        return self.ground_world(x, z, self.ground_triangles.get(math.floor(s / 2), ()))
+
+    def ground_world(self, x, z, candidates=None):
+        """Highest shipped P1 surface under world-XZ, or None if no triangle covers the point."""
+        if candidates is None:
+            cell = self.ground_xz_cell_m
+            candidates = self.ground_triangles_xz.get((math.floor(x / cell), math.floor(z / cell)), ())
+        hits = []
+        for box, tri in candidates:
+            if box[0] - 1e-5 <= x <= box[1] + 1e-5 and box[2] - 1e-5 <= z <= box[3] + 1e-5:
+                y = _bary_y(tri, x, z)
+                if y is not None:
+                    hits.append(y)
+        return max(hits) if hits else None
 
 
 def _bary_y(tri, x, z):
@@ -334,6 +431,129 @@ def build(pkg, seed=11):
     return zones, len(instances)
 
 
+def apply_local_overrides(pkg, config_path):
+    """Apply a small, data-authored prototype/scale override without resampling instances.
+
+    This preserves every instance's route-relative and world position fields. Only the configured
+    zone/prototype matches are retagged and uniformly scaled; the package's other vegetation is untouched.
+    """
+    with open(config_path) as f:
+        config = json.load(f)
+    vdir = os.path.join(pkg, "vegetation")
+    with open(os.path.join(vdir, "zones.json")) as f:
+        zones_doc = json.load(f)
+    with open(os.path.join(vdir, "prototypes.json")) as f:
+        protos_doc = json.load(f)
+    zones = {z["id"]: z for z in zones_doc["zones"]}
+    protos = {p["id"]: p for p in protos_doc["prototypes"]}
+
+    for definition in config.get("prototype_aliases", []):
+        alias = definition["id"]
+        if alias in protos:
+            raise ValueError(f"prototype alias already exists: {alias}")
+        base = protos.get(definition["base"])
+        if base is None:
+            raise ValueError(f"unknown base prototype: {definition['base']}")
+        clone = json.loads(json.dumps(base))
+        clone["id"] = alias
+        for key in ("scale", "height_m", "source", "reference_assets", "category",
+                    "footprint_radius_m", "min_spacing_m", "lod"):
+            if key in definition:
+                clone[key] = definition[key]
+        clone["derived_from"] = definition["base"]
+        protos_doc["prototypes"].append(clone)
+        protos[alias] = clone
+
+    rules = {}
+    target_zone_ids = set()
+    for rule in config.get("zone_rules", []):
+        for zid in rule["zones"]:
+            if zid not in zones:
+                raise ValueError(f"unknown vegetation zone: {zid}")
+            if zid in rules:
+                raise ValueError(f"duplicate zone override: {zid}")
+            rules[zid] = rule
+            target_zone_ids.add(zid)
+            if "mix" in rule:
+                zone_mix = json.loads(json.dumps(rule["mix"]))
+                old_area = next((entry.get("free_area_ha") for entry in zones[zid]["mix"]
+                                 if entry.get("free_area_ha") is not None), None)
+                for entry in zone_mix:
+                    if "free_area_ha" not in entry and old_area is not None:
+                        entry["free_area_ha"] = old_area
+                zones[zid]["mix"] = zone_mix
+
+    if not rules and not config.get("prototype_aliases"):
+        return 0
+
+    changed = 0
+    manifest_path = os.path.join(pkg, "manifest.json")
+    with open(manifest_path) as f:
+        manifest = json.load(f)
+    for tile in manifest["tiles"]:
+        path = os.path.join(pkg, tile["files"].get("vegetation", ""))
+        if not os.path.isfile(path):
+            continue
+        with open(path) as f:
+            doc = json.load(f)
+        if not any(zid in target_zone_ids for zid in doc.get("zone_refs", [])):
+            continue
+        output = {}
+        for group in doc["groups"]:
+            n = group["count"]
+            for i in range(n):
+                zid = doc["zone_refs"][group["zone"][i]]
+                rule = rules.get(zid)
+                spec = next((x for x in rule.get("replace", []) if x["from"] == group["proto"]), None) if rule else None
+                proto = spec["to"] if spec else group["proto"]
+                if proto not in protos:
+                    raise ValueError(f"unknown override target prototype: {proto}")
+                row = output.setdefault(proto, {"proto": proto, "category": protos[proto]["category"],
+                                                "count": 0, "data": [], "s": [],
+                                                "lateral_offset_m": [], "zone_refs": []})
+                data = group["data"][10 * i:10 * i + 10]
+                if spec:
+                    factors = spec.get("scale_multiplier_xyz")
+                    if factors is None:
+                        factors = [float(spec.get("scale_multiplier", 1.0))] * 3
+                    if len(factors) != 3 or any(float(factor) <= 0 for factor in factors):
+                        raise ValueError(f"scale multiplier must be a positive scalar or XYZ triple: {spec}")
+                    data[7:10] = [round(v * float(factor), 3) for v, factor in zip(data[7:10], factors)]
+                    changed += 1
+                row["count"] += 1
+                row["data"].extend(data)
+                row["s"].append(group["s"][i])
+                row["lateral_offset_m"].append(group["lateral_offset_m"][i])
+                row["zone_refs"].append(zid)
+        refs = []
+        groups = []
+        for proto in sorted(output):
+            row = output[proto]
+            zone_ids = row.pop("zone_refs")
+            for zid in zone_ids:
+                if zid not in refs:
+                    refs.append(zid)
+            row["zone_ids"] = zone_ids
+            groups.append(row)
+        doc["zone_refs"] = refs
+        for group in groups:
+            group["zone"] = [refs.index(zid) for zid in group.pop("zone_ids")]
+        doc["groups"] = groups
+        tile["vegetation"] = {}
+        for group in groups:
+            tile["vegetation"][group["category"]] = tile["vegetation"].get(group["category"], 0) + group["count"]
+        with open(path, "w") as f:
+            json.dump(doc, f, separators=(",", ":"))
+
+    with open(os.path.join(vdir, "zones.json"), "w") as f:
+        json.dump(zones_doc, f, indent=1)
+    with open(os.path.join(vdir, "prototypes.json"), "w") as f:
+        json.dump(protos_doc, f, indent=1)
+    with open(manifest_path, "w") as f:
+        json.dump(manifest, f, indent=1)
+    return changed
+
+
 # ------------------------------------------------------------------ validation
 def validate(pkg):
     """(errors, report). Reads only files; writes vegetation/validation.json."""
@@ -451,6 +671,10 @@ def main(argv):
               f"density realised/target {rep['density_ratio']}")
         print("VALID" if not errs else f"INVALID ({len(errs)} problems)")
         return 0 if not errs else 1
+    if len(args) == 3 and args[0] == "apply-local-overrides":
+        changed = apply_local_overrides(args[1], args[2])
+        print(f"{args[1]}: applied local vegetation overrides to {changed} instances")
+        return 0
     print(__doc__)
     return 2
 

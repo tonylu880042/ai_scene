@@ -17,6 +17,24 @@ python3 tools/vegetation.py build export/packages/weissensee_rolling_hills
 python3 tools/vegetation.py validate export/packages/weissensee_rolling_hills
 ```
 
+For a package-local authored prototype/mix change that must preserve existing instance placements, a JSON override can be
+applied after the normal stage build:
+
+```bash
+python3 tools/vegetation.py apply-local-overrides <package_dir> <authoring.json>
+python3 tools/vegetation.py validate <package_dir>
+```
+
+`prototype_aliases` clone an existing prototype definition and can override its estimated size/scale/provenance; the
+mesh reference and attribution are inherited unless explicitly changed. `zone_rules` are restricted to named vegetation
+zone IDs and may retag/scale only matching instances. Position, orientation, route `s`/lateral offset and instance count
+are retained. A named zone's authored `mix` can be replaced at the same time. This operation is opt-in, does not resample
+the scene, and is not a substitute for the stage builder; record and validate the exact authoring JSON used.
+For a local silhouette adjustment, `scale_multiplier_xyz` optionally multiplies the existing instance X/Y/Z
+scale components independently; it does not change the package transform contract or resample placements. Keep each
+resulting component inside the alias prototype's existing `scale` range, which is the authored bounds for the local
+proxy. The runtime applies those three components directly to the mesh basis.
+
 ## 1. Order and inputs
 
 `route.json` → road/terrain tiles → `semantics.json` → **vegetation**. `build` refuses to run unless all three exist
@@ -142,3 +160,21 @@ boulders use dart throwing with `min_spacing_m` so distribution is even rather t
 Prototype meshes in the package, aquatic plants, gardens inside building zones, slope-aligned orientation for
 ground cover, area correction for curvature (zones are measured in ds × du; on a bend of radius R the true area
 differs by the factor 1 − u/R on the inside).
+
+## Optional shared prototype geometry
+
+`norfolk_pine` is an additional conifer prototype for tiered coastal Araucaria silhouettes; use the explicit
+`norfolk_pine` species key instead of mapping all coastal pines to spruce. Geometry is an estimate.
+
+`python3 tools/build_package_assets.py <package> [library-map.json]` supplies shared procedural GLBs for used
+vegetation and structure prototypes. A static library map can replace a prototype with a local glTF asset and a
+metre-scale factor. It copies external images once, without recompression, and records the library attribution.
+`prototypes[].mesh_file` references the package-relative asset; old prototypes without it remain valid for
+runtime substitution. Whole-package validation checks these references and `manifest.prototype_assets.files`.
+The shared Godot `scenes/PackagePreview.tscn` consumer draws the package transforms using instancing. Generated
+assets contain no source-video pixels. Procedural silhouettes remain candidates until visual acceptance.
+
+Ground lookup uses the shipped terrain triangle indices with route-distance buckets. It supports coastal clips,
+changed diagonals and holes. It does not reconnect unused grid vertices. A world-space road-corridor query also
+excludes other traversals (including lower terrain underneath their road), so a tree cannot grow through a
+revisited / crossing road simply because its own route-relative offset is clear.

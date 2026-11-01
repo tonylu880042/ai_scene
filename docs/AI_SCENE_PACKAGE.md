@@ -33,8 +33,9 @@ conventions as contract data.
   tiles/
     <NN>/road.glb            P0 road surface mesh for this stretch
     <NN>/terrain.glb         P1 ground mesh (and near water)
-    <NN>/roadside.glb        P2 walls, guardrails, fences, kerbs
+    <NN>/roadside.glb        P2 walls, guardrails, fences, kerbs; OSM context streets / car parks (tools/osm_context.py)
     <NN>/structures.json     P4 instancing groups + barrier polylines (docs/STRUCTURES.md)
+    <NN>/buildings.glb       P4 OSM building footprints extruded (UV metres, COLOR_0 wall tint; tools/osm_context.py)
     <NN>/vegetation.json     P3 vegetation instances per prototype (docs/VEGETATION.md)
     <NN>/instances.json      P4 repeated props (posts, signs) per prototype
   assets/
@@ -146,6 +147,12 @@ Rules: only route surfaces inside the playable band; the route surface described
 spot; no forest or buildings on water or roads. P3 vegetation and P4 structures are generated **from** these zones
 (`zones_in` / `zones_at`) and validated against them; roadside geometry (walls, guardrails) goes to
 `tiles/*/roadside.glb` when that stage exists.
+
+Context streets (`tools/osm_context.py fetch|build <package> <osm.json>`): OSM vehicular roads, parking aisles and
+car parks within the shipped terrain, written to `tiles/*/roadside.glb` (materials `context_asphalt`,
+`lane_marking`). Plan geometry is OSM-measured, widths come from tags or per-class estimates, heights are draped on
+P1 terrain + 0.04 m. Quads within 0.6 m of the P0 road footprint are dropped, P0/P1 bytes never change, and P3
+instances standing on context asphalt are removed. Provenance and counts: `manifest.layers.P2_corridor.context_streets`.
 
 ## 7. Vegetation (P3)
 

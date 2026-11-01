@@ -22,9 +22,10 @@ import road_terrain as rt  # noqa: E402
 import route_model as rm  # noqa: E402
 import semantics as sm  # noqa: E402
 import vegetation as vg  # noqa: E402
+import gltf_mesh  # noqa: E402
 
 VERSION = "0.1"
-TYPES = ["house", "commercial_building", "station", "hut", "church", "bridge", "tunnel_portal", "retaining_wall",
+TYPES = ["house", "commercial_building", "station", "hut", "church", "bridge", "pier", "tunnel_portal", "retaining_wall",
          "guardrail", "fence", "sign", "lamp", "bench", "monument", "race_landmark"]
 IMPORTANCE = ["high", "medium", "low"]
 BUILDING = {"house", "commercial_building", "station", "hut", "church", "monument"}
@@ -40,6 +41,21 @@ PROTOTYPES = {
     "house_chalet": {"semantic_type": "house", "placement": "point", "dimensions_m": [12.0, 9.0, 9.0], "reference_assets": ["Buildings._chalet"]},
     "barn_timber": {"semantic_type": "hut", "placement": "point", "dimensions_m": [5.5, 5.5, 4.5], "reference_assets": ["Buildings._barn"]},
     "lodge": {"semantic_type": "commercial_building", "placement": "point", "dimensions_m": [14.0, 8.0, 10.0], "reference_assets": ["Buildings._chalet (hotel)"]},
+    "coastal_house_gable": {"semantic_type": "house", "placement": "point", "dimensions_m": [18.0, 6.0, 8.0],
+                            "reference_assets": ["Shared pale low-rise gable house; video-estimated generic shape"]},
+    "coastal_apartment_corner_36": {"semantic_type": "commercial_building", "placement": "point", "dimensions_m": [18.0, 36.0, 15.0],
+                                     "reference_assets": ["Shared coastal apartment with wrap-around corner balconies; video-estimated generic shape"]},
+    "rotary_chapel_gable": {"semantic_type": "church", "placement": "point", "dimensions_m": [5.9, 8.0, 14.9],
+                            "reference_assets": ["Rotary Broadwater Chapel OSM footprint + owner exterior; estimated detail"]},
+    "sky_broadwater_podium": {"semantic_type": "commercial_building", "placement": "point", "dimensions_m": [46.1, 40.16, 62.3],
+                              "reference_assets": ["Sky Broadwater OSM part 1115393562; BDA architect exterior; estimated podium detail"]},
+    "park_art_cylinder": {"semantic_type": "monument", "placement": "point", "dimensions_m": [6.5, 4.8, 6.5],
+                          "reference_assets": ["Video-estimated openwork cylindrical park sculpture; source pixels not included"]},
+    "broadwater_jetty": {"semantic_type": "pier", "placement": "point", "dimensions_m": [24.0, 2.1, 12.0],
+                         "asset_parameters": {"deck_local_y_m": 1.2, "pile_size_m": 0.28,
+                                               "pile_layout_xz_m": [[x,z] for x in (-10.0,-3.3,3.3,10.0) for z in (-4.4,-1.5,1.5,4.4)],
+                                               "pile_bottom_corner_offsets_m": [[0.0]*4 for _ in range(16)]},
+                         "reference_assets": ["S08 private-video morphology review; dimensions and location estimated; no frame pixels included"]},
     "bench_wood": {"semantic_type": "bench", "placement": "point", "dimensions_m": [1.8, 0.9, 0.6], "reference_assets": ["painted_wooden_bench"]},
     "picnic_table": {"semantic_type": "bench", "placement": "point", "dimensions_m": [2.0, 0.8, 1.8], "reference_assets": ["Boardwalk picnic table"]},
     "lamp_lantern": {"semantic_type": "lamp", "placement": "point", "dimensions_m": [0.3, 3.5, 0.3], "reference_assets": ["Boardwalk lantern post"]},
@@ -53,12 +69,14 @@ PROTOTYPES = {
     "guardrail_lograil": {"semantic_type": "guardrail", "placement": "linear", "profile_m": {"height": 0.9, "thickness": 0.2, "post_spacing": 2.0}, "reference_assets": ["Boardwalk lograil"]},
     "guardrail_steel": {"semantic_type": "guardrail", "placement": "linear", "profile_m": {"height": 0.75, "thickness": 0.3, "post_spacing": 2.0}, "reference_assets": ["Boardwalk guardrail"]},
     "fence_rail": {"semantic_type": "fence", "placement": "linear", "profile_m": {"height": 1.1, "thickness": 0.1, "post_spacing": 2.0}, "reference_assets": ["Boardwalk woodrail / rail"]},
+    "fence_timber_rail": {"semantic_type": "fence", "placement": "linear", "profile_m": {"height": 1.05, "thickness": 0.09, "post_spacing": 2.2}, "reference_assets": ["Timber posts and twin rails; video-estimated local profile"]},
     "fence_boards": {"semantic_type": "fence", "placement": "linear", "profile_m": {"height": 1.35, "thickness": 0.06, "post_spacing": 2.0}, "reference_assets": ["Boardwalk boardfence"]},
     "fence_pasture": {"semantic_type": "fence", "placement": "linear", "profile_m": {"height": 1.0, "thickness": 0.05, "post_spacing": 4.0}, "reference_assets": ["Boardwalk efence"]},
     "fence_lattice": {"semantic_type": "fence", "placement": "linear", "profile_m": {"height": 1.0, "thickness": 0.05, "post_spacing": 2.0}, "reference_assets": ["Boardwalk lattice"]},
 }
 LINEAR_PROTO = {"cable": "guardrail_cable", "lograil": "guardrail_lograil", "guardrail": "guardrail_steel",
-                "boardfence": "fence_boards", "efence": "fence_pasture", "lattice": "fence_lattice"}
+                "boardfence": "fence_boards", "efence": "fence_pasture", "lattice": "fence_lattice",
+                "timber_rail": "fence_timber_rail"}
 
 
 # ------------------------------------------------------------------ geometry helpers
@@ -78,6 +96,153 @@ def _box_overlap(a, b, tol=0.01):
 
 def _zbox(z):
     return (z["from_s"], z["to_s"], z["lateral_offset_m"][0], z["lateral_offset_m"][1])
+
+
+def valid_foundation_support_policy(obj, manifest):
+    """Accept only the r16-style estimated local P1 pad backed by matching manifest provenance."""
+    attrs = obj.get("attributes", {})
+    source = obj.get("source", {})
+    transform = obj.get("transform", {})
+    if not isinstance(source, dict) or not isinstance(attrs, dict) or not isinstance(transform, dict):
+        return False
+    support = attrs.get("foundation_support")
+    if not isinstance(support, dict):
+        return False
+    position = transform.get("position", [])
+    tile_id = str(support.get("p1_tile", ""))
+    pad_y = support.get("pad_top_y_m")
+    def finite_number(value):
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            return False
+        try:
+            return math.isfinite(float(value))
+        except (OverflowError, ValueError):
+            return False
+    if (support.get("kind") != "estimated_local_level_pad"
+            or not isinstance(source.get("kind"), str) or not source.get("kind")
+            or source.get("estimated") is not True or not isinstance(source.get("ref"), str) or not source.get("ref")
+            or attrs.get("candidate_only") is not True
+            or not isinstance(position, (list, tuple)) or len(position) != 3 or not finite_number(pad_y)
+            or not all(finite_number(v) for v in position)
+            or abs(float(pad_y) - position[1]) > 0.01
+            or not all(finite_number(support.get(key)) and 0 <= support[key] <= limit
+                       for key, limit in (("max_gap_m", 0.05), ("max_penetration_m", 0.02)))):
+        return False
+    tiles = manifest.get("tiles", [])
+    if not isinstance(tiles, list) or tile_id not in {str(tile.get("id")) for tile in tiles
+                                                     if isinstance(tile, dict)
+                                                     and isinstance(tile.get("files"), dict)
+                                                     and tile["files"].get("terrain")}:
+        return False
+    x, z = position[0], position[2]
+    patches = manifest.get("p1_local_support_patches", [])
+    if not isinstance(patches, list):
+        return False
+    for patch in patches:
+        if not isinstance(patch, dict):
+            continue
+        polygon = patch.get("polygon_xz_m", [])
+        patch_source = patch.get("source", {})
+        if not isinstance(patch_source, dict):
+            continue
+        if (str(patch.get("tile_id")) != tile_id or patch.get("estimated") is not True
+                or not isinstance(patch_source.get("kind"), str) or not patch_source.get("kind")
+                or patch_source.get("estimated") is not True
+                or not isinstance(patch_source.get("ref"), str) or not patch_source.get("ref")
+                or not isinstance(patch.get("method"), str) or not patch.get("method")
+                or not finite_number(patch.get("top_y_m"))
+                or abs(float(patch["top_y_m"]) - float(pad_y)) > 0.001
+                or not isinstance(polygon, list) or len(polygon) < 3
+                or len({(point[0], point[1]) for point in polygon
+                        if isinstance(point, (list, tuple)) and len(point) == 2
+                        and all(finite_number(v) for v in point)}) < 3
+                or any(not isinstance(point, (list, tuple)) or len(point) != 2
+                       or not all(finite_number(v) for v in point) for point in polygon)):
+            continue
+        area = sum(polygon[i][0] * polygon[(i + 1) % len(polygon)][1]
+                   - polygon[(i + 1) % len(polygon)][0] * polygon[i][1]
+                   for i in range(len(polygon)))
+        if abs(area) <= 1e-8:
+            continue
+        inside = False
+        previous = polygon[-1]
+        for current in polygon:
+            x1, z1 = current; x2, z2 = previous
+            cross = (x - x1) * (z2 - z1) - (z - z1) * (x2 - x1)
+            if abs(cross) <= 1e-8 and min(x1, x2) - 1e-8 <= x <= max(x1, x2) + 1e-8 and min(z1, z2) - 1e-8 <= z <= max(z1, z2) + 1e-8:
+                return True
+            if (z1 > z) != (z2 > z):
+                try:
+                    if x < (x2 - x1) * (z - z1) / (z2 - z1) + x1:
+                        inside = not inside
+                except (ZeroDivisionError, TypeError, ValueError):
+                    inside = False
+                    break
+            previous = current
+        if inside:
+            return True
+    return False
+
+
+def point_world_base_samples(obj):
+    """Nine world-XZ support samples from a point object's rigidly transformed local footprint."""
+    dims = obj["dimensions_m"]
+    w, d = dims["width"], dims["depth"]
+    transform = obj["transform"]
+    px, py, pz = transform["position"]
+    qx, qy, qz, qw = transform["rotation"]
+    sx, sy, sz = transform["scale"]
+    samples = []
+    for lx in (-w / 2, 0.0, w / 2):
+        for lz in (-d / 2, 0.0, d / 2):
+            vx, vy, vz = lx * sx, 0.0 * sy, lz * sz
+            # q * v * conjugate(q), valid for the package's general unit quaternion.
+            tx = 2.0 * (qy * vz - qz * vy)
+            ty = 2.0 * (qz * vx - qx * vz)
+            tz = 2.0 * (qx * vy - qy * vx)
+            rx = vx + qw * tx + (qy * tz - qz * ty)
+            ry = vy + qw * ty + (qz * tx - qx * tz)
+            rz = vz + qw * tz + (qx * ty - qy * tx)
+            samples.append({"x": px + rx, "y": py + ry, "z": pz + rz})
+    return samples
+
+
+def point_world_mesh_support_samples(obj, local_vertices):
+    """Transform unique lowest mesh vertices (plus footprint grid) into world support samples."""
+    if not local_vertices:
+        return point_world_base_samples(obj)
+    base_y = min(v[1] for v in local_vertices)
+    support = [tuple(v) for v in local_vertices if v[1] <= base_y + 1e-3]
+    dims = obj["dimensions_m"]
+    proto_dims = obj.get("prototype_dimensions_m")
+    if proto_dims and all(v > 0 for v in proto_dims):
+        # Match _write's tile scale exactly; dimensions_m and the footprint grid are already physical.
+        mesh_scale = [round(dims["width"] / proto_dims[0], 3), round(dims["height"] / proto_dims[1], 3),
+                      round(dims["depth"] / proto_dims[2], 3)]
+        mesh_points = [(v[0] * mesh_scale[0], v[1] * mesh_scale[1], v[2] * mesh_scale[2]) for v in support]
+        grid_scale = [1.0, 1.0, 1.0]
+    else:
+        # Legacy direct callers have no prototype metadata; honor the supplied object transform scale.
+        sx, sy, sz = obj["transform"]["scale"]
+        mesh_points = [(v[0] * sx, v[1] * sy, v[2] * sz) for v in support]
+        grid_scale = [sx, sy, sz]
+    unique = {(round(v[0], 4), round(v[1], 4), round(v[2], 4)) for v in mesh_points}
+    unique.update((round(x * grid_scale[0], 4), 0.0, round(z * grid_scale[2], 4))
+                  for x in (-dims["width"] / 2, 0.0, dims["width"] / 2)
+                  for z in (-dims["depth"] / 2, 0.0, dims["depth"] / 2))
+    transform = obj["transform"]
+    px, py, pz = transform["position"]
+    qx, qy, qz, qw = transform["rotation"]
+    out = []
+    for lx, ly, lz in sorted(unique):
+        vx, vy, vz = lx, ly, lz
+        tx = 2.0 * (qy * vz - qz * vy)
+        ty = 2.0 * (qz * vx - qx * vz)
+        tz = 2.0 * (qx * vy - qy * vx)
+        out.append({"x": px + vx + qw * tx + qy * tz - qz * ty,
+                    "y": py + vy + qw * ty + qz * tx - qx * tz,
+                    "z": pz + vz + qw * tz + qx * ty - qy * tx})
+    return out
 
 
 class Site:
@@ -129,7 +294,19 @@ class Site:
         x, z = self.space.world_xz(s, u)
         return self.space.ground(s, u, x, z)
 
-    def problems(self, obj):
+    def foreign_road_in(self, box, clearance):
+        """Probe a footprint at <=1m spacing against every other traversal's physical road corridor."""
+        a,b,lo,hi=box
+        ns=max(1,math.ceil(b-a));nu=max(1,math.ceil(hi-lo))
+        for i in range(ns+1):
+            s=a+(b-a)*i/ns
+            for j in range(nu+1):
+                u=lo+(hi-lo)*j/nu
+                x,z=self.space.world_xz(s,u)
+                if self.space.road_corridors.contains_foreign(x,z,s,clearance):return True
+        return False
+
+    def problems(self, obj, check_ground=True):
         """Why a placed point / spanning object is not allowed here (list of strings)."""
         out = []
         t = obj["semantic_type"]
@@ -144,7 +321,9 @@ class Site:
                     out.append("inside the road boundary + clearance")
                 if self.zones(box, {"road", "trail", "sidewalk"}):
                     out.append("on a road / trail / sidewalk zone")
-            if self.zones(box, {"water"}) and t != "bridge":
+                if self.foreign_road_in(box, clear):
+                    out.append("footprint on another route traversal")
+            if self.zones(box, {"water"}) and t not in ("bridge", "pier"):
                 out.append("in water")
             if t not in ("bridge", "tunnel_portal") and self.zones(box, {"tunnel", "bridge"}):
                 out.append("in a tunnel / on a bridge")
@@ -156,8 +335,8 @@ class Site:
                 if lin is not obj and any(_box_overlap(box, lb) for lb in lin["footprints_route"]):
                     out.append(f"overlaps {lin['object_id']} ({lin['semantic_type']})")
                     break
-            hs = [self.ground(s, u) for s in (box[0], box[1]) for u in (box[2], box[3])]
-            if t != "bridge":
+            hs = [self.ground(s, u) for s in (box[0], box[1]) for u in (box[2], box[3])] if check_ground else []
+            if check_ground and t not in ("bridge", "pier"):
                 if any(h is None for h in hs):
                     out.append("not over terrain")
                 elif max(hs) - min(hs) > MAX_DROP_M.get(t, 4.0):
@@ -414,16 +593,158 @@ def build(pkg, sections=None, hints=None, seed=5):
     return allobjs, skipped
 
 
+def append_hints(pkg, hints):
+    """Append point hints to a validated P4 package without regenerating existing objects."""
+    for need in ("route/route.json", "manifest.json", "semantics/semantics.json", "vegetation/zones.json",
+                 "structures/structures.json", "structures/prototypes.json"):
+        if not os.path.isfile(os.path.join(pkg, need)):
+            raise ValueError(f"append-hints needs {need}")
+    route, man, sem = _load(pkg)
+    errs = rm.validate(route) + sm.validate(sem, route) + rt.validate(pkg)[0] + vg.validate(pkg)[0]
+    if errs:
+        raise ValueError("P4 inputs invalid, not appending:")
+    p4_path = os.path.join(pkg, "structures", "structures.json")
+    proto_path = os.path.join(pkg, "structures", "prototypes.json")
+    with open(p4_path) as f:
+        p4 = json.load(f)
+    with open(proto_path) as f:
+        proto_data = json.load(f)
+    objs = p4["objects"]
+    protos = {p["id"]: {k: v for k, v in p.items() if k != "id"} for p in proto_data["prototypes"]}
+    site = Site(pkg, route, man, sem)
+    site.linear = [o for o in objs if o["placement"] == "linear"]
+    numeric_ids = [int(o["object_id"][2:]) for o in objs if re.fullmatch(r"st\d+", o["object_id"])]
+    next_id = max(numeric_ids, default=0) + 1
+    skipped = list(p4.get("skipped_hints", []))
+    new_skipped = []
+    for hint in hints:
+        proto = hint.get("prototype")
+        if not proto:
+            raise ValueError("append-hints requires an explicit reusable prototype for every hint")
+        if proto not in protos:
+            if proto not in PROTOTYPES:
+                raise ValueError(f"unknown prototype {proto}")
+            protos[proto] = dict(PROTOTYPES[proto])
+        semantic_type = hint["semantic_type"]
+        if protos[proto].get("semantic_type") != semantic_type:
+            raise ValueError(f"{proto} semantic type does not match {semantic_type}")
+        if protos[proto].get("placement") != "point":
+            raise ValueError("append-hints only supports point prototypes")
+        dims = hint.get("dimensions_m") or protos[proto].get("dimensions_m")
+        if not dims or len(dims) != 3:
+            raise ValueError(f"{proto} requires three dimensions_m values")
+        importance = hint.get("importance", "medium")
+        if importance not in IMPORTANCE:
+            raise ValueError(f"invalid importance {importance}")
+        side = hint.get("side")
+        if side not in ("left", "right"):
+            raise ValueError("append-hints requires side left or right")
+        s0 = float(hint["s"])
+        sign = 1.0 if side == "left" else -1.0
+        candidates = [0.0] + [d * k for k in range(1, int(SLIDE_M[importance] / 2.5) + 1) for d in (2.5, -2.5)]
+        placed = None
+        for ds in candidates:
+            s = s0 + ds
+            lateral = float(hint["lateral_offset_m"]) if "lateral_offset_m" in hint else sign * (
+                (site.band(s - dims[0] / 2, s + dims[0] / 2)[0 if sign > 0 else 1]) +
+                float(hint.get("edge_offset_m", 1.0)) + dims[2] / 2)
+            anchor = {"s": round(s0, 3), "lateral_offset_m": round(lateral, 3)} if importance == "high" else None
+            obj = _point(site, f"st{next_id:04d}", semantic_type, proto, importance, s, lateral, dims,
+                         float(hint.get("confidence", 0.6)), hint["source"], hint.get("name"), anchor=anchor,
+                         attrs=hint.get("attributes"))
+            _finish(site, obj)
+            overlaps = any(_box_overlap(obj["footprints_route"][0], tuple(b))
+                           for old in objs for b in old["footprints_route"])
+            if not site.problems(obj) and not overlaps:
+                placed = obj
+                break
+            if importance == "high":
+                placed = obj  # Named landmarks keep their exact anchor and let validation report a conflict.
+                break
+        next_id += 1
+        if placed:
+            objs.append(placed)
+        else:
+            record = {"hint": hint, "reason": "; ".join(site.problems(obj)) or "overlaps another structure"}
+            skipped.append(record)
+            new_skipped.append(record)
+    _write(pkg, route, man, objs, protos, skipped)
+    return objs, new_skipped
+
+
+def replace_point_objects(pkg, hints):
+    """Replace named point objects at authored route anchors, rebuilding tiles and preserving IDs.
+
+    This is for evidence-backed P4 revisions where an existing landmark identity/location is corrected.
+    Placement conflicts remain visible to validate(); this helper never slides or suppresses them.
+    Each hint requires object_id, semantic_type, prototype, s, lateral_offset_m, dimensions_m and source.
+    """
+    with open(os.path.join(pkg, "route", "route.json")) as f: route = json.load(f)
+    with open(os.path.join(pkg, "manifest.json")) as f: man = json.load(f)
+    with open(os.path.join(pkg, "semantics", "semantics.json")) as f: sem = json.load(f)
+    with open(os.path.join(pkg, "structures", "structures.json")) as f: p4 = json.load(f)
+    with open(os.path.join(pkg, "structures", "prototypes.json")) as f: proto_data = json.load(f)
+    objs = p4["objects"]
+    proto_data_by_id = {p["id"]: {k: v for k, v in p.items() if k != "id"} for p in proto_data["prototypes"]}
+    site = Site(pkg, route, man, sem)
+    site.linear = [o for o in objs if o["placement"] == "linear"]
+    seen = set()
+    for hint in hints:
+        oid = hint["object_id"]
+        if oid in seen: raise ValueError(f"duplicate object_id {oid}")
+        seen.add(oid)
+        index = next((i for i, o in enumerate(objs) if o["object_id"] == oid), None)
+        if index is None: raise ValueError(f"unknown structure object_id {oid}")
+        if objs[index].get("placement") != "point":
+            raise ValueError(f"{oid} is not a point object and cannot be replaced by replace_point_objects")
+        proto = hint["prototype"]
+        if proto not in PROTOTYPES: raise ValueError(f"unknown prototype {proto}")
+        spec = PROTOTYPES[proto]
+        if spec["semantic_type"] != hint["semantic_type"] or spec["placement"] != "point":
+            raise ValueError(f"incompatible replacement prototype {proto}")
+        dims = hint["dimensions_m"]
+        if len(dims) != 3: raise ValueError(f"{oid} requires three dimensions_m values")
+        s, u = float(hint["s"]), float(hint["lateral_offset_m"])
+        obj = _point(site, oid, hint["semantic_type"], proto, hint.get("importance", "high"),
+                     s, u, dims, float(hint.get("confidence", 0.6)), hint["source"],
+                     hint.get("name"), anchor={"s": round(s, 3), "lateral_offset_m": round(u, 3)},
+                     attrs=hint.get("attributes"))
+        _finish(site, obj)
+        objs[index] = obj
+        proto_data_by_id[proto] = dict(spec)
+    _write(pkg, route, man, objs, proto_data_by_id, p4.get("skipped_hints", []))
+    return objs
+
+
 def sm_barriers():
     return {"wall", "guardrail", "fence"}
+
+
+def preserve_package_prototype_assets(generated, previous):
+    """Keep existing package asset lineage across a P4 rebuild while adding/updating prototype facts."""
+    merged = {key: dict(value) for key, value in generated.items()}
+    for old in previous:
+        pid = old["id"]
+        if pid not in merged:
+            merged[pid] = {k: v for k, v in old.items() if k != "id"}
+            continue
+        for field in ("mesh_file", "source", "asset_parameters"):
+            if field in old and field not in merged[pid]:
+                merged[pid][field] = old[field]
+    return merged
 
 
 def _write(pkg, route, man, objs, protos, skipped):
     d = os.path.join(pkg, "structures")
     os.makedirs(d, exist_ok=True)
+    prototype_path = os.path.join(d, "prototypes.json")
+    if os.path.isfile(prototype_path):
+        with open(prototype_path) as f:
+            previous = json.load(f).get("prototypes", [])
+        protos = preserve_package_prototype_assets(protos, previous)
     with open(os.path.join(d, "structures.json"), "w") as f:
         json.dump({"version": VERSION, "route_id": route["route_id"], "objects": objs, "skipped_hints": skipped}, f, indent=1)
-    with open(os.path.join(d, "prototypes.json"), "w") as f:
+    with open(prototype_path, "w") as f:
         json.dump({"version": VERSION, "types": TYPES, "importance": IMPORTANCE,
                    "frame": "local +Y up, +Z front, +X right; dimensions_m = [width X, height Y, depth Z]",
                    "prototypes": [dict(id=k, **v) for k, v in protos.items()]}, f, indent=1)
@@ -484,6 +805,7 @@ def validate(pkg):
     if len(set(ids)) != len(ids):
         errs.append("object ids not unique")
     worst = {"anchor_m": 0.0, "ground_m": 0.0, "position_m": 0.0}
+    ground_support = {}
     for o in objs:
         oid, t = o["object_id"], o["semantic_type"]
         e = []
@@ -542,7 +864,9 @@ def validate(pkg):
         else:
             boxes = [tuple(b) for b in o["footprints_route"]]
             check = dict(o, footprints_route=boxes)
-            e += site.problems(check)
+            support = o.get("attributes", {}).get("foundation_support")
+            strict_support = valid_foundation_support_policy(o, man)
+            e += site.problems(check, check_ground=not strict_support)
             pr = rm.sample(route, o["s"])
             _, left = _vec(pr["heading_deg"])
             x, z = pr["x"] + left[0] * o["lateral_offset_m"], pr["z"] + left[1] * o["lateral_offset_m"]
@@ -563,6 +887,157 @@ def validate(pkg):
                     zs = [sem_by_id.get(z) for z in o["source"].get("semantic_zones", [])]
                     if not zs or None in zs or not any(z["semantic_type"] == "tunnel" and min(abs(z["from_s"] - o["s"]), abs(z["to_s"] - o["s"])) < 0.5 for z in zs):
                         e.append("tunnel portal not at the end of a semantic tunnel zone")
+            elif t == "pier":
+                attrs = o.get("attributes", {})
+                policy = attrs.get("pier_support", {})
+                mesh_file = (p or {}).get("mesh_file")
+                mesh_path = os.path.join(pkg, mesh_file) if mesh_file else None
+                if not policy.get("estimated") or policy.get("deck_y_m") is None or policy.get("water_level_m") is None:
+                    e.append("pier lacks estimated deck/water datum metadata")
+                elif abs((pos[1] + float(policy["deck_y_m"])) - float(policy["water_level_m"]) - 0.4) > 0.03:
+                    e.append("pier deck is not 0.4 m above declared water level")
+                if mesh_path and os.path.isfile(mesh_path):
+                    try:
+                        mesh_local, mesh_indices = gltf_mesh.read(mesh_path)
+                        used = [mesh_local[i] for i in sorted(set(mesh_indices))]
+                        layout=(p or {}).get("asset_parameters",{}).get("pile_layout_xz_m",[])
+                        if len(layout)!=16:
+                            e.append("pier prototype must declare 16 actual pile locations")
+                        sx=o["dimensions_m"]["width"]/(p or {}).get("dimensions_m",[o["dimensions_m"]["width"]])[0]
+                        sz=o["dimensions_m"]["depth"]/(p or {}).get("dimensions_m",[0,0,o["dimensions_m"]["depth"]])[2]
+                        bottom=set()
+                        half=float((p or {}).get("asset_parameters",{}).get("pile_size_m",0.28))/2
+                        for lx0,lz0 in layout:
+                            lx0=float(lx0)*sx; lz0=float(lz0)*sz
+                            for dx,dz in ((-half,-half),(half,-half),(half,half),(-half,half)):
+                                cx=lx0+dx*sx; cz=lz0+dz*sz
+                                vertices=[v for v in used if abs(v[0]-cx)<=.002 and abs(v[2]-cz)<=.002]
+                                if not vertices:
+                                    e.append(f"pier mesh lacks pile base corner at ({cx:.2f},{cz:.2f})")
+                                    continue
+                                low_y=min(v[1] for v in vertices)
+                                bottom.add((round(cx,4),round(low_y,4),round(cz,4)))
+                        qx, qy, qz, qw = o["transform"]["rotation"]
+                        px, py, pz = pos
+                        results=[]
+                        for lx,ly,lz in sorted(bottom):
+                            tx=2*(qy*lz-qz*ly); ty=2*(qz*lx-qx*lz); tz=2*(qx*ly-qy*lx)
+                            x=px+lx+qw*tx+qy*tz-qz*ty
+                            y=py+ly+qw*ty+qz*tx-qx*tz
+                            z=pz+lz+qw*tz+qx*ty-qy*tx
+                            # Resolve the physical owner by nearest route station, then test every
+                            # terrain triangle in the runtime's actual s-window (back 350 / ahead 800 m).
+                            lo=max(0.0,o["s"]-o["dimensions_m"]["width"]/2-5.0)
+                            hi=min(total,o["s"]+o["dimensions_m"]["width"]/2+5.0)
+                            best=(float("inf"),o["s"])
+                            station_step=0.2
+                            for step in range(max(1,math.ceil((hi-lo)/station_step))+1):
+                                station=min(hi,lo+step*station_step)
+                                rp=rm.sample(route,station)
+                                dist=math.hypot(rp["x"]-x,rp["z"]-z)
+                                if dist<best[0]:best=(dist,station)
+                            station=best[1]; rp=rm.sample(route,station); _,left=_vec(rp["heading_deg"])
+                            lateral=(x-rp["x"])*left[0]+(z-rp["z"])*left[1]
+                            ground=site.ground(station,lateral)
+                            # Same station window as PackagePreview: [progress-350, progress+800].
+                            window=[]
+                            for bucket in range(math.floor(max(0.0,o["s"]-350.0)/2),math.floor(min(total,o["s"]+800.0)/2)+1):
+                                for box,tri in site.space.ground_triangles.get(bucket,()):
+                                    if box[0]-1e-5<=x<=box[1]+1e-5 and box[2]-1e-5<=z<=box[3]+1e-5:
+                                        hit=vg._bary_y(tri,x,z)
+                                        if hit is not None:window.append(hit)
+                            active_high=max(window) if window else None
+                            results.append({"x_m":round(x,3),"y_m":round(y,3),"z_m":round(z,3),
+                                            "owner_s_m":round(station,3),"owner_u_m":round(lateral,3),
+                                            "owner_ground_y_m":round(ground,4) if ground is not None else None,
+                                            "owner_base_minus_ground_m":round(y-ground,4) if ground is not None else None,
+                                            "loaded_window_hit_count":len(window),"loaded_window_max_y_m":round(active_high,4) if active_high is not None else None,
+                                            "loaded_window_base_minus_max_m":round(y-active_high,4) if active_high is not None else None})
+                        support_ok=bool(results) and all(r["owner_ground_y_m"] is not None and abs(r["owner_base_minus_ground_m"]) <= 0.05
+                            and r["loaded_window_max_y_m"] is not None and abs(r["loaded_window_base_minus_max_m"])<=0.05 for r in results)
+                        ground_support[oid]={"policy":"actual_mesh_lowest_vertices_are_piles",
+                                             "sample_count":len(results),"hit_count":sum(r["owner_ground_y_m"] is not None for r in results),
+                                             "owner_policy":"nearest route station + runtime streaming s window [-350,+800] m",
+                                             "max_abs_ground_error_m":round(max((abs(r["owner_base_minus_ground_m"]) for r in results if r["owner_base_minus_ground_m"] is not None),default=0),4),
+                                             "samples":results}
+                        if not support_ok:e.append("actual pile bottom vertices are not supported by P1 within 0.05 m")
+                    except gltf_mesh.GltfMeshError as exc:
+                        e.append(f"pier support mesh cannot be used: {exc}")
+                else:
+                    e.append(f"pier prototype mesh {mesh_file} is missing")
+            elif t in BUILDING:
+                samples = point_world_base_samples(o)
+                mesh_file = (p or {}).get("mesh_file")
+                mesh_path = os.path.join(pkg, mesh_file) if mesh_file else None
+                if mesh_path and not os.path.isfile(mesh_path):
+                    e.append(f"prototype mesh {mesh_file} is missing")
+                if mesh_path and os.path.isfile(mesh_path):
+                    try:
+                        mesh_local, mesh_indices = gltf_mesh.read(mesh_path)
+                        used_vertices = [mesh_local[i] for i in sorted(set(mesh_indices))]
+                        samples = point_world_mesh_support_samples(
+                            dict(o, prototype_dimensions_m=(p or {}).get("dimensions_m")), used_vertices)
+                    except gltf_mesh.GltfMeshError as exc:
+                        e.append(f"prototype mesh {mesh_file} cannot be used for support validation: {exc}")
+                hits = []
+                missing = []
+                sample_results = []
+                for index, sample in enumerate(samples):
+                    ground = site.space.ground_world(sample["x"], sample["z"])
+                    if ground is None:
+                        missing.append(index)
+                        sample_results.append({"index": index, "x_m": round(sample["x"], 3),
+                                               "base_y_m": round(sample["y"], 3), "z_m": round(sample["z"], 3),
+                                               "ground_y_m": None, "signed_base_minus_ground_m": None})
+                    else:
+                        signed = sample["y"] - ground  # positive is a gap; negative is penetration
+                        hits.append((index, ground, signed))
+                        sample_results.append({"index": index, "x_m": round(sample["x"], 3),
+                                               "base_y_m": round(sample["y"], 3), "z_m": round(sample["z"], 3),
+                                               "ground_y_m": round(ground, 4),
+                                               "signed_base_minus_ground_m": round(signed, 4)})
+                errors = [abs(signed) for _, _, signed in hits]
+                penetration = max([max(0.0, -signed) for _, _, signed in hits] or [0.0])
+                gap = max([max(0.0, signed) for _, _, signed in hits] or [0.0])
+                max_error = max(errors) if errors else None
+                attrs = o.get("attributes", {})
+                support = attrs.get("foundation_support")
+                support_claimed = support is not None
+                support = support if isinstance(support, dict) else {}
+                if support_claimed and not strict_support:
+                    e.append("foundation support policy is invalid; using the 0.05 m base-to-minimum-ground limit")
+                gap_limit = min(0.05, support.get("max_gap_m", 0.05)) if strict_support else 0.05
+                penetration_limit = min(0.02, support.get("max_penetration_m", 0.02)) if strict_support else 0.02
+                ground_support[oid] = {
+                    "sample_count": len(samples), "hit_count": len(hits), "missing_count": len(missing),
+                    "missing_points": missing,
+                    "sample_kind": "prototype_lowest_vertices_and_footprint_grid" if mesh_path and os.path.isfile(mesh_path) else "footprint_grid",
+                    "max_ground_y_m": round(max((g for _, g, _ in hits), default=float("nan")), 4) if hits else None,
+                    "min_ground_y_m": round(min((g for _, g, _ in hits), default=float("nan")), 4) if hits else None,
+                    "max_abs_ground_error_m": round(max_error, 4) if max_error is not None else None,
+                    "max_penetration_m": round(penetration, 4), "max_gap_m": round(gap, 4),
+                    "gap_limit_m": gap_limit, "penetration_limit_m": penetration_limit,
+                    "policy": support.get("kind", "legacy_foundation_drop") if strict_support else "diagnostic_only_legacy_foundation_drop",
+                    "samples": sample_results if strict_support or o["importance"] == "high" else [],
+                }
+                if max_error is not None:
+                    worst["ground_m"] = max(worst["ground_m"], max_error)
+                if not strict_support:
+                    # Preserve the established package contract for ordinary buildings:
+                    # their rigid base anchor remains within 5 cm of the lowest route-relative corner.
+                    legacy_hs=[site.ground(s,u) for s in (boxes[0][0],boxes[0][1]) for u in (boxes[0][2],boxes[0][3])]
+                    available=[h for h in legacy_hs if h is not None]
+                    if available:
+                        base_delta=pos[1]-min(available)
+                        worst["ground_m"]=max(worst["ground_m"],abs(base_delta))
+                        if abs(base_delta)>0.05:
+                            e.append(f"base {base_delta:.2f} m off the terrain")
+                if missing and (strict_support or o["importance"] == "high"):
+                    e.append(f"actual rigid base has {len(missing)}/{len(samples)} missing terrain samples {missing}")
+                if strict_support and hits and penetration > penetration_limit:
+                    e.append(f"actual rigid base penetrates highest terrain by {penetration:.3f} m (limit {penetration_limit:.3f})")
+                if strict_support and hits and gap > gap_limit:
+                    e.append(f"actual rigid base has {gap:.3f} m unsupported gap (limit {gap_limit:.3f})")
             else:
                 b = boxes[0]
                 hs = [site.ground(s, u) for s in (b[0], b[1]) for u in (b[2], b[3])]
@@ -598,6 +1073,7 @@ def validate(pkg):
         counts.setdefault(o["semantic_type"], {}).setdefault(o["importance"], 0)
         counts[o["semantic_type"]][o["importance"]] += 1
     report = {"objects": len(objs), "by_type": counts, "skipped_hints": len(data.get("skipped_hints", [])),
+              "ground_support": ground_support,
               "worst": {k: round(v, 4) for k, v in worst.items()}, "errors": errs, "valid": not errs}
     with open(os.path.join(pkg, "structures", "validation.json"), "w") as f:
         json.dump(report, f, indent=1)
@@ -616,6 +1092,23 @@ def main(argv):
         print(f"{args[1]}: {len(objs)} objects, {len(skipped)} hints skipped")
         for s in skipped:
             print(f"  skipped {s['hint']['semantic_type']} at s={s['hint']['s']:.0f}: {s['reason']}")
+        args = ["validate", args[1]]
+    if len(args) == 2 and args[0] == "append-hints":
+        if "hints" not in opts:
+            raise ValueError("append-hints requires --hints=file.json")
+        with open(opts["hints"]) as f:
+            hints = json.load(f)
+        objs, skipped = append_hints(args[1], hints)
+        print(f"{args[1]}: {len(objs)} objects, {len(skipped)} skipped hints")
+        for item in skipped:
+            print(f"  skipped {item['hint'].get('name', item['hint']['prototype'])}: {item['reason']}")
+        args = ["validate", args[1]]
+    if len(args) == 2 and args[0] == "replace-point-objects":
+        if "hints" not in opts:
+            raise ValueError("replace-point-objects requires --hints=file.json")
+        with open(opts["hints"]) as f: hints = json.load(f)
+        objs = replace_point_objects(args[1], hints)
+        print(f"{args[1]}: replaced {len(hints)} existing point objects; IDs preserved")
         args = ["validate", args[1]]
     if len(args) == 2 and args[0] == "validate":
         errs, rep = validate(args[1])

@@ -213,7 +213,7 @@ def build(pkg, hints_path=None, max_grid=256):
                               "note": "horizon of the distant terrain seen from the start, bearings in the world frame"}
     for w in h.get("water", []):
         distant["water"].append({
-            "id": w["name"].lower(), "kind": "lake", "geometry": {"type": "plane", "size_m": w["size_m"]},
+            "id": w["name"].lower(), "kind": w.get("kind", "lake"), "geometry": {"type": "plane", "size_m": w["size_m"]},
             "anchor": "follow_runner" if w.get("follows_route_water") else "world",
             "level_offset_m": w.get("base_y", 0.0),
             "appearance": {k: v for k, v in {"deep_color_linear": srgb_to_linear(w["deep_color"]) if "deep_color" in w else None,
@@ -269,7 +269,7 @@ def build(pkg, hints_path=None, max_grid=256):
                         "bloom": h["grading"]["glow"], "note": "look intent; runtimes may restyle"},
         },
         "attribution": [{"id": a, "text": ATTRIBUTION[a]} for a in dict.fromkeys(attribution)],
-        "source": {"kind": "scene_generator", "ref": h.get("scene"), "course": h.get("course")},
+        "source": h.get("source", {"kind": "scene_generator", "ref": h.get("scene"), "course": h.get("course")}),
     }
     with open(os.path.join(edir, "environment.json"), "w") as f:
         json.dump(env, f, indent=1)

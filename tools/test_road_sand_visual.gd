@@ -1,0 +1,30 @@
+extends SceneTree
+## Opt-in roadway appearance override is bounded by route s and physical surface_type.
+const Viewer = preload("res://scripts/package_preview.gd")
+
+func _initialize() -> void:
+	var viewer := Viewer.new()
+	var config: Dictionary = viewer._read("res://data/gold_coast_s17_s19_sand_visual.json")
+	var overrides: Array = config.overrides
+	assert(viewer._road_surface_visual_override("road_concrete", 8700.0, []) .is_empty())
+	assert(viewer._road_surface_visual_override("road_concrete", 8500.0, overrides).is_empty())
+	assert(viewer._road_surface_visual_override("road_asphalt", 8700.0, overrides).is_empty())
+	assert(viewer._road_surface_visual_override("terrain_ground", 8700.0, overrides).is_empty())
+	assert(viewer._road_surface_visual_override("road_concrete", 8700.0, overrides).appearance == "compacted_fine_sand")
+	assert(viewer._road_surface_visual_override("road_dirt", 9000.0, overrides).appearance == "compacted_fine_sand")
+	assert(viewer._road_surface_visual_override("road_concrete", 10000.0, overrides).is_empty())
+	var style: Dictionary = viewer._road_surface_visual_override("road_dirt", 9000.0, overrides)
+	var shader_code: String = viewer._sand_road_shader(Vector3(0.42, 0.33, 0.24), style)
+	assert(shader_code.contains("road_uv.y >= "))
+	assert(shader_code.contains("value_noise(world.xz*"))
+	assert(shader_code.contains("tracks*0.08"))
+	assert(shader_code.contains("NORMAL_MAP_DEPTH=0.65"))
+	assert(shader_code.contains("NORMAL_MAP=tangent_normal*0.5+0.5"))
+	assert(shader_code.contains("vec3 tangent_normal=normalize(vec3(-relief_gradient,1.0))"))
+	assert(shader_code.contains("track_wobble"))
+	viewer.camera.free()
+	viewer.tiles.free()
+	viewer.label.free()
+	viewer.free()
+	print("ROAD_SAND_VISUAL_TEST_OK; opt-in only; s and surface_type bounded")
+	quit()

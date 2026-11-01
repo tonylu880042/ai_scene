@@ -61,11 +61,33 @@ def validate(pkg):
             for pat in d.get("files", []):
                 if not glob.glob(os.path.join(pkg, pat)):
                     errs.append(f"{layer}: {pat} listed in the manifest but not found")
+        for pat in man.get("prototype_assets", {}).get("files", []):
+            if not glob.glob(os.path.join(pkg, pat)):
+                errs.append(f"prototype assets: {pat} listed but not found")
+        for layer in ("vegetation", "structures"):
+            pp = os.path.join(pkg, layer, "prototypes.json")
+            if os.path.isfile(pp):
+                with open(pp) as f:
+                    protos = json.load(f)
+                for proto in protos.get("prototypes", []):
+                    mesh = proto.get("mesh_file")
+                    if mesh and not os.path.isfile(os.path.join(pkg, mesh)):
+                        errs.append(f"{layer} prototype {proto['id']}: mesh {mesh} missing")
         for t in man.get("tiles", []):
             for k, v in t.get("files", {}).items():
                 if not os.path.isfile(os.path.join(pkg, v)):
                     errs.append(f"tile {t['id']}: {k} file {v} missing")
     out.append(("package integrity", "VALID" if not errs else "INVALID", errs))
+    if os.path.isfile(mp) and man.get("acceptance"):
+        ap = os.path.join(pkg, man["acceptance"])
+        if not os.path.isfile(ap):
+            out.append(("acceptance", "INVALID", ["declared acceptance file missing"]))
+        else:
+            with open(ap) as f:
+                acceptance = json.load(f)
+            accepted = acceptance.get("status") == "accepted"
+            messages = [] if accepted else [b.get("reason", str(b)) for b in acceptance.get("blockers", [])]
+            out.append(("acceptance", "VALID" if accepted else "INVALID", messages or ([] if accepted else ["candidate not accepted"])))
     return out
 
 

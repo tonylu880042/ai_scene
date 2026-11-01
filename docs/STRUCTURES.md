@@ -16,6 +16,25 @@ python3 tools/structures.py build export/packages/weissensee_rolling_hills --sec
 python3 tools/structures.py validate export/packages/weissensee_rolling_hills
 ```
 
+For a localized addition to an already validated package, `append-hints` retains the existing P4 object records and
+prototype catalog, then rebuilds the per-tile P4 indexes with the added point hints:
+
+```bash
+python3 tools/structures.py append-hints export/packages/<candidate> --hints=data/<local-hints>.json
+python3 tools/build_package_assets.py export/packages/<candidate> --only=<new-prototype-id>
+python3 tools/structures.py validate export/packages/<candidate>
+```
+
+`--only` writes just the named structure mesh and updates that prototype's asset reference; it does not rebuild other
+prototype meshes or vegetation. It is intended for one new procedural structure prototype after a focused P4 append.
+
+OSM buildings (`python3 tools/osm_context.py buildings <package> <osm.json>`): footprints within 200 m of the route
+are extruded into `tiles/NN/buildings.glb` (materials `facade_osm`, `roof_osm`; UV in metres, COLOR_0 tint). Height:
+OSM `height`, else `building:levels` × 3.1 m, else a per-class estimate; base = lowest P1 terrain under the footprint
+− 0.3 m. Footprints within 1 m of the P0 road are dropped. Low, video-estimated `coastal_apartment_*` objects with an
+OSM footprint within 60 m are removed as superseded, and P3 instances inside footprints are removed. Stats and
+provenance: `manifest.layers.P4_structures.osm_buildings`.
+
 ## 1. Order and inputs
 
 route → road/terrain → semantics → vegetation → **structures**. `build` refuses to run unless all earlier
@@ -99,6 +118,10 @@ manifest.json                   layers.P4_structures; tiles[].files.structures; 
 bridge, tunnel_portal, retaining_wall, guardrail, fence, sign, lamp, bench, monument, race_landmark. No meshes yet:
 `reference_assets` name today's Godot generators; each runtime maps prototype ids to its own assets.
 
+The reusable `fence_timber_rail` linear prototype describes dark timber posts with two horizontal rails. The Godot
+adapter maps that prototype to its preview geometry; existing `fence_rail`, `fence_boards`, and `fence_lattice`
+rendering keeps its previous behavior.
+
 ### Per-tile file
 
 ```json
@@ -122,6 +145,22 @@ Same 10-float transform layout as vegetation (instancing-ready); scale = object 
 | tunnels / bridges | nothing but portals / bridges inside tunnel / bridge zones; bridges match a semantic bridge zone, portals a tunnel end (0.5 m) |
 | each other | footprints of point / spanning objects do not overlap each other or linear barriers |
 | tiles | every object listed exactly once in the per-tile files; group arrays match counts |
+
+### Rigid foundation support policy
+
+The default rigid-base rule is a physical 5 cm limit: the base anchor must remain within 0.05 m of the
+lowest sampled ground point. A `foundation_support` attribute does not grant its own tolerance. A local
+level-pad exception is accepted only for a candidate-only structure with a nonempty source kind and
+reference, `source.estimated = true` (GPS/video and other provenance are allowed), and a finite
+`pad_top_y_m` within 1 cm of the object base. No OSM identity field grants this exception. Its
+`p1_tile` must name a terrain tile; the tile, pad height and object center must match an estimated
+`manifest.p1_local_support_patches` entry with a finite polygon, nonempty provenance and method. Its
+declared gap is finite, nonnegative and at most 0.05 m; penetration is finite, nonnegative and at most
+0.02 m. Invalid claims are reported and use the default 5 cm base-to-minimum-ground check. A data record
+cannot turn its own height or gap value into permission to float.
+
+Prototype mesh support sampling accepts `.glb` and static `.gltf` triangle POSITION data, including external
+buffers and node transforms. Unsupported or malformed mesh data produces a validation error.
 
 ## 5. Test package result
 
@@ -147,3 +186,9 @@ over their whole length (semantics producer fixed too).
 
 Meshes for prototypes (planned `assets/prototypes.glb`), building footprints rotated off the road direction,
 jetties and viewing decks (structures in water), distant scenery (P5).
+
+
+Shared placement also probes each point object's route-relative footprint at <= 1 m spacing against the physical
+road corridors of other traversals. The category clearance still applies. This complements semantic exclusions
+and actual indexed terrain lookup; it prevents a building under / across another leg of the route from passing
+merely because it lies outside its authoring leg's road band. High-importance anchors are never silently moved.

@@ -2,6 +2,7 @@
 """Near-route spatial semantics (semantics/semantics.json): validate and query. Engine-independent, stdlib only.
 
   python3 tools/semantics.py validate <package_dir>
+  python3 tools/semantics.py append-zones <package_dir> <zones.json>
   python3 tools/semantics.py describe <package_dir> <s> [<s> ...]     what is around the route at distance s
 
 Format: schemas/semantics.schema.json, docs/SEMANTICS.md. Every zone is a box in route coordinates:
@@ -11,6 +12,7 @@ Vegetation / building stages place objects only inside zones they get from zones
 import bisect
 import json
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -107,6 +109,97 @@ def zones_in(sem, from_s, to_s, types):
     return [z for z in sem["zones"] if z["semantic_type"] in types and z["from_s"] < to_s and z["to_s"] > from_s]
 
 
+def append_zones(sem, additions, route):
+    """Append validated authored zones without rebuilding or replacing existing semantics."""
+    existing = {z["id"]: z for z in sem["zones"]}
+    pending = []
+    for zone in additions:
+        old = existing.get(zone.get("id"))
+        if old is not None:
+            if old != zone:
+                raise ValueError(f"zone id already exists with different content: {zone.get('id')}")
+            continue
+        pending.append(zone)
+        existing[zone["id"]] = zone
+    original = sem["zones"]
+    sem["zones"] = original + pending
+    errors = validate(sem, route)
+    if errors:
+        sem["zones"] = original
+        raise ValueError("appended zones invalid: " + "; ".join(errors[:8]))
+    return len(pending)
+
+
+def split_surface_region(sem, *, from_s, to_s, side, lateral_offset_m, surface_type,
+                         attributes, source, ground_types=("grass",), clip_types=("vegetation_zone",)):
+    """Split ground-cover boxes around an authored surface and clip planting boxes over it.
+
+    The route and terrain are untouched. Returns original semantic IDs mapped to their replacement
+    boxes so P3 records and existing instances can be remapped without changing their transforms.
+    """
+    lo, hi = map(float, lateral_offset_m)
+    if from_s >= to_s or lo >= hi or side not in ("left", "right"):
+        raise ValueError("surface region requires ordered s/lateral bounds and a left/right side")
+    zone_numbers = [int(m.group(1)) for z in sem["zones"] if (m := re.search(r"(\d+)", z["id"]))]
+    next_id = max(zone_numbers, default=0) + 1
+    result, mapping = [], {}
+
+    def append(zone):
+        nonlocal next_id
+        clone = dict(zone)
+        clone["id"] = f"z{next_id:04d}"
+        next_id += 1
+        result.append(clone)
+        return clone
+
+    for zone in sem["zones"]:
+        typ = zone["semantic_type"]
+        if (zone["side"] != side or typ not in set(ground_types) | set(clip_types) or
+                zone["to_s"] <= from_s or zone["from_s"] >= to_s):
+            result.append(zone)
+            continue
+        start, end = max(zone["from_s"], from_s), min(zone["to_s"], to_s)
+        band_lo, band_hi = zone["lateral_offset_m"]
+        if band_hi <= lo or band_lo >= hi:
+            result.append(zone)
+            continue
+        pieces = []
+        if zone["from_s"] < start:
+            before = dict(zone); before["to_s"] = start
+            pieces.append(append(before))
+        if typ in ground_types:
+            if band_lo < min(band_hi, lo):
+                piece = dict(zone); piece["from_s"], piece["to_s"] = start, end
+                piece["lateral_offset_m"] = [band_lo, min(band_hi, lo)]
+                pieces.append(append(piece))
+            if max(band_lo, hi) < band_hi:
+                piece = dict(zone); piece["from_s"], piece["to_s"] = start, end
+                piece["lateral_offset_m"] = [max(band_lo, hi), band_hi]
+                pieces.append(append(piece))
+            overlap_lo, overlap_hi = max(band_lo, lo), min(band_hi, hi)
+            if overlap_lo < overlap_hi:
+                surface = dict(zone)
+                surface.update({"semantic_type":surface_type, "from_s":start, "to_s":end,
+                                "lateral_offset_m":[overlap_lo, overlap_hi],
+                                "attributes":dict(attributes), "source":dict(source)})
+                pieces.append(append(surface))
+        else:
+            # Preserve planting on both verges outside the new surface.
+            outside = ([band_lo, min(band_hi, lo)], [max(band_lo, hi), band_hi])
+            for clipped in outside:
+                if clipped[0] >= clipped[1]:
+                    continue
+                piece = dict(zone); piece["from_s"], piece["to_s"] = start, end
+                piece["lateral_offset_m"] = clipped
+                pieces.append(append(piece))
+        if zone["to_s"] > end:
+            after = dict(zone); after["from_s"] = end
+            pieces.append(append(after))
+        mapping[zone["id"]] = pieces
+    sem["zones"] = result
+    return mapping
+
+
 def _label(z):
     a = z.get("attributes", {})
     words = [a[k] for k in ("density", "kind") if isinstance(a.get(k), str)]
@@ -148,6 +241,16 @@ def _load_pkg(pkg):
 
 
 def main(argv):
+    if len(argv) == 3 and argv[0] == "append-zones":
+        route, sem = _load_pkg(argv[1])
+        raw = json.loads(open(argv[2]).read())
+        additions = raw.get("zones", raw) if isinstance(raw, dict) else raw
+        count = append_zones(sem, additions, route)
+        with open(os.path.join(argv[1], "semantics", "semantics.json"), "w") as f:
+            json.dump(sem, f, indent=1)
+            f.write("\n")
+        print(f"{argv[1]}: appended {count} zones; {len(sem['zones'])} total")
+        return 0
     if len(argv) == 2 and argv[0] == "validate":
         route, sem = _load_pkg(argv[1])
         errs = validate(sem, route)
