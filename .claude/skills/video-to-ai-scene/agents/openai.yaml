@@ -1,0 +1,4 @@
+interface:
+  display_name: "影片轉 AI 場景包"
+  short_description: "Video + OSM/DEM → AI Scene Package: data, assets and registration first, route and terrain before decoration"
+  default_prompt: "使用 $video-to-ai-scene，從影片建立 AI Scene Package：先做 Phase 0 資料與素材盤點、時間對位，路線和地形通過後才做植被與建築。"
