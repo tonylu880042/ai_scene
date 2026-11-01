@@ -5,6 +5,9 @@ draped on the shipped P1 terrain and written as tiles/<NN>/roadside.glb. Never t
   python3 tools/osm_context.py fetch <package> <osm.json> [margin_m]   Overpass query around the route
   python3 tools/osm_context.py build <package> <osm.json>              roadside.glb + manifest + licence
   python3 tools/osm_context.py fetch-skyline <package> <skyline.json>  measured-height buildings within 1.5 km
+  python3 tools/osm_context.py fetch-water <package> <water.json>       OSM coastline + water areas around the route
+  python3 tools/osm_context.py shoreline <package> <water.json> <from_s> <to_s> <out.json>
+                                    OSM-measured water edge per 2 m -> coast_profiles replacing that span only
   python3 tools/osm_context.py buildings <package> <osm.json> [skyline.json]
                                     tiles/<NN>/buildings.glb (P4), environment/skyline_buildings.glb (P5) + licence
 
@@ -46,7 +49,7 @@ def to_latlon(origin, x, z):
             origin["lon"] + x / (METRES_PER_DEGREE * math.cos(math.radians(origin["lat"]))))
 
 
-def fetch(pkg, out_path, margin_m=150.0, skyline=False):
+def fetch(pkg, out_path, margin_m=150.0, skyline=False, water=False):
     route = json.load(open(os.path.join(pkg, "route", "route.json")))
     origin = route["coordinate_system"]["origin"]
     xs, zs = route["samples"]["x"], route["samples"]["z"]
@@ -55,6 +58,9 @@ def fetch(pkg, out_path, margin_m=150.0, skyline=False):
     bbox = f"{south:.6f},{west:.6f},{north:.6f},{east:.6f}"
     query = (f'[out:json][timeout:180];(way["highway"~"^({"|".join(CLASS_WIDTH_M)})$"]({bbox});'
              f'way["amenity"="parking"]({bbox});way["building"]({bbox}););out geom tags;')
+    if water:
+        query = (f'[out:json][timeout:180];(way["natural"="coastline"]({bbox});way["natural"="water"]({bbox});'
+                 f'relation["natural"="water"]({bbox});way["waterway"="riverbank"]({bbox}););out geom tags;')
     if skyline:  # only buildings that carry a measured height or level count
         query = f'[out:json][timeout:180];(way["building"]["height"]({bbox});way["building"]["building:levels"]({bbox}););out geom tags;'
     request = urllib.request.Request(OVERPASS, data=urllib.parse.urlencode({"data": query}).encode(),
@@ -513,10 +519,127 @@ def remove_superseded_structures(pkg, man, footprints, radius_m=60.0):
     return len(gone)
 
 
+# ------------------------------------------------------------------ P1 shoreline evidence
+class Water:
+    """Point-in-water from OSM: inside a natural=water polygon, or on the water (right-hand) side of the nearest
+    natural=coastline segment within 400 m (OSM coastlines keep land on their left)."""
+
+    def __init__(self, osm_path, origin, cell=50.0):
+        self.cell, self.coast, self.polygons = cell, {}, []
+        for e in json.load(open(osm_path))["elements"]:
+            tags = e.get("tags", {})
+            rings = [e["geometry"]] if e["type"] == "way" else [m["geometry"] for m in e.get("members", [])
+                                                              if m.get("role") == "outer" and m.get("geometry")]
+            for ring in rings:
+                pts = [to_xz(origin, g["lat"], g["lon"]) for g in ring]
+                if tags.get("natural") == "coastline":
+                    for a, b in zip(pts, pts[1:]):
+                        for gx in range(math.floor(min(a[0], b[0]) / cell), math.floor(max(a[0], b[0]) / cell) + 1):
+                            for gz in range(math.floor(min(a[1], b[1]) / cell), math.floor(max(a[1], b[1]) / cell) + 1):
+                                self.coast.setdefault((gx, gz), []).append((a, b))
+                elif len(pts) >= 4 and pts[0] == pts[-1]:
+                    xs, zs = [p[0] for p in pts], [p[1] for p in pts]
+                    self.polygons.append(((min(xs), max(xs), min(zs), max(zs)), pts))
+
+    def __call__(self, x, z):
+        for (x0, x1, z0, z1), pts in self.polygons:
+            if x0 <= x <= x1 and z0 <= z <= z1 and _point_in_ring(x, z, pts):
+                return True
+        best = None
+        gx, gz = math.floor(x / self.cell), math.floor(z / self.cell)
+        for r in range(0, 9):  # rings of cells out to 400 m
+            for dx in range(-r, r + 1):
+                for dz in range(-r, r + 1):
+                    if max(abs(dx), abs(dz)) != r:
+                        continue
+                    for a, b in self.coast.get((gx + dx, gz + dz), ()):
+                        ex, ez = b[0] - a[0], b[1] - a[1]
+                        t = max(0.0, min(1.0, ((x - a[0]) * ex + (z - a[1]) * ez) / ((ex * ex + ez * ez) or 1e-9)))
+                        d = math.hypot(x - a[0] - t * ex, z - a[1] - t * ez)
+                        if best is None or d < best[0]:
+                            best = (d, ex * (z - a[1]) - ez * (x - a[0]))
+            if best is not None and best[0] < (r - 1) * self.cell:
+                break
+        # x east, z south: with north up, a point on the right of a segment has a positive cross in this frame
+        return best is not None and best[1] > 0
+
+
+def _point_in_ring(x, z, pts):
+    inside = False
+    for (ax, az), (bx, bz) in zip(pts, pts[1:]):
+        if (az > z) != (bz > z) and x < ax + (z - az) * (bx - ax) / (bz - az):
+            inside = not inside
+    return inside
+
+
+def water_edge(route, water, s, side, reach_m=150.0, step_m=0.5):
+    """Lateral distance from the centreline to the first OSM water along the left/right normal, or None."""
+    import route_model as rm
+    p = rm.sample(route, s)
+    lx, lz = rm.left_vector(p["heading_deg"])
+    sign = 1 if side == "left" else -1
+    u = p["width_left_m" if side == "left" else "width_right_m"]
+    while u <= reach_m:
+        if water(p["x"] + sign * lx * u, p["z"] + sign * lz * u):
+            return u
+        u += step_m
+    return None
+
+
+def shoreline(pkg, water_path, from_s, to_s, out_path, chunk_m=2.0, bank_width_m=6.0):
+    """Replace every coast profile inside [from_s, to_s] (both sides) with OSM-measured 2 m chunks (median of 3).
+    A chunk with no OSM water within reach is land: no profile. Profiles outside the span are kept byte-identical
+    in value (straddling ones are clipped at the span ends), so terrain outside it does not change."""
+    route = json.load(open(os.path.join(pkg, "route", "route.json")))
+    man = json.load(open(os.path.join(pkg, "manifest.json")))
+    water = Water(water_path, route["coordinate_system"]["origin"])
+    stations = [from_s + k * chunk_m for k in range(int(round((to_s - from_s) / chunk_m)))]
+    out, replaced, report = [], [], {"span": [from_s, to_s], "measured": {}}
+    for prof in man["visual_terrain"]["coast_profiles"]:
+        if prof["to_s"] <= from_s or prof["from_s"] >= to_s:
+            out.append(prof)
+            continue
+        replaced.append(prof)
+        if prof["from_s"] < from_s:
+            out.append(dict(prof, to_s=from_s))
+        if prof["to_s"] > to_s:
+            out.append(dict(prof, from_s=to_s))
+    template = replaced[0] if replaced else {"water_level_m": 0, "sand_width_m": 2}
+    for side in ("left", "right"):
+        edges = [water_edge(route, water, s + chunk_m / 2, side) for s in stations]
+        report["measured"][side] = edges
+        for i, a in enumerate(stations):
+            window = [v for v in edges[max(0, i - 1):i + 2] if v is not None]
+            if edges[i] is None or not window:
+                continue  # OSM: land on this side
+            edge = sorted(window)[len(window) // 2]
+            width = rm_width(route, a, side)
+            out.append({"from_s": round(a, 4), "to_s": round(min(a + chunk_m, to_s), 4), "side": side, "water_edge_m": round(edge, 2),
+                        "water_level_m": template.get("water_level_m", 0), "bank_width_m": round(min(bank_width_m, max(0.5, edge - width)), 2),
+                        "sand_width_m": template.get("sand_width_m", 2),
+                        "source": {"kind": "osm", "estimated": False, "confidence": 0.75,
+                                   "ref": "OpenStreetMap natural=coastline / natural=water, ODbL 1.0",
+                                   "note": "plan-view water edge measured along the route normal (0.5 m steps, median of 3 x 2 m); bank shape is the estimated profile model"}})
+    out.sort(key=lambda p: (p["from_s"], p["side"]))
+    json.dump({"coast_profiles": out, "report": dict(report, replaced_profiles=replaced)}, open(out_path, "w"), indent=1)
+    for side in ("left", "right"):
+        v = [e for e in report["measured"][side] if e is not None]
+        print(side, f"{len(v)}/{len(stations)} chunks with water", (min(v), sorted(v)[len(v) // 2], max(v)) if v else "")
+
+
+def rm_width(route, s, side):
+    import route_model as rm
+    return rm.sample(route, s)["width_left_m" if side == "left" else "width_right_m"]
+
+
 if __name__ == "__main__":
     command, pkg, osm = sys.argv[1:4]
     if command == "fetch":
         fetch(pkg, osm, *(float(a) for a in sys.argv[4:5]))
+    elif command == "fetch-water":
+        fetch(pkg, osm, 400.0, water=True)
+    elif command == "shoreline":
+        shoreline(pkg, osm, float(sys.argv[4]), float(sys.argv[5]), sys.argv[6])
     elif command == "fetch-skyline":
         fetch(pkg, osm, SKYLINE_REACH_M, skyline=True)
     elif command == "buildings":

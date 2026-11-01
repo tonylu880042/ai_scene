@@ -555,6 +555,42 @@ def apply_local_overrides(pkg, config_path):
 
 
 # ------------------------------------------------------------------ validation
+def resettle(pkg, tile_ids, water_level=0.0):
+    """After a P1 change in tile_ids: re-ground every instance on the shipped terrain (same query the validator
+    uses); drop instances that are now over water (terrain below water_level + 0.1 m) or off the terrain.
+    Positions in x/z, rotation, scale and every per-instance array stay aligned. Returns (moved, dropped)."""
+    route, man, sem = _load(pkg)
+    space = Space(pkg, route, man, sem)
+    moved = dropped = 0
+    for t in man["tiles"]:
+        if t["id"] not in tile_ids or "vegetation" not in t["files"]:
+            continue
+        path = os.path.join(pkg, t["files"]["vegetation"])
+        doc = json.load(open(path))
+        for g in doc["groups"]:
+            n, keep = g["count"], []
+            for k in range(n):
+                s, u = g["s"][k], g["lateral_offset_m"][k]
+                ex, ez = space.world_xz(s, u)
+                gy = space.ground(s, u, ex, ez)
+                if gy is None or gy < water_level + 0.1:
+                    continue
+                if abs(g["data"][10 * k + 1] - gy) > 1e-4:
+                    g["data"][10 * k + 1] = round(gy, 4)
+                    moved += 1
+                keep.append(k)
+            dropped += n - len(keep)
+            for key, values in g.items():
+                if key != "data" and isinstance(values, list) and len(values) == n:
+                    g[key] = [values[i] for i in keep]
+            g["data"] = [v for i in keep for v in g["data"][10 * i:10 * i + 10]]
+            g["count"] = len(keep)
+        doc["groups"] = [g for g in doc["groups"] if g["count"]]
+        with open(path, "w") as f:
+            json.dump(doc, f)
+    return moved, dropped
+
+
 def validate(pkg):
     """(errors, report). Reads only files; writes vegetation/validation.json."""
     route, man, sem = _load(pkg)
@@ -671,6 +707,10 @@ def main(argv):
               f"density realised/target {rep['density_ratio']}")
         print("VALID" if not errs else f"INVALID ({len(errs)} problems)")
         return 0 if not errs else 1
+    if len(args) == 3 and args[0] == "resettle":
+        moved, dropped = resettle(args[1], set(args[2].split(",")), float(opts.get("water-level", 0.0)))
+        print(f"{args[1]}: re-grounded {moved} instances, dropped {dropped} now over water / off terrain")
+        return 0
     if len(args) == 3 and args[0] == "apply-local-overrides":
         changed = apply_local_overrides(args[1], args[2])
         print(f"{args[1]}: applied local vegetation overrides to {changed} instances")

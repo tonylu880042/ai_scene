@@ -787,6 +787,51 @@ def _write(pkg, route, man, objs, protos, skipped):
         json.dump(man, f, indent=1)
 
 
+def resettle(pkg, tile_ids, water_level=0.0):
+    """After a P1 change in tile_ids: re-ground low / medium point objects on their lowest footprint corner (the
+    legacy base rule); drop those now over water (< water_level + 0.1 m) or off the terrain. High-importance
+    objects are never moved or dropped. Returns (moved, dropped ids)."""
+    route, man, sem = _load(pkg)
+    site = Site(pkg, route, man, sem)
+    path = os.path.join(pkg, "structures", "structures.json")
+    data = json.load(open(path))
+    tiles = [t for t in man["tiles"] if t["id"] in tile_ids]
+    moved, gone, new_y = 0, set(), {}
+    for o in data["objects"]:
+        if o["placement"] != "point" or o["importance"] == "high" or not any(t["from_s"] <= o["s"] <= t["to_s"] for t in tiles):
+            continue
+        b = o["footprints_route"][0]
+        hs = [site.ground(s, u) for s in (b[0], b[1]) for u in (b[2], b[3])]
+        if None in hs or min(hs) < water_level + 0.1:
+            gone.add(o["object_id"])
+        elif abs(o["transform"]["position"][1] - min(hs)) > 1e-4:
+            o["transform"]["position"][1] = new_y[o["object_id"]] = round(min(hs), 4)
+            moved += 1
+    data["objects"] = [o for o in data["objects"] if o["object_id"] not in gone]
+    json.dump(data, open(path, "w"), indent=1)
+    for t in man["tiles"]:
+        tpath = os.path.join(pkg, t["files"]["structures"])
+        td = json.load(open(tpath))
+        for g in td["groups"]:
+            keep = [i for i, oid in enumerate(g["object_id"]) if oid not in gone]
+            dropped = g["count"] - len(keep)
+            if dropped and t.get("structures", {}).get(g["semantic_type"]):
+                t["structures"][g["semantic_type"]] -= dropped
+                if t["structures"][g["semantic_type"]] <= 0:
+                    del t["structures"][g["semantic_type"]]
+            for i in keep:
+                if g["object_id"][i] in new_y:
+                    g["data"][10 * i + 1] = new_y[g["object_id"][i]]
+            g["data"] = [v for i in keep for v in g["data"][10 * i:10 * i + 10]]
+            g["object_id"] = [g["object_id"][i] for i in keep]
+            g["count"] = len(keep)
+        td["groups"] = [g for g in td["groups"] if g["count"]]
+        json.dump(td, open(tpath, "w"))
+    with open(os.path.join(pkg, "manifest.json"), "w") as f:
+        json.dump(man, f, indent=1)
+    return moved, sorted(gone)
+
+
 # ------------------------------------------------------------------ validation
 def validate(pkg):
     """(errors, report). Rechecks every object from the files; writes structures/validation.json."""
@@ -1102,6 +1147,10 @@ def main(argv):
         print(f"{args[1]}: {len(objs)} objects, {len(skipped)} skipped hints")
         for item in skipped:
             print(f"  skipped {item['hint'].get('name', item['hint']['prototype'])}: {item['reason']}")
+        args = ["validate", args[1]]
+    if len(args) == 3 and args[0] == "resettle":
+        moved, gone = resettle(args[1], set(args[2].split(",")), float(opts.get("water-level", 0.0)))
+        print(f"{args[1]}: re-grounded {moved} point objects, dropped {gone} (now over water / off terrain)")
         args = ["validate", args[1]]
     if len(args) == 2 and args[0] == "replace-point-objects":
         if "hints" not in opts:

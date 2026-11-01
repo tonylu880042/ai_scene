@@ -39,6 +39,21 @@ class OsmContextTest(unittest.TestCase):
             self.assertEqual(oc.building_height(tags, towers, area)[1], "estimated from building class")
         self.assertEqual(oc.building_height({"building": "yes"}, towers[:2], 400.0)[1], "estimated from building class")
 
+    def test_water_sides(self):
+        origin = {"lat": 0.0, "lon": 0.0}
+        to_ll = lambda x, z: dict(zip(("lat", "lon"), oc.to_latlon(origin, x, z)))
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "water.json")
+            # Coastline running north (-z) along x = 0: OSM keeps land on the left (west), water on the right (east).
+            coast = {"type": "way", "tags": {"natural": "coastline"}, "geometry": [to_ll(0, 100), to_ll(0, -100)]}
+            pond = {"type": "way", "tags": {"natural": "water"},
+                    "geometry": [to_ll(-60, -5), to_ll(-50, -5), to_ll(-50, 5), to_ll(-60, 5), to_ll(-60, -5)]}
+            json.dump({"elements": [coast, pond]}, open(path, "w"))
+            water = oc.Water(path, origin)
+            self.assertTrue(water(20, 0))
+            self.assertFalse(water(-20, 0))
+            self.assertTrue(water(-55, 0))   # inside the pond, on the land side of the coast
+
     def test_vegetation_removal_keeps_arrays_aligned(self):
         with tempfile.TemporaryDirectory() as pkg:
             os.makedirs(os.path.join(pkg, "tiles", "00"))

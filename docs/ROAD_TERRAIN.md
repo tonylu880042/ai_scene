@@ -318,3 +318,20 @@ chart selector does not filter interior IDW samples. A read-only R47 audit found
 vertices whose four samples span at least 5 m in station, with maximum sample-height spread 0.941 m. This
 indicates an unresolved branch-attribution risk, not proof that each resulting estimated height is wrong;
 see `export/gold_coast/review/shore_idw_r52_sol/parent_review.md`.
+
+### OSM-measured shoreline spans (partial P1 rebuild)
+
+`python3 tools/osm_context.py fetch-water <package> <water.json>` caches OSM `natural=coastline` / `natural=water`.
+`python3 tools/osm_context.py shoreline <package> <water.json> <from_s> <to_s> <out.json>` replaces every coast
+profile inside the span, on both sides, with 2 m chunks whose `water_edge_m` is the first OSM water along the route
+normal (0.5 m steps, median of 3); chunks with no water within 150 m become land (no profile). Profiles outside the
+span keep their values (straddling ones are clipped). The bank / underwater shape stays the estimated profile model.
+OSM coastlines are generalised: near video-evidenced seawalls (e.g. S02, 2.4 m) they can be several metres off, so
+use a span only where OSM is corroborated (here: OSM buildings standing on estimated P1 water).
+
+Rebuild procedure (Gold Coast r49): run `road_terrain.py build --tile-m=250` with the package's own
+`visual_terrain` as a control and confirm the target tiles reproduce byte-for-byte; rebuild with the new profiles,
+confirm only the target tiles' `terrain.glb` changed and every `road.glb` is identical, transplant those tiles, then
+`python3 tools/vegetation.py resettle <package> <tiles>` and `python3 tools/structures.py resettle <package> <tiles>`
+re-ground P3 / low-medium P4 on the new terrain and drop what now stands on water (high-importance objects are never
+moved). Provenance: `manifest.osm_shoreline_partial_rebuild`. Evidence: `export/gold_coast/review/osm_shoreline_r49/`.
