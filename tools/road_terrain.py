@@ -539,13 +539,16 @@ def coastal_height(height, road_y, width, u, profile):
     return height * (1 - blend) + (profile.get("water_level_m", 0.0) - 0.8) * blend
 
 
-def coastal_sand(profile, u):
-    """Sand band at the water edge(s) of a coast profile (both banks of an optional water band)."""
+def coastal_sand(profile, u, y=None):
+    """Sand from the near water edge outward (and the bed of an optional water band). Inside a band only where the
+    surface is near the water (y < level + 0.6 m) and never on its far bank: band faces span coarse columns and can
+    lie under another tile's laterally overlapping terrain, where land-height sand would show through as a strip."""
     if not profile:
         return False
-    sand = profile.get("sand_width_m", 2.0)
     far = profile.get("water_far_m")
-    return abs(u) > profile["water_edge_m"] - sand and (far is None or abs(u) < far + sand)
+    if far is not None and y is not None and y > profile.get("water_level_m", 0.0) + 0.6:
+        return False
+    return abs(u) > profile["water_edge_m"] - profile.get("sand_width_m", 2.0) and (far is None or abs(u) < far)
 
 
 def _terrain_grid_with_coastal_anchors(smp, rows, D, reaches, tp):
@@ -1192,7 +1195,7 @@ def apply_coastal_ownership(pkg,tiles,smp,tp,corridors):
         for k in range(0,len(updated),3):
             tri=updated[k:k+3];sv=sum(ss[j] for j in tri)/3;u=sum(uu[j] for j in tri)/3
             profile=coast_profile(profiles_all,sv,"left" if u>0 else "right")
-            (sand if coastal_sand(profile,u) else ground).extend(tri)
+            (sand if coastal_sand(profile,u,sum(world[j][1] for j in tri)/3) else ground).extend(tri)
         prims=[]
         if ground:prims.append({"material":TERRAIN_MATERIAL,"indices":ground})
         if sand:prims.append({"material":{"name":"shore_sand","color":[0.68,0.59,0.39],"roughness":0.95},"indices":sand})
@@ -1318,7 +1321,7 @@ def build(pkg, tile_m=500.0, terrain=None):
             tri = tidx[k:k+3]
             sv, u = sum(ts[j] for j in tri)/3, sum(tu[j] for j in tri)/3
             profile = coast_profile(tp.get("coast_profiles", []), sv, "left" if u > 0 else "right")
-            target = sand if (not exact_sand and coastal_sand(profile, u)) else ground
+            target = sand if (not exact_sand and coastal_sand(profile, u, sum(tpos[j][1] for j in tri) / 3)) else ground
             target.extend(tri)
         terrain_prims = [{"material": TERRAIN_MATERIAL, "indices": ground}] if ground else []
         if sand:

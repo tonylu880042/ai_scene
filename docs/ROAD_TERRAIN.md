@@ -337,9 +337,13 @@ re-ground P3 / low-medium P4 on the new terrain and drop what now stands on wate
 moved). Provenance: `manifest.osm_shoreline_partial_rebuild`. Evidence: `export/gold_coast/review/osm_shoreline_r49/`.
 
 Optional `water_far_m` on a coast profile makes it a **water band** (creek / channel): water from `water_edge_m` to
-`water_far_m`, land rising again beyond it over `bank_width_m`, sand on both banks. Without it a profile is unchanged.
+`water_far_m`, land rising again beyond it over `bank_width_m`; inside a band, sand only on the near bank and bed and
+only below water level + 0.6 m (band faces span coarse columns and can lie under another tile's laterally
+overlapping terrain, where land-height sand would show through as a strip). Without it a profile is unchanged.
 `shoreline` sets it from the first OSM water interval and smooths near/far edges over 5 chunks (10 m) so the waterline
-does not flip between terrain columns; banks still cannot be finer than the 15–25 m column spacing at 20–60 m.
+does not flip between terrain columns; banks still cannot be finer than the 15–25 m column spacing at 20–60 m. A band
+also ends 3 m before another traversal of the route (P1 pins terrain to that road's edge, which would lift water-bed
+faces to path height), and a window is open water (no far edge) only when most of its chunks reach 150 m.
 Where an original two-sided (bridge) profile covers a route above 5 m (deck and ramps), the estimated open-water
 profile is kept: terrain follows the deck height, so a narrow measured band would form a trench under the bridge.
 `coastal_exact_sand_boundary` rejects water bands.

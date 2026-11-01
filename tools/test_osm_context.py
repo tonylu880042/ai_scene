@@ -63,7 +63,9 @@ class OsmContextTest(unittest.TestCase):
         self.assertAlmostEqual(rt.coastal_height(3.0, 3.0, 1.6, 20.0, band), -0.8)  # inside the band: water bed
         self.assertAlmostEqual(rt.coastal_height(3.0, 3.0, 1.6, 60.0, band), 3.0)   # land again beyond it
         self.assertAlmostEqual(rt.coastal_height(3.0, 3.0, 1.6, 60.0, coast), -0.8)
-        self.assertTrue(rt.coastal_sand(band, 29.0) and not rt.coastal_sand(band, 40.0) and rt.coastal_sand(coast, 40.0))
+        self.assertTrue(rt.coastal_sand(band, 29.0) and not rt.coastal_sand(band, 31.0) and rt.coastal_sand(coast, 40.0))
+        self.assertFalse(rt.coastal_sand(band, 29.0, y=1.5))     # land-height face inside a band stays ground
+        self.assertTrue(rt.coastal_sand(coast, 40.0, y=1.5))     # plain coast profiles ignore height (unchanged)
 
     def test_vegetation_removal_keeps_arrays_aligned(self):
         with tempfile.TemporaryDirectory() as pkg:

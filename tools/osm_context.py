@@ -109,6 +109,17 @@ class RouteIndex:
         d, _, half = self.nearest(x, z, 1)
         return d - half
 
+    def foreign_clearance(self, x, z, s, min_ds=60.0):
+        """Distance to the road edge of another traversal (route samples more than min_ds away along s)."""
+        best = math.inf
+        gx, gz = math.floor(x / self.cell), math.floor(z / self.cell)
+        for dx in (-1, 0, 1):
+            for dz in (-1, 0, 1):
+                for px, pz, ps, half in self.grid.get((gx + dx, gz + dz), ()):
+                    if abs(ps - s) > min_ds:
+                        best = min(best, math.hypot(x - px, z - pz) - half)
+        return best
+
 
 def resample(points, step):
     out = [points[0]]
@@ -586,16 +597,20 @@ def water_edge(route, water, s, side, reach_m=150.0, step_m=0.5):
     return None
 
 
-def water_band(route, water, s, side, reach_m=150.0, step_m=0.5):
+def water_band(route, water, s, side, reach_m=150.0, step_m=0.5, index=None, foreign_clearance_m=3.0):
     """(near, far) of the first OSM water interval along the left/right normal; far None if it reaches reach_m;
-    None if no water within reach."""
+    None if no water within reach. With a RouteIndex, the interval also ends foreign_clearance_m before another
+    traversal of the route (P1 pins terrain to that road's edge, so water may not run into it)."""
     import route_model as rm
     p = rm.sample(route, s)
     lx, lz = rm.left_vector(p["heading_deg"])
     sign = 1 if side == "left" else -1
     u, near = p["width_left_m" if side == "left" else "width_right_m"], None
     while u <= reach_m:
-        wet = water(p["x"] + sign * lx * u, p["z"] + sign * lz * u)
+        x, z = p["x"] + sign * lx * u, p["z"] + sign * lz * u
+        if index is not None and index.foreign_clearance(x, z, s) < foreign_clearance_m:
+            return (near, max(u - foreign_clearance_m, near + step_m)) if near is not None else None
+        wet = water(x, z)
         if wet and near is None:
             near = u
         elif not wet and near is not None:
@@ -620,6 +635,7 @@ def shoreline(pkg, water_path, from_s, to_s, out_path, chunk_m=2.0, bank_width_m
     route = json.load(open(os.path.join(pkg, "route", "route.json")))
     man = json.load(open(os.path.join(pkg, "manifest.json")))
     water = Water(water_path, route["coordinate_system"]["origin"])
+    index = RouteIndex(route)
     stations = [from_s + k * chunk_m for k in range(int(round((to_s - from_s) / chunk_m)))]
     out, replaced, report = [], [], {"span": [from_s, to_s], "measured": {}}
     for prof in man["visual_terrain"]["coast_profiles"]:
@@ -642,7 +658,7 @@ def shoreline(pkg, water_path, from_s, to_s, out_path, chunk_m=2.0, bank_width_m
             out += [dict(p, from_s=round(max(a, p["from_s"]), 4), to_s=round(min(b, p["to_s"]), 4))
                     for p in replaced if p["from_s"] < b and p["to_s"] > a]
     for side in ("left", "right"):
-        bands = [water_band(route, water, s + chunk_m / 2, side) for s in stations]
+        bands = [water_band(route, water, s + chunk_m / 2, side, index=index) for s in stations]
         report["measured"][side] = bands
         for i, a in enumerate(stations):
             window = [v for v in bands[max(0, i - 2):i + 3] if v is not None]
@@ -650,7 +666,9 @@ def shoreline(pkg, water_path, from_s, to_s, out_path, chunk_m=2.0, bank_width_m
                 continue  # OSM: land on this side
             near = _median([v[0] for v in window])
             fars = [v[1] for v in window]
-            far = None if any(f is None for f in fars) else _median(fars)
+            # open water only when most of the window agrees: one far-reaching chunk must not flood the band out to
+            # another traversal of the route (its road edge would pin water-bed terrain up to path height)
+            far = None if sum(f is None for f in fars) * 2 > len(fars) else _median([f for f in fars if f is not None])
             width = rm_width(route, a, side)
             prof = {"from_s": round(a, 4), "to_s": round(min(a + chunk_m, to_s), 4), "side": side, "water_edge_m": round(near, 2),
                     "water_level_m": template.get("water_level_m", 0), "bank_width_m": round(min(bank_width_m, max(0.5, near - width)), 2),
