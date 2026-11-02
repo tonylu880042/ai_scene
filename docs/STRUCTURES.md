@@ -28,16 +28,59 @@ python3 tools/structures.py validate export/packages/<candidate>
 `--only` writes just the named structure mesh and updates that prototype's asset reference; it does not rebuild other
 prototype meshes or vegetation. It is intended for one new procedural structure prototype after a focused P4 append.
 
-OSM buildings (`python3 tools/osm_context.py buildings <package> <osm.json> [skyline.json]`): footprints within
-200 m of the route are extruded into `tiles/NN/buildings.glb` (materials `facade_osm`, `roof_osm`, `roof_tile_osm`;
-UV in metres, COLOR_0 tint). Height: OSM `height`, else `building:levels` × 3.1 m, else the median of measured OSM
-neighbours within 120 m (only for plain footprints >= 150 m², capped at 6 levels), else a per-class estimate. Small
-houses (<= 2 levels, < 400 m²) get an estimated pyramid hip roof. Base = lowest P1 terrain under the footprint − 0.3 m;
-footprints whose P1 surface is all below water level are dropped (P1 outranks P4; the list is kept as shoreline
-evidence), as are footprints within 1 m of the P0 road. Low, video-estimated `coastal_apartment_*` objects with an OSM
-footprint within 60 m are removed as superseded, and P3 instances inside footprints are removed. With a skyline file
-(`fetch-skyline`), measured towers >= 25 m at 200–1500 m go to `environment/skyline_buildings.glb` (P5). Stats and
-provenance: `manifest.layers.P4_structures.osm_buildings`, `manifest.layers.P5_distant.skyline_buildings`.
+OSM buildings (`python3 tools/osm_context.py buildings <package> <osm.json> [skyline.json]`) use
+OSM way and multipolygon footprints, with stitched outer/inner rings and `building:part` intervals.
+`fetch` and `fetch-skyline` request ways/relations for both `building` and `building:part` with
+`out body geom` (not `out tags`, which omits relation members); complete queries are cached and
+recorded in `manifest.layers.P4_structures.osm_buildings.source.inputs` with input SHA-256.
+
+P4 within 200 m writes `tiles/NN/buildings.glb`; P5 at 200–1500 m writes
+`environment/skyline_buildings.glb`. A measured tower height/level count >=25 m selects its complex,
+including lower podium parts. Height precedence remains height tag → levels ×3.1 m +1 m → bounded
+neighbour median → class estimate. Levels are OSM observations; their metre conversion is estimated.
+`min_height` is absolute above ground; `building:min_level` uses the same estimated 3.1 m floor pitch.
+Parts are associated with the smallest containing outline. Where a high-importance structure declares the exact same OSM way ID, that structure represents the footprint and the duplicate OSM mesh is omitted; the OSM record and provenance remain in the package. Matching never uses proximity alone. Ground-level parts cut the parent volume;
+elevated parts cap the parent podium at their minimum height and cut its roof. Missing segmentation
+is estimated and retains the original outline height/tags in provenance.
+
+Roofs honor `roof:shape=flat/gabled/hipped/skillion/pyramidal`. Untagged small houses get a ridge hip
+along the minimum bounding rectangle long axis only for a convex footprint with area ratio >0.85.
+Concave/irregular untagged footprints use the conservative flat-roof/parapet fallback (no rectangle
+approximation and no centroid pyramid). Pitched roofs are clipped to the actual footprint and have
+0.5 m parallel-edge eaves. Rise is `roof:height` or an estimated 25% short span, capped at 3 m. Flat
+roofs have 0.9 m parapets. Roof/parapet rise fits within the declared total height, except a parent
+outline's derived podium parapet may project above its segment height while staying below its
+original complete-building envelope. Open shelters (`roof`, `carport`, `shelter`, `canopy`, `gazebo`,
+`pergola` or amenity=shelter) use a 0.18 m roof slab and 0.18 m columns. Apartments/hotels with >=4
+levels get estimated 0.6 m balcony bands. All construction dimensions are estimates.
+
+Foundations use the lowest shipped P1 surface under the footprint minus 0.3 m; an explicit plinth
+rises to the highest ground datum, where floors start. Support probes include clipped P1 triangles
+and interior terrain vertices, not only footprint corners. P5 ground outside P1 uses nearest-route
+elevation, explicitly estimated. Existing P0 clearance and P1 water rejection stay in force; every
+exclusion has an OSM ID and reason. This command preserves P3 and existing structure files.
+
+`structures/osm_buildings.json` is the engine-neutral per-building record. It contains `osm_id`
+(`way/<id>` or `relation/<id>`), `outer_index`, class, levels/source, total height/source, min height,
+roof plan, facade style, linear wall/roof colours and their sources, original tags, footprint/inner
+rings, parent/part IDs, support heights, mesh file and vertex ranges. A derived podium additionally
+has `segment_height_m` and `outline_height_m`. The same facts are recorded in manifest `osm_buildings`
+and GLB mesh extras, so other runtimes need no Godot shader to recover them.
+
+Metre UV resets u=0 on **each wall segment**; v=0 is the maximum ground at that segment's endpoints,
+not the sunken foundation. Windows are centered in evenly spaced bays; walls <2.5 m and garage/shed/
+shelter classes have none. Residential and commercial ground floors use one estimated entrance per building segment, on the eligible outer wall nearest the route (otherwise the longest eligible outer wall); commercial ground floors also have shop glazing. Openings and balconies are baked geometry. Estimated facade
+styles and fixed class palettes yield to `building:colour` / `roof:colour` (sRGB tags converted to linear).
+
+CC0 PBR sets are declared in `data/<scene>_library.json` under `_materials`; copy them with
+`python3 tools/build_package_assets.py <package> <library.json> --materials-only` without rebuilding
+P3 assets. `assets/materials/osm_buildings.json` records maps, metre repeat scale, attribution and
+hashes; `CREDITS.md` records licences. GLB materials `osm_v2_facade/roof/trim` use standard glTF PBR,
+normal and roughness textures plus `KHR_texture_transform`. Godot only adapts those shipped values;
+legacy package materials retain their previous adapter. No private video pixels are used.
+
+`python3 tools/osm_context.py validate-buildings <package>` checks records, UV origins, opening
+exclusions and PBR dependencies; the whole-package validator also runs this optional check.
 
 ## 1. Order and inputs
 

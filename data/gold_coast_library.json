@@ -1,0 +1,27 @@
+{
+ "deciduous_broadleaf": {
+  "file": "assets/models/island_tree_02/island_tree_02_1k.gltf",
+  "scale": 3.6,
+  "attribution": "Island Tree 02 \u2014 Poly Haven, CC0: https://polyhaven.com/a/island_tree_02"
+ },
+ "_materials": {
+  "osm_facade": {
+   "license": "CC0",
+   "url": "https://polyhaven.com/a/painted_plaster_wall",
+   "attribution": "painted_plaster_wall \u2014 Amal Kumar / Poly Haven",
+   "repeat_m": 2,
+   "diffuse": "assets/textures/painted_plaster_wall_diff.jpg",
+   "normal": "assets/textures/painted_plaster_wall_nor.jpg",
+   "roughness": "assets/textures/painted_plaster_wall_rough.jpg"
+  },
+  "osm_roof": {
+   "license": "CC0",
+   "url": "https://polyhaven.com/a/clay_roof_tiles",
+   "attribution": "clay_roof_tiles \u2014 Amal Kumar / Poly Haven",
+   "repeat_m": 4,
+   "diffuse": "assets/textures/clay_roof_tiles_diff.jpg",
+   "normal": "assets/textures/clay_roof_tiles_nor.jpg",
+   "roughness": "assets/textures/clay_roof_tiles_rough.jpg"
+  }
+ }
+}

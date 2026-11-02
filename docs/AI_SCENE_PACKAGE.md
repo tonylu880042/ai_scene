@@ -26,6 +26,7 @@ conventions as contract data.
   structures/                P4
     structures.json          buildings, landmarks, route furniture (docs/STRUCTURES.md)
     prototypes.json          reusable + unique landmark prototypes
+    osm_buildings.json       OSM footprint/parts + per-building geometry, appearance and provenance (optional)
   environment/               P5 + P6 (docs/ENVIRONMENT.md)
     environment.json         distant terrain / water / skyline + sun, sky, ambient, fog, clouds, weather, time of day
     distant_terrain.glb      real DEM backdrop with orthophoto
@@ -41,6 +42,7 @@ conventions as contract data.
   assets/
     prototypes.glb           every repeated mesh once (node name = prototype id)
     textures/                only if not embedded in .glb
+    materials/               CC0 PBR maps + osm_buildings.json material catalog (optional)
   licences.json              attribution / licence per external source and asset
   validation.json            last validator report (written by the validator, not by hand)
 ```

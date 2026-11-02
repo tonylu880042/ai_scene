@@ -98,6 +98,7 @@ func _ready() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--package="): package_dir = arg.trim_prefix("--package=")
 		elif arg.begins_with("--start-s="): progress = float(arg.trim_prefix("--start-s="))
+		elif arg.begins_with("--speed-kmh="): speed = float(arg.trim_prefix("--speed-kmh=")) / 3.6
 		elif arg.begins_with("--capture-dir="): capture_dir = arg.trim_prefix("--capture-dir=")
 		elif arg.begins_with("--views="): views_file = arg.trim_prefix("--views=")
 		elif arg.begins_with("--surface-visual-overrides="): surface_visual_overrides_file = arg.trim_prefix("--surface-visual-overrides=")
@@ -667,10 +668,26 @@ func _style_meshes(node: Node, tile_id := "", layer := "", tile_from_s := 0.0, t
 			var original: Material = node.mesh.surface_get_material(i)
 			if original == null: continue
 			var key := original.resource_name
+			if key in ["osm_v2_facade", "osm_v2_roof", "osm_v2_trim"] and original is StandardMaterial3D:
+				# The package owns geometry, colours, openings and CC0 PBR maps. This
+				# adapter only translates imported glTF material values into uniforms.
+				var authored := original as StandardMaterial3D
+				var adapted := ShaderMaterial.new()
+				var pbr_shader := Shader.new()
+				pbr_shader.code = ROOF_TILE_SHADER if key == "osm_v2_roof" else FACADE_SHADER
+				adapted.shader = pbr_shader
+				adapted.set_shader_parameter("tint", authored.albedo_color)
+				adapted.set_shader_parameter("uv_scale", Vector2(authored.uv1_scale.x, authored.uv1_scale.y))
+				if authored.albedo_texture != null: adapted.set_shader_parameter("diffuse", authored.albedo_texture)
+				if authored.normal_texture != null: adapted.set_shader_parameter("normal_map", authored.normal_texture)
+				if authored.roughness_texture != null: adapted.set_shader_parameter("roughness_map", authored.roughness_texture)
+				adapted.set_shader_parameter("normal_depth", authored.normal_scale if authored.normal_enabled else 0.0)
+				node.set_surface_override_material(i, adapted)
+				continue
 			if key == "facade_osm" or key == "roof_tile_osm":
 				if not material_cache.has(key):
 					var building_shader := Shader.new()
-					building_shader.code = FACADE_SHADER if key == "facade_osm" else ROOF_TILE_SHADER
+					building_shader.code = LEGACY_FACADE_SHADER if key == "facade_osm" else LEGACY_ROOF_TILE_SHADER
 					var building_material := ShaderMaterial.new()
 					building_material.shader = building_shader
 					var maps := _surface_library_textures(key)
@@ -891,10 +908,28 @@ vec3 top_n=normalize(vec3(t.x+n.x,abs(t.z)*n.y,t.y+n.z));
 NORMAL=normalize((VIEW_MATRIX*vec4(normalize(mix(n,top_n,w.y)),0.0)).xyz);
 }"""
 
+# P4/P5 v2: glTF-authored openings, floor lines and material maps. No inferred windows here.
+const FACADE_SHADER := """shader_type spatial;
+uniform sampler2D diffuse : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D normal_map : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D roughness_map : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform vec4 tint : source_color = vec4(1.0);
+uniform vec2 uv_scale = vec2(1.0);
+uniform float normal_depth = 1.0;
+void fragment(){
+vec2 tex_uv = UV * uv_scale;
+ALBEDO = COLOR.rgb * tint.rgb * texture(diffuse, tex_uv).rgb;
+NORMAL_MAP = texture(normal_map, tex_uv).rgb;
+NORMAL_MAP_DEPTH = normal_depth;
+ROUGHNESS = texture(roughness_map, tex_uv).g;
+}
+"""
+const ROOF_TILE_SHADER := FACADE_SHADER
+
 # P4 OSM buildings: UV is metres (u along the facade, v up), COLOR_0 the wall tint. Window bays every 3.2 m
 # on 3.1 m floors with a slab line per floor; glass varies per window. Adapter-only appearance.
 # Plaster luminance detail (no new hue), darker base course, faint rain streaks under each window column.
-const FACADE_SHADER := """shader_type spatial;
+const LEGACY_FACADE_SHADER := """shader_type spatial;
 uniform sampler2D detail : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform float detail_mean = 1.0;
 uniform float detail_per_m = 0.4;
@@ -912,7 +947,7 @@ ALBEDO=mix(mix(wall,glass,window),wall*.8,slab);
 ROUGHNESS=mix(.85,.12,window);METALLIC=mix(0.,.25,window);
 }"""
 
-const ROOF_TILE_SHADER := """shader_type spatial;
+const LEGACY_ROOF_TILE_SHADER := """shader_type spatial;
 uniform sampler2D detail : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform float detail_mean = 1.0;
 uniform float detail_per_m = 0.5;

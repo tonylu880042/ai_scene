@@ -2440,6 +2440,16 @@ def _classify_coastal_sand_exact(mesh, profiles, tile_from_s, tile_to_s):
     return updated,stats
 
 
+def _triangulate_serializable_polygon(poly, translation):
+    """Discard only polygons with fewer than three distinct float32 XZ vertices."""
+    def f32(value):
+        return struct.unpack('<f', struct.pack('<f', float(value)))[0]
+    packed={(f32(p[0]-translation[0]), f32(p[1]-translation[2])) for p in poly}
+    if len(packed)<3:
+        return [], True
+    return _triangulate_xz(poly), False
+
+
 def reclassify_surface_mesh_exact(mesh, regions, target_material=None, cell_m=16.0,
                                   preserve_source_winding=False):
     """Split terrain triangles on a projected owner mask without changing the piecewise-planar surface."""
@@ -2463,6 +2473,7 @@ def reclassify_surface_mesh_exact(mesh, regions, target_material=None, cell_m=16
     groups={}; split_count=0; changed_count=0; collapsed_removed=0; prepack_collapsed_removed=0; quantization_flips_removed=0
     actual_collapsed_removed=0;actual_quantization_flips_removed=0;actual_removed_area_m2=0.0
     actual_full_precision_winding_mismatch_retained=0
+    unserializable_polygons=0;unserializable_area_m2=0.0
     original_vertex_count=len(result["attributes"]["POSITION"])
     translation=mesh.get("translation",(0.0,0.0,0.0))
 
@@ -2472,7 +2483,7 @@ def reclassify_surface_mesh_exact(mesh, regions, target_material=None, cell_m=16
     def emit(material_key,source_tri,poly,vertex_cache):
         nonlocal collapsed_removed,prepack_collapsed_removed,quantization_flips_removed
         nonlocal actual_collapsed_removed,actual_quantization_flips_removed,actual_removed_area_m2
-        nonlocal actual_full_precision_winding_mismatch_retained
+        nonlocal actual_full_precision_winding_mismatch_retained,unserializable_polygons,unserializable_area_m2
         source_points=[world[j] for j in source_tri]
         source_area2=(source_points[1][0]-source_points[0][0])*(source_points[2][2]-source_points[0][2])-(source_points[1][2]-source_points[0][2])*(source_points[2][0]-source_points[0][0])
         if source_area2==0.0 or (source_area2>0.0 and not preserve_source_winding):
@@ -2483,7 +2494,13 @@ def reclassify_surface_mesh_exact(mesh, regions, target_material=None, cell_m=16
                        for i in range(1,len(poly)-1)) if len(poly)>=3 else 0.0
         if poly_area2 and source_area2*poly_area2<0:
             poly=list(reversed(poly))
-        for raw_face in _triangulate_xz(poly):
+        if '_ACTUAL_POSITION' in result['attributes']:
+            triangles,collapsed=_triangulate_xz(poly),False
+        else:
+            triangles,collapsed=_triangulate_serializable_polygon(poly,translation)
+        if collapsed:
+            unserializable_polygons+=1;unserializable_area_m2+=abs(poly_area2)*.5
+        for raw_face in triangles:
             face=list(raw_face)
             prepack=[(p[0]-translation[0],p[1]-translation[2]) for p in face]
             prepack_area2=(prepack[1][0]-prepack[0][0])*(prepack[2][1]-prepack[0][1])-(prepack[1][1]-prepack[0][1])*(prepack[2][0]-prepack[0][0])
@@ -2615,7 +2632,8 @@ def reclassify_surface_mesh_exact(mesh, regions, target_material=None, cell_m=16
                 split_count+=1
             if before_inside>0.0:
                 for poly in inside: emit(material,tri,poly,vertex_cache)
-                changed_count+=sum(len(_triangulate_xz(p)) for p in inside)
+                changed_count+=sum(len(_triangulate_xz(p) if '_ACTUAL_POSITION' in result['attributes']
+                                       else _triangulate_serializable_polygon(p,translation)[0]) for p in inside)
             for poly in remaining:
                 emit(source_material,tri,poly,vertex_cache)
     ordered=sorted(groups.values(),key=lambda g:(g[0].get("name")!="terrain_ground",g[0].get("name","")))
@@ -2624,6 +2642,8 @@ def reclassify_surface_mesh_exact(mesh, regions, target_material=None, cell_m=16
                    "new_vertices":len(result["attributes"]["POSITION"])-original_vertex_count,
                    "mask_triangles":len(masks),"float32_collapsed_facets_removed":collapsed_removed,
                    "prepack_zero_area_facets_removed":prepack_collapsed_removed,
+                   "unserializable_polygons_removed":unserializable_polygons,
+                   "unserializable_polygon_area_m2":unserializable_area_m2,
                    "float32_quantization_flips_removed":quantization_flips_removed,
                    "actual_float32_collapsed_facets_removed":actual_collapsed_removed,
                    "actual_float32_quantization_flips_removed":actual_quantization_flips_removed,

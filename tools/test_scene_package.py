@@ -1977,6 +1977,18 @@ class EnvironmentTest(unittest.TestCase):
 
 
 class EstimatedLandInfillTest(unittest.TestCase):
+    def test_nonserializable_clipped_polygon_collapses_without_losing_valid_triangle(self):
+        # Reproduction from the S5640 intersection: four double-precision points
+        # become two points in the GLB float32 coordinate frame.
+        sliver=[(1504.024892414558,4947.33174887295),(1504.0248924145599,4947.331748872949),
+                (1503.9953250774981,4947.3469787741915),(1503.9953250774645,4947.346978774209)]
+        tris,collapsed=rt._triangulate_serializable_polygon(sliver,(0,0,0))
+        self.assertTrue(collapsed);self.assertEqual(tris,[])
+        triangle=[(1504.,4947.),(1504.1,4947.),(1504.,4947.1)]
+        tris,collapsed=rt._triangulate_serializable_polygon(triangle,(0,0,0))
+        self.assertFalse(collapsed);self.assertEqual(len(tris),1)
+
+
     def test_target_road_affine_chart_recovers_curved_edge_without_clamping_or_moving_mesh(self):
         # Adjacent road rows turn 45 degrees. Their outer edge chord projects to
         # U≈1.707 on the incoming route chord, although the road faces author U=2.

@@ -12,6 +12,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import osm_context as oc
 import environment as en  # noqa: E402
 import road_terrain as rt  # noqa: E402
 import route_model as rm  # noqa: E402
@@ -51,6 +52,9 @@ def validate(pkg):
         errs = fn(pkg)
         out.append((name, "VALID" if not errs else "INVALID", errs))
         ok = not errs
+    if os.path.isfile(os.path.join(pkg, "structures/osm_buildings.json")):
+        errs = oc.validate_buildings(pkg)
+        out.append(("OSM buildings", "VALID" if not errs else "INVALID", errs))
     # package integrity: every file the manifest lists exists
     errs = []
     mp = os.path.join(pkg, "manifest.json")

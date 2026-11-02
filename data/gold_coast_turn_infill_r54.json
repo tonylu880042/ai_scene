@@ -1,0 +1,116 @@
+[
+ {
+  "schema_version": 1,
+  "estimated": true,
+  "target_tile_id": "22",
+  "provenance": {
+   "source": "r53 native terrain probe + OSM shoreline screen",
+   "status": "estimated",
+   "rationale": "0.5 m XZ terrain/P0 screen around s=5640 found bounded unclassified no-coverage region; OSM water inference negative. ROI bbox expanded 0.75 m. Existing P0 and P1 geometry is excluded; height is derived from neighboring serialized triangles, not surveyed."
+  },
+  "height_rule": {
+   "kind": "boundary_supported_idw",
+   "neighbors": 4,
+   "max_estimated_support_distance_m": 4.0,
+   "max_boundary_mismatch_m": 0.002,
+   "support_edge_sample_spacing_m": 1.0
+  },
+  "material": {
+   "name": "terrain_ground",
+   "color": [
+    0.3,
+    0.42,
+    0.2
+   ],
+   "roughness": 0.95
+  },
+  "route_attribute_chart": {
+   "kind": "target_road_affine",
+   "max_distance_m": 0.02
+  },
+  "regions": [
+   {
+    "id": "turn_5640",
+    "polygon_xz": [
+     [
+      1500.496,
+      4945.013
+     ],
+     [
+      1505.496,
+      4945.013
+     ],
+     [
+      1505.496,
+      4950.013
+     ],
+     [
+      1500.496,
+      4950.013
+     ]
+    ],
+    "logical_owner_ids": [
+     "22"
+    ],
+    "boundary_provenance": "estimated 0.5m P0/P1 uncovered sample component bbox expanded 0.75m; OSM water screen negative"
+   }
+  ]
+ },
+ {
+  "schema_version": 1,
+  "estimated": true,
+  "target_tile_id": "25",
+  "provenance": {
+   "source": "r53 native terrain probe + OSM shoreline screen",
+   "status": "estimated",
+   "rationale": "0.5 m XZ terrain/P0 screen around s=6310 found bounded unclassified no-coverage region; OSM water inference negative. ROI bbox expanded 0.75 m. Existing P0 and P1 geometry is excluded; height is derived from neighboring serialized triangles, not surveyed."
+  },
+  "height_rule": {
+   "kind": "boundary_supported_idw",
+   "neighbors": 4,
+   "max_estimated_support_distance_m": 4.0,
+   "max_boundary_mismatch_m": 0.002,
+   "support_edge_sample_spacing_m": 1.0
+  },
+  "material": {
+   "name": "terrain_ground",
+   "color": [
+    0.3,
+    0.42,
+    0.2
+   ],
+   "roughness": 0.95
+  },
+  "route_attribute_chart": {
+   "kind": "target_road_affine",
+   "max_distance_m": 0.02
+  },
+  "regions": [
+   {
+    "id": "turn_6310",
+    "polygon_xz": [
+     [
+      1804.684,
+      4476.395
+     ],
+     [
+      1808.684,
+      4476.395
+     ],
+     [
+      1808.684,
+      4479.895
+     ],
+     [
+      1804.684,
+      4479.895
+     ]
+    ],
+    "logical_owner_ids": [
+     "25"
+    ],
+    "boundary_provenance": "estimated 0.5m P0/P1 uncovered sample component bbox expanded 0.75m; OSM water screen negative"
+   }
+  ]
+ }
+]

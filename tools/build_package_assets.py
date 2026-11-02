@@ -370,6 +370,36 @@ def copy_gltf_asset(pkg, spec):
     return output.relative_to(pkg).as_posix()
 
 
+def build_material_assets(pkg, library):
+    """Copy only declared CC0 material sets; never rebuild P3/P4 prototype meshes."""
+    import hashlib
+    specs = library.get('_materials', {})
+    out = pkg/'assets/materials';out.mkdir(parents=True, exist_ok=True)
+    catalog = {'version':'0.1','materials':{}}
+    credits = pkg/'CREDITS.md'
+    text = credits.read_text() if credits.exists() else '# Sources and licences\n'
+    for name,spec in specs.items():
+        if spec.get('license') != 'CC0':
+            raise ValueError('Package building material must be explicitly CC0: '+name)
+        record = {'repeat_m':spec['repeat_m'],'source':{'kind':'library','license':'CC0','ref':spec['attribution'],
+                                                       'url':spec['url'],'estimated':False},'sha256':{}}
+        folder = out/name;folder.mkdir(exist_ok=True)
+        for key in ('diffuse','normal','roughness'):
+            src=Path(spec[key]);dest=folder/src.name
+            shutil.copyfile(src,dest)
+            record[key]=dest.relative_to(pkg).as_posix()
+            record['sha256'][key]=hashlib.sha256(dest.read_bytes()).hexdigest()
+        catalog['materials'][name]=record
+        line=f"- {name}: {spec['attribution']} — CC0; {spec['url']} (diffuse, OpenGL normal, roughness; original source bytes).\n"
+        if line not in text:text=text.rstrip()+'\n'+line
+    (out/'osm_buildings.json').write_text(json.dumps(catalog,indent=1)+'\n')
+    credits.write_text(text)
+    man=json.loads((pkg/'manifest.json').read_text());man['building_material_assets']={
+        'catalog':'assets/materials/osm_buildings.json','license':'CC0','files':[p.relative_to(pkg).as_posix() for p in sorted(out.rglob('*')) if p.is_file()]}
+    (pkg/'manifest.json').write_text(json.dumps(man,indent=1)+'\n')
+    print(f"{len(specs)} CC0 building PBR material sets copied; existing prototypes unchanged")
+
+
 def build(pkg, library=None, only=None):
     out=pkg/'assets/prototypes';out.mkdir(parents=True,exist_ok=True)
     count=0
@@ -418,4 +448,10 @@ if __name__=='__main__':
     pkg=Path(args[0])
     library_path=next((a for a in args[1:] if not a.startswith('--')),None)
     only=next((a.split('=',1)[1] for a in args[1:] if a.startswith('--only=')),None)
-    build(pkg, json.loads(Path(library_path).read_text()) if library_path else None, only)
+    library = json.loads(Path(library_path).read_text()) if library_path else None
+    if '--materials-only' in args:
+        if not library: raise ValueError('--materials-only requires a library file')
+        build_material_assets(pkg, library)
+    else:
+        if library and library.get('_materials'): build_material_assets(pkg, library)
+        build(pkg, library, only)
