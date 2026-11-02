@@ -1,0 +1,602 @@
+{
+  "schema_version": 1,
+  "kind": "saisies_r37_representative_dressing_candidate",
+  "status": "root_selected_for_integrated_review",
+  "visual_acceptance": "pending",
+  "source_estimated": true,
+  "gps_calibrated": false,
+  "formal_route_edit": false,
+  "source_manifest": "export/saisies/review/round37_route_diagnosis/source/manifest.json",
+  "source_frames": "export/saisies/review/round37_route_diagnosis/source",
+  "scope": {
+    "candidate_ids": [
+      "S06",
+      "S10",
+      "S12"
+    ],
+    "station_windows_m": {
+      "S06": [
+        3406.8955,
+        3801.8979
+      ],
+      "S10": [
+        6464.3658,
+        6828.3131
+      ],
+      "S12": [
+        9145.3445,
+        9549.1824
+      ]
+    },
+    "preserved_scene_ids": [
+      "S01",
+      "S02",
+      "S03",
+      "S05",
+      "S07",
+      "S09",
+      "S11",
+      "S13"
+    ],
+    "preserved_terminal_station_m": 14615.087922,
+    "full_route_generation": false,
+    "delete_existing_forest": false,
+    "delete_existing_roadside": false,
+    "hud_or_vehicle_content": false
+  },
+  "ground_contract": {
+    "source": "actual visible SaisiesGeoTerrain indexed triangle",
+    "required_sampler_method": "sample_mesh_triangle",
+    "fallback_height_sampler_allowed": false,
+    "route_frame": "Corrected route pos_at/left_at/tangent_at after representative curve integration",
+    "root_contact": "Each structure root and tree root records the visible triangle, barycentric coordinate and sampled ground height.",
+    "road_clearance_m": 2.0,
+    "tree_trunk_clearance_m": 2.0,
+    "tree_crown_overhang_allowed": true,
+    "structure_road_clearance_m": 12.0,
+    "building_clearance_m": 5.0,
+    "rock_wall_clearance_m": 4.0,
+    "minimum_tree_spacing_m": 4.5,
+    "asphalt_overlap_allowed": false
+  },
+  "asset_contract": {
+    "tree_factory": "res://scripts/saisies_trees.gd",
+    "chalet_factory": "res://scripts/saisies_roadside_chalets.gd",
+    "tree_families": [
+      "broadleaf"
+    ],
+    "tree_transform_contract": {
+      "bounds_source": "runtime Mesh.get_aabb()",
+      "height_scale": "target_height_m / abs(bounds.size.y)",
+      "width_scale": "target_width_m / max(abs(bounds.size.x), abs(bounds.size.z))",
+      "root_y": "ground.height - bounds.position.y * height_scale",
+      "reported_fields": [
+        "target_height_m",
+        "target_width_m",
+        "actual_height_m",
+        "actual_width_m",
+        "height_scale",
+        "width_scale",
+        "mesh_source_bounds_size",
+        "root_contact_error_m"
+      ]
+    },
+    "roadside_owned_features": [
+      "SaisiesLowerContinuousRockCut",
+      "SaisiesS08RightParapet",
+      "SaisiesS09StoneBlock",
+      "guardrail",
+      "existing R36 roadside walls"
+    ],
+    "forest_policy": "Add sparse layered nearfield crowns around authored openings and slopes; preserve all inherited R36 forest and roadside geometry.",
+    "broadleaf_crown_profile": "rounded",
+    "crown_profile_source": {
+      "kind": "video_estimate",
+      "estimated": true,
+      "ref": "R37 S06/S10/S12 source sequences: rounded, irregular broadleaf crown silhouettes"
+    }
+  },
+  "segments": [
+    {
+      "id": "S06",
+      "source_scene_id": "S06",
+      "source_time_s": [
+        213.0,
+        237.0
+      ],
+      "source_evidence": [
+        "source_213_frame05107.png",
+        "source_225_frame05395.png",
+        "source_231_frame05538.png",
+        "source_237_frame05682.png"
+      ],
+      "composition": "left/uphill timber chalet group with a broad rounded crown; right/downhill grey-roof group; keep the 219-228 near-straight village opening and green textured grass slope",
+      "camera_anchor": {
+        "source_time_s": 225.0,
+        "station_m": 3604.3967,
+        "lateral_m": -1.8,
+        "source_estimated": true
+      },
+      "structures": [
+        {
+          "id": "S06_left_main_chalet",
+          "kind": "adjoining_alpine_chalets",
+          "station_m": 3675.0,
+          "lateral_m": 17.0,
+          "scale": 1.0,
+          "yaw_offset_deg": 4.0,
+          "expected_apparent_width_px": 280,
+          "side": "route_left_uphill",
+          "contact_policy": "visible_triangle_root",
+          "support_policy": "visible_triangle_root_with_stone_plinth",
+          "face_camera": true,
+          "evidence_role": "frame 225 left main chalet is a complete 8.7m-high midground group at roughly 280px after the old R36 hero is hidden",
+          "duplicate_policy": "spawn_if_missing"
+        },
+        {
+          "id": "S06_left_rear_chalet",
+          "kind": "adjoining_alpine_chalets",
+          "station_m": 3690.0,
+          "lateral_m": 18.0,
+          "scale": 0.8,
+          "yaw_offset_deg": -6.0,
+          "expected_apparent_width_px": 190,
+          "side": "route_left_uphill",
+          "contact_policy": "visible_triangle_root",
+          "support_policy": "visible_triangle_root_with_stone_plinth",
+          "face_camera": true,
+          "evidence_role": "staggered rear roof line follows the left main group through source 225–228",
+          "duplicate_policy": "spawn_if_missing"
+        },
+        {
+          "id": "S06_right_foreground_grey_roof_group",
+          "kind": "adjoining_alpine_chalets",
+          "station_m": 3630.0,
+          "lateral_m": -30.0,
+          "scale": 1.0,
+          "yaw_offset_deg": 10.0,
+          "expected_apparent_width_px": 320,
+          "side": "route_right_downhill",
+          "contact_policy": "visible_triangle_root",
+          "support_policy": "visible_triangle_root_with_stone_plinth",
+          "face_camera": true,
+          "evidence_role": "source 225 right foreground grey-roof group occupies the near downhill view without entering the road",
+          "duplicate_policy": "spawn_if_missing"
+        },
+        {
+          "id": "S06_right_downhill_rear_group",
+          "kind": "adjoining_alpine_chalets",
+          "station_m": 3665.0,
+          "lateral_m": -27.0,
+          "scale": 1.1,
+          "yaw_offset_deg": -8.0,
+          "expected_apparent_width_px": 220,
+          "side": "route_right_downhill",
+          "contact_policy": "visible_triangle_root",
+          "support_policy": "visible_triangle_root_with_stone_plinth",
+          "face_camera": true,
+          "evidence_role": "staggered downhill rear grey-roof group carries the source 225–228 sequence",
+          "duplicate_policy": "spawn_if_missing"
+        }
+      ],
+      "tree_clusters": [
+        {
+          "id": "S06_left_slope_entry",
+          "station_m": [
+            3408.0,
+            3494.0
+          ],
+          "side_route_left_sign": 1.0,
+          "offset_m": [
+            42.0,
+            78.0
+          ],
+          "count": 16,
+          "broadleaf_probability": 0.86,
+          "height_m": [
+            10.0,
+            12.5
+          ],
+          "width_m": [
+            7.0,
+            9.5
+          ],
+          "layer": "mid_slope",
+          "gap_probability": 0.08,
+          "station_jitter_fraction": 0.08,
+          "evidence_role": "10–12.5m rounded crowns on the uphill chalet slope without closing the 219–228 village opening"
+        },
+        {
+          "id": "S06_left_exit_layer",
+          "station_m": [
+            3658.0,
+            3762.0
+          ],
+          "side_route_left_sign": 1.0,
+          "offset_m": [
+            48.0,
+            104.0
+          ],
+          "count": 13,
+          "broadleaf_probability": 0.92,
+          "height_m": [
+            10.5,
+            14.0
+          ],
+          "width_m": [
+            7.5,
+            10.5
+          ],
+          "layer": "rear_slope",
+          "gap_probability": 0.12,
+          "station_jitter_fraction": 0.1,
+          "evidence_role": "10.5–14m broad rounded crowns behind the left chalet exit"
+        },
+        {
+          "id": "S06_left_main_rounded_crown",
+          "station_m": [
+            3678.0,
+            3682.0
+          ],
+          "side_route_left_sign": 1.0,
+          "offset_m": [
+            30.0,
+            34.0
+          ],
+          "count": 1,
+          "broadleaf_probability": 1.0,
+          "height_m": [
+            11.5,
+            12.5
+          ],
+          "width_m": [
+            9.5,
+            10.5
+          ],
+          "layer": "left_main_behind",
+          "gap_probability": 0.0,
+          "station_jitter_fraction": 0.0,
+          "evidence_role": "single rounded crown immediately behind the compact left main chalet in source frame 225"
+        },
+        {
+          "id": "S06_right_broadleaf_occlusion",
+          "station_m": [
+            3704.0,
+            3792.0
+          ],
+          "side_route_left_sign": -1.0,
+          "offset_m": [
+            7.0,
+            15.0
+          ],
+          "count": 15,
+          "broadleaf_probability": 1.0,
+          "height_m": [
+            12.0,
+            16.0
+          ],
+          "width_m": [
+            9.0,
+            12.0
+          ],
+          "layer": "downhill_near",
+          "gap_probability": 0.12,
+          "station_jitter_fraction": 0.1,
+          "evidence_role": "near route-right 12–16m rounded broadleaf occlusion after source 231s; the 3704–3792m span preserves the source 237 opening"
+        }
+      ],
+      "open_station_windows_m": [
+        [
+          3505.6461,
+          3653.772
+        ]
+      ],
+      "grass_contract": "Preserve the visible green textured slope between the house groups and the route; no opaque ground plane is added."
+    },
+    {
+      "id": "S10",
+      "source_scene_id": "S10",
+      "source_time_s": [
+        393.0,
+        417.0
+      ],
+      "source_evidence": [
+        "source_393_frame09423.png",
+        "source_405_frame09710.png",
+        "source_417_frame09998.png"
+      ],
+      "composition": "continuous uphill near-straight passage; high rock/wall remains route-right, low guardrail remains route-left, and layered broadleaf crowns make a narrow sky opening",
+      "structures": [],
+      "tree_clusters": [
+        {
+          "id": "S10_left_guardrail_near_canopy",
+          "station_m": [
+            6464.3658,
+            6578.0
+          ],
+          "side_route_left_sign": 1.0,
+          "offset_m": [
+            7.0,
+            18.0
+          ],
+          "count": 20,
+          "broadleaf_probability": 0.94,
+          "height_m": [
+            10.0,
+            14.0
+          ],
+          "width_m": [
+            8.0,
+            11.0
+          ],
+          "layer": "guardrail_near",
+          "gap_probability": 0.1,
+          "station_jitter_fraction": 0.08,
+          "evidence_role": "10–14m nearfield broadleaf crown above the low route-left guardrail; trunks keep 2m edge clearance while crowns may overhang"
+        },
+        {
+          "id": "S10_left_guardrail_mid_canopy",
+          "station_m": [
+            6578.0,
+            6722.0
+          ],
+          "side_route_left_sign": 1.0,
+          "offset_m": [
+            18.0,
+            42.0
+          ],
+          "count": 22,
+          "broadleaf_probability": 0.9,
+          "height_m": [
+            11.0,
+            15.5
+          ],
+          "width_m": [
+            8.5,
+            11.5
+          ],
+          "layer": "guardrail_mid",
+          "gap_probability": 0.14,
+          "station_jitter_fraction": 0.1,
+          "evidence_role": "layered 11–15.5m crowns keep the uphill road readable while narrowing the sky"
+        },
+        {
+          "id": "S10_left_guardrail_near_extension",
+          "station_m": [
+            6578.0,
+            6828.3131
+          ],
+          "side_route_left_sign": 1.0,
+          "offset_m": [
+            7.0,
+            14.0
+          ],
+          "count": 24,
+          "broadleaf_probability": 1.0,
+          "height_m": [
+            12.0,
+            17.0
+          ],
+          "width_m": [
+            8.0,
+            12.0
+          ],
+          "layer": "guardrail_near_extension",
+          "gap_probability": 0.18,
+          "station_jitter_fraction": 0.1,
+          "evidence_role": "near route-left rounded crowns continue from the guardrail through station 6828, narrowing the source 405 sky opening while preserving intermittent road exit sightlines"
+        },
+        {
+          "id": "S10_left_canopy_exit",
+          "station_m": [
+            6722.0,
+            6828.3131
+          ],
+          "side_route_left_sign": 1.0,
+          "offset_m": [
+            22.0,
+            45.0
+          ],
+          "count": 16,
+          "broadleaf_probability": 0.82,
+          "height_m": [
+            10.5,
+            14.5
+          ],
+          "width_m": [
+            8.0,
+            11.0
+          ],
+          "layer": "exit_canopy",
+          "gap_probability": 0.18,
+          "station_jitter_fraction": 0.11,
+          "evidence_role": "farther route-left 10.5–14.5m broadleaf layer near the source exit, with an intentional gap"
+        },
+        {
+          "id": "S10_left_far_layer",
+          "station_m": [
+            6480.0,
+            6810.0
+          ],
+          "side_route_left_sign": 1.0,
+          "offset_m": [
+            30.0,
+            45.0
+          ],
+          "count": 12,
+          "broadleaf_probability": 0.72,
+          "height_m": [
+            12.0,
+            17.0
+          ],
+          "width_m": [
+            9.0,
+            12.0
+          ],
+          "layer": "far_slope",
+          "gap_probability": 0.22,
+          "station_jitter_fraction": 0.12,
+          "evidence_role": "deep 12–17m crown layer behind the guardrail, leaving the rock side open"
+        }
+      ],
+      "open_station_windows_m": [],
+      "avoid_owned_features": [
+        "SaisiesLowerContinuousRockCut",
+        "SaisiesS08RightParapet",
+        "guardrail"
+      ]
+    },
+    {
+      "id": "S12",
+      "source_scene_id": "S12",
+      "source_time_s": [
+        558.0,
+        582.0
+      ],
+      "source_evidence": [
+        "source_558_frame13379.png",
+        "source_570_frame13666.png",
+        "source_582_frame13954.png"
+      ],
+      "composition": "left bend retaining wall, then right rock forest corridor; route-left broadleaf crowns occlude the valley without hiding the corrected left-to-right-to-straight road sequence",
+      "structures": [],
+      "tree_clusters": [
+        {
+          "id": "S12_left_wall_canopy",
+          "station_m": [
+            9145.3445,
+            9249.3397
+          ],
+          "side_route_left_sign": 1.0,
+          "offset_m": [
+            7.0,
+            18.0
+          ],
+          "count": 18,
+          "broadleaf_probability": 0.9,
+          "height_m": [
+            10.0,
+            14.5
+          ],
+          "width_m": [
+            8.0,
+            11.0
+          ],
+          "layer": "left_wall_near",
+          "gap_probability": 0.1,
+          "station_jitter_fraction": 0.08,
+          "evidence_role": "10–14.5m nearfield broadleaf crown above the left retaining wall at the first bend"
+        },
+        {
+          "id": "S12_left_right_bend_canopy",
+          "station_m": [
+            9300.5105,
+            9401.0566
+          ],
+          "side_route_left_sign": 1.0,
+          "offset_m": [
+            18.0,
+            42.0
+          ],
+          "count": 22,
+          "broadleaf_probability": 0.94,
+          "height_m": [
+            11.0,
+            16.0
+          ],
+          "width_m": [
+            8.0,
+            12.0
+          ],
+          "layer": "left_valley_occlusion",
+          "gap_probability": 0.14,
+          "station_jitter_fraction": 0.1,
+          "evidence_role": "layered 11–16m crowns on route-left through the left-to-right bend transition"
+        },
+        {
+          "id": "S12_left_core_nearfield",
+          "station_m": [
+            9320.0,
+            9465.0
+          ],
+          "side_route_left_sign": 1.0,
+          "offset_m": [
+            8.0,
+            15.0
+          ],
+          "count": 20,
+          "broadleaf_probability": 1.0,
+          "height_m": [
+            12.0,
+            17.0
+          ],
+          "width_m": [
+            8.0,
+            12.0
+          ],
+          "layer": "left_core_nearfield",
+          "gap_probability": 0.12,
+          "station_jitter_fraction": 0.08,
+          "evidence_role": "near route-left rounded crowns kept 8–15m off asphalt so source 567–573 frames retain the dense close forest edge without a canopy wall"
+        },
+        {
+          "id": "S12_left_straight_exit_canopy",
+          "station_m": [
+            9401.0566,
+            9549.1824
+          ],
+          "side_route_left_sign": 1.0,
+          "offset_m": [
+            24.0,
+            45.0
+          ],
+          "count": 18,
+          "broadleaf_probability": 0.84,
+          "height_m": [
+            10.5,
+            15.0
+          ],
+          "width_m": [
+            8.0,
+            11.0
+          ],
+          "layer": "left_exit",
+          "gap_probability": 0.18,
+          "station_jitter_fraction": 0.11,
+          "evidence_role": "left 10.5–15m canopy remains in the straight forest exit while the road opens ahead"
+        },
+        {
+          "id": "S12_right_rock_corridor_layer",
+          "station_m": [
+            9198.169,
+            9401.0566
+          ],
+          "side_route_left_sign": -1.0,
+          "offset_m": [
+            24.0,
+            45.0
+          ],
+          "count": 16,
+          "broadleaf_probability": 0.48,
+          "height_m": [
+            12.0,
+            17.0
+          ],
+          "width_m": [
+            9.0,
+            12.0
+          ],
+          "layer": "right_rock_far",
+          "gap_probability": 0.22,
+          "station_jitter_fraction": 0.12,
+          "evidence_role": "sparse 12–17m forest layer beyond the existing right rock corridor; do not author a duplicate wall"
+        }
+      ],
+      "open_station_windows_m": [],
+      "avoid_owned_features": [
+        "SaisiesLowerContinuousRockCut",
+        "existing retaining wall"
+      ]
+    }
+  ]
+}

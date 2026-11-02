@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/MainScene_saisies_s04_guardrail_review.tscn" id="1_guardrail"]
+[ext_resource type="Script" path="res://scripts/saisies_s04_forest_distribution.gd" id="2_forest"]
+
+[node name="MainSceneSaisiesS04ForestReview" type="Node3D"]
+
+[node name="GuardrailBase" parent="." instance=ExtResource("1_guardrail")]
+
+[node name="ForestDistribution" type="Node3D" parent="."]
+script = ExtResource("2_forest")
+guardrail_base_path = NodePath("../GuardrailBase")
+candidate_path = "res://data/saisies_s04_forest_distribution.json"
+enable_refinement = true
+left_forest_review_path = NodePath("../GuardrailBase/LinkedBendsBase/S03Base/JunctionShapeReview/ParasolReview/CafeTreesReview/RightForestReview/LeftForestReview")
+flowers_review_path = NodePath("../GuardrailBase/LinkedBendsBase/S03Base/JunctionShapeReview/ParasolReview/CafeTreesReview/RightForestReview/LeftForestReview/FlowersReview")
+world_path = NodePath("../GuardrailBase/LinkedBendsBase/S03Base/JunctionShapeReview/ParasolReview/CafeTreesReview/RightForestReview/LeftForestReview/FlowersReview/SignsReview/LiftReview/GroundReview/CafeReview/S03Review/S02Review/S01Review/World")
+s01_landscape_path = NodePath("../GuardrailBase/LinkedBendsBase/S03Base/JunctionShapeReview/ParasolReview/CafeTreesReview/RightForestReview/LeftForestReview/FlowersReview/SignsReview/LiftReview/GroundReview/CafeReview/S03Review/S02Review/S01Review/S01Landscape")

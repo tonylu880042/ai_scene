@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "id": "saisies_geo_scene_map",
+  "title": "Saisies geographic estimated visual landmark anchors",
+  "base_scene_map": "res://data/saisies_scene_map.json",
+  "estimated": true,
+  "note": "Geo-only scene distances inferred from root native visual landmarks and map context; not GPS, telemetry, or camera calibration. Other scene ids continue through the geographic route checkpoints.",
+  "root_approval": "candidate A sequence 0 full approval for limited road phase only; no full visual pass",
+  "integration_scope": "road phase only",
+  "timing_scope": {
+    "selected_candidate": "A_center",
+    "selected_sequence_index": 0,
+    "validated_window_s": [315.0, 346.0],
+    "outside_window_status": "timing unvalidated",
+    "calibration_status": "not calibrated",
+    "unresolved_intervals": [
+      {
+        "from_s": 346.0,
+        "to_s": 360.0,
+        "implied_speed_kmh": 87.0,
+        "status": "unresolved; do not use as calibration"
+      }
+    ],
+    "boundary_checkpoints_unchanged_s": [296.0, 360.0]
+  },
+  "time_anchors": [
+    {
+      "time_s": 312.0,
+      "distance_m": 4985.75,
+      "label": "phase_alignment_312",
+      "distance_source": "root estimated phase alignment from rough HUD prior; not GPS"
+    },
+    {
+      "time_s": 318.0,
+      "distance_m": 5111.58,
+      "label": "phase_alignment_318",
+      "distance_source": "root estimated phase alignment from R11 source timing context; not GPS"
+    },
+    {
+      "time_s": 322.0,
+      "distance_m": 5194.36,
+      "label": "phase_alignment_322",
+      "distance_source": "root estimated phase alignment from R11 source timing context; not GPS"
+    },
+    {
+      "time_s": 326.0,
+      "distance_m": 5274.916403,
+      "label": "candidate_A_T326",
+      "distance_source": "root candidate A sequence 0 full approval; visual road probe, not GPS"
+    },
+    {
+      "time_s": 334.0,
+      "distance_m": 5427.116403,
+      "label": "candidate_A_T334",
+      "distance_source": "root candidate A sequence 0 full approval; visual road probe, not GPS"
+    },
+    {
+      "time_s": 338.0,
+      "distance_m": 5497.116403,
+      "label": "candidate_A_T338",
+      "distance_source": "root candidate A sequence 0 full approval; visual road probe, not GPS"
+    },
+    {
+      "time_s": 342.0,
+      "distance_m": 5550.449736,
+      "label": "candidate_A_T342",
+      "distance_source": "root candidate A sequence 0 full approval; visual road probe, not GPS"
+    },
+    {
+      "time_s": 346.0,
+      "distance_m": 5587.116403,
+      "label": "candidate_A_T346",
+      "distance_source": "root candidate A sequence 0 full approval; visual road probe, not GPS"
+    }
+  ],
+  "scenes": [
+    {
+      "scene_id": "S01",
+      "video_seconds": 5.0,
+      "distance_m": 50.0,
+      "distance_source": "estimated geographic start station at the S01 reference time (5 s); not GPS"
+    },
+    {
+      "scene_id": "S03",
+      "video_seconds": 75.0,
+      "distance_m": 930.0,
+      "landmark": "Legette chairlift approach, approximately 25 m before the cable landmark",
+      "distance_source": "root native visual landmark inference from OSM/map context; estimated, not GPS"
+    },
+    {
+      "scene_id": "S05",
+      "video_seconds": 180.0,
+      "distance_m": 2800.0,
+      "landmark": "winding station / east mountain and left-curve visual match",
+      "distance_source": "root native visual landmark inference; estimated, not GPS"
+    },
+    {
+      "scene_id": "S08",
+      "video_seconds": 315.0,
+      "distance_m": 5048.66,
+      "landmark": "R11 canonical S08 low wall and forest opening phase",
+      "distance_source": "root estimated phase alignment from R11 source315 canonical reference; not GPS",
+      "source_evidence": "res://export/saisies/review/round12_source_dense/source_manifest.json",
+      "estimated": true,
+      "note": "Selected with S09 as a limited road-phase timing window; no full visual pass."
+    },
+    {
+      "scene_id": "S09",
+      "video_seconds": 330.0,
+      "distance_m": 5352.116403,
+      "landmark": "R12 candidate A center road phase through S09 source order",
+      "distance_source": "root candidate A sequence 0 full approval; visual road probe, not GPS",
+      "source_evidence": "res://export/saisies/review/round12_source_dense/source_manifest.json",
+      "source_contact": "res://export/saisies/review/round12_source_dense/source_contact.jpg",
+      "sequence_candidate": "A_center",
+      "sequence_index": 0,
+      "estimated": true,
+      "note": "A330/334 right, A338 left hairpin phase, A342 right, A346 exit; limited road phase only and no full visual pass."
+    },
+    {
+      "scene_id": "S13",
+      "video_seconds": 630.0,
+      "distance_m": 10120.0,
+      "landmark": "Estimated source-view left-bend candidate, before true-left curvature peak near10149m",
+      "distance_source": "root reviewed native true-left probes and full-resolution source; estimated, not GPS",
+      "source_evidence": "res://export/saisies/review/round10_analysis/source_sequence/fullres/fullres_source_feature_annotations.json",
+      "estimated": true,
+      "note": "Replaces rejected10244m right-bend candidate caused by diagnostic direction sign error. Selected10120 native road projection resembles source more than10359/10379; grade/altitude and scenery still require visual acceptance.",
+      "probe_evidence": "res://export/saisies/review/round10_analysis/left_probes/left_contact_sheet.jpg"
+    }
+  ]
+}

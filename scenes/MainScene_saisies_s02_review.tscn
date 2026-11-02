@@ -1,0 +1,25 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/MainScene_saisies_s01_review.tscn" id="1_s01_review"]
+[ext_resource type="Script" path="res://scripts/saisies_s02_lodge_refinement.gd" id="2_s02_lodge"]
+[ext_resource type="Script" path="res://scripts/saisies_s02_review_controller.gd" id="3_s02_controller"]
+
+[node name="MainSceneSaisiesS02Review" type="Node3D"]
+
+[node name="S01Review" parent="." instance=ExtResource("1_s01_review")]
+
+[node name="S02LodgeRefinement" type="Node3D" parent="."]
+script = ExtResource("2_s02_lodge")
+world_path = NodePath("../S01Review/World")
+s01_architecture_path = NodePath("../S01Review/S01Architecture")
+s01_landscape_path = NodePath("../S01Review/S01Landscape")
+s01_camera_controller_path = NodePath("../S01Review/S01CameraController")
+enable_refinement = true
+
+[node name="S02ReviewController" type="Node3D" parent="."]
+script = ExtResource("3_s02_controller")
+world_path = NodePath("../S01Review/World")
+s01_architecture_path = NodePath("../S01Review/S01Architecture")
+s01_landscape_path = NodePath("../S01Review/S01Landscape")
+s01_camera_controller_path = NodePath("../S01Review/S01CameraController")
+lodge_refinement_path = NodePath("../S02LodgeRefinement")

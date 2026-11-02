@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "kind": "saisies_s04_late_bends_time_station_candidate",
+  "status": "root_selected_for_integrated_review",
+  "visual_acceptance": "pending",
+  "source_visual_estimate": true,
+  "gps_calibrated": false,
+  "formal_route_edit": false,
+  "scope": "S04 late 125..135 second linked-bends review only; R33 scenery is inherited unchanged",
+  "note": "The 125..135 second station values are a controlled visual estimate, not GPS, route calibration, or formal GeoRoute edits. The original 100..120 anchors are preserved exactly for regression.",
+  "source_frames": [
+    "export/saisies/review/round30_s04_bends/source_frames/source_100_frame02398.png",
+    "export/saisies/review/round30_s04_bends/source_frames/source_105_frame02517.png",
+    "export/saisies/review/round30_s04_bends/source_frames/source_110_frame02637.png",
+    "export/saisies/review/round30_s04_bends/source_frames/source_115_frame02757.png",
+    "export/saisies/review/round30_s04_bends/source_frames/source_120_frame02877.png",
+    "export/saisies/review/round30_s04_bends/source_frames/source_125_frame02997.png",
+    "export/saisies/review/round30_s04_bends/source_frames/source_130_frame03117.png",
+    "export/saisies/review/round30_s04_bends/source_frames/source_135_frame03237.png"
+  ],
+  "camera": {
+    "fov_deg": 58.0,
+    "height_m": 1.67,
+    "pitch_deg": -8.0,
+    "yaw_deg": 0.0,
+    "lateral_m": -1.6,
+    "roll_deg": 0.0,
+    "preview_speed_kmh": 30.0
+  },
+  "anchors": [
+    {"video_seconds": 100.0, "station_m": 1340.0},
+    {"video_seconds": 105.0, "station_m": 1435.0},
+    {"video_seconds": 110.0, "station_m": 1540.0},
+    {"video_seconds": 115.0, "station_m": 1630.0},
+    {"video_seconds": 120.0, "station_m": 1770.0},
+    {"video_seconds": 125.0, "station_m": 1830.0},
+    {"video_seconds": 130.0, "station_m": 1890.0},
+    {"video_seconds": 135.0, "station_m": 1950.0}
+  ],
+  "preview_tour": {
+    "from_video_seconds": 120.0,
+    "from_station_m": 1770.0,
+    "to_video_seconds": 135.0,
+    "to_station_m": 1950.0,
+    "speed_kmh": 30.0,
+    "visual_acceptance": "pending"
+  }
+}

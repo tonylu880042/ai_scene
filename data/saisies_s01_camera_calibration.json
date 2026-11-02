@@ -1,0 +1,237 @@
+{
+  "schema_version": 1,
+  "scope": "s01-camera-only-runtime-candidates",
+  "estimated": true,
+  "selection_status": "root_selected_for_integrated_review",
+  "selected_candidate": "combined_C_yaw24_pitch14_roll0_lateral22",
+  "selected_candidate_status": "root_selected_for_integrated_review",
+  "source_frame": {
+    "path": "video/saisies_analysis/acceptance/S01_f000120.png",
+    "frame_index": 120,
+    "requested_video_seconds": 5.0,
+    "pts": 120120,
+    "time_base": "1/24000",
+    "sha256": "b25ceb90f56481c1c5f1a4ae2d4e4afdf111673e2374b7ec2123d8dbd3bd65d3"
+  },
+  "reference_render": {
+    "path": "export/saisies/review/round14_final/full_fast/S01.png",
+    "size": [1920, 1080],
+    "role": "frozen R14 full_fast baseline"
+  },
+  "work_project": {
+    "manifest": "export/saisies/review/round15_s01/work_project.json",
+    "base_project": "/var/folders/_5/h07fz7sj3mjdjs6fnqhhdr5h0000gn/T/saisies_geo_fast_r14_6k73_4o6",
+    "base_bake": "res://export/saisies/SaisiesEnvironment_geo_r14.scn",
+    "frozen_sources": true
+  },
+  "camera_contract": {
+    "station_m": 50.0,
+    "pitch_deg": -16.0,
+    "yaw_deg": 20.0,
+    "lateral_m": -1.7,
+    "height_m": 1.65,
+    "fov_deg": 79.0,
+    "lateral_sign": "positive is route-left, negative is route-right",
+    "station_note": "S01 route anchor is an estimated 5 s visual station, not GPS or calibrated time mapping"
+  },
+  "projection_targets": {
+    "road_edge_file": "export/saisies/review/round8_geography/s01_road_contact_targets.json",
+    "road_exit_source_px": [1210, 410],
+    "baseline_road_exit_px": [1120, 385],
+    "right_edge_source_polyline_px": [[1560, 670], [1490, 540], [1400, 450]],
+    "left_edge_source_anchor_px": [0, 690],
+    "note": "Manual source observations for root visual review; occluded pixels are excluded and these are not an automatic pass threshold"
+  },
+  "capture": {
+    "size": [1920, 1080],
+    "startup_settle_seconds": 3.0,
+    "frames_between_candidates": 3,
+    "draw_policy": "process_frame then RenderingServer.force_draw; no frame_post_draw waits",
+    "candidate_limit": 12,
+    "stdout_policy": "redirect Godot stdout/stderr to the unique review log"
+  },
+  "candidates": [
+    {
+      "id": "baseline_s50",
+      "station_m": 50.0,
+      "pitch_deg": -16.0,
+      "yaw_deg": 20.0,
+      "lateral_m": -1.7,
+      "height_m": 1.65,
+      "fov_deg": 79.0,
+      "variation": "baseline",
+      "note": "Existing S01 camera contract; retained only as a visual control"
+    },
+    {
+      "id": "yaw18_s50",
+      "station_m": 50.0,
+      "pitch_deg": -16.0,
+      "yaw_deg": 18.0,
+      "lateral_m": -1.7,
+      "height_m": 1.65,
+      "fov_deg": 79.0,
+      "variation": "yaw_only",
+      "note": "Two-degree yaw reduction; test street-exit horizontal shift"
+    },
+    {
+      "id": "yaw22_s50",
+      "station_m": 50.0,
+      "pitch_deg": -16.0,
+      "yaw_deg": 22.0,
+      "lateral_m": -1.7,
+      "height_m": 1.65,
+      "fov_deg": 79.0,
+      "variation": "yaw_only",
+      "note": "Two-degree yaw increase; test street-exit horizontal shift"
+    },
+    {
+      "id": "yaw24_s50",
+      "station_m": 50.0,
+      "pitch_deg": -16.0,
+      "yaw_deg": 24.0,
+      "lateral_m": -1.7,
+      "height_m": 1.65,
+      "fov_deg": 79.0,
+      "variation": "yaw_only",
+      "note": "Four-degree yaw increase; test the stronger rightward street-exit shift requested by root"
+    },
+    {
+      "id": "pitch_up14_s50",
+      "station_m": 50.0,
+      "pitch_deg": -14.0,
+      "yaw_deg": 20.0,
+      "lateral_m": -1.7,
+      "height_m": 1.65,
+      "fov_deg": 79.0,
+      "variation": "pitch_only",
+      "note": "Two-degree less-downward pitch; test road-exit vertical placement"
+    },
+    {
+      "id": "pitch_down18_s50",
+      "station_m": 50.0,
+      "pitch_deg": -18.0,
+      "yaw_deg": 20.0,
+      "lateral_m": -1.7,
+      "height_m": 1.65,
+      "fov_deg": 79.0,
+      "variation": "pitch_only",
+      "note": "Two-degree more-downward pitch; test road-exit vertical placement"
+    },
+    {
+      "id": "lateral_inner12_s50",
+      "station_m": 50.0,
+      "pitch_deg": -16.0,
+      "yaw_deg": 20.0,
+      "lateral_m": -1.2,
+      "height_m": 1.65,
+      "fov_deg": 79.0,
+      "variation": "lateral_only",
+      "note": "Half-metre toward route centre from the existing right-lane candidate"
+    },
+    {
+      "id": "lateral_outer22_s50",
+      "station_m": 50.0,
+      "pitch_deg": -16.0,
+      "yaw_deg": 20.0,
+      "lateral_m": -2.2,
+      "height_m": 1.65,
+      "fov_deg": 79.0,
+      "variation": "lateral_only",
+      "note": "Half-metre farther route-right from the existing right-lane candidate"
+    },
+    {
+      "id": "fov77_s50",
+      "station_m": 50.0,
+      "pitch_deg": -16.0,
+      "yaw_deg": 20.0,
+      "lateral_m": -1.7,
+      "height_m": 1.65,
+      "fov_deg": 77.0,
+      "variation": "fov_only",
+      "note": "Narrower horizontal spread; test combined road-edge convergence"
+    },
+    {
+      "id": "fov81_s50",
+      "station_m": 50.0,
+      "pitch_deg": -16.0,
+      "yaw_deg": 20.0,
+      "lateral_m": -1.7,
+      "height_m": 1.65,
+      "fov_deg": 81.0,
+      "variation": "fov_only",
+      "note": "Wider horizontal spread; test combined road-edge convergence"
+    },
+    {
+      "id": "station45_baseline_pose",
+      "station_m": 45.0,
+      "pitch_deg": -16.0,
+      "yaw_deg": 20.0,
+      "lateral_m": -1.7,
+      "height_m": 1.65,
+      "fov_deg": 79.0,
+      "variation": "station_only",
+      "note": "Five-metre upstream diagnostic; do not interpret as a time-map correction"
+    },
+    {
+      "id": "station55_baseline_pose",
+      "station_m": 55.0,
+      "pitch_deg": -16.0,
+      "yaw_deg": 20.0,
+      "lateral_m": -1.7,
+      "height_m": 1.65,
+      "fov_deg": 79.0,
+      "variation": "station_only",
+      "note": "Five-metre downstream diagnostic; do not interpret as a time-map correction"
+    }
+  ],
+  "combined_candidates": [
+    {
+      "id": "combined_A_yaw24_pitch14_rollm5",
+      "station_m": 50.0,
+      "pitch_deg": -14.0,
+      "yaw_deg": 24.0,
+      "lateral_m": -1.7,
+      "height_m": 1.65,
+      "fov_deg": 79.0,
+      "roll_deg": -5.0,
+      "variation": "yaw_pitch_combined_with_explicit_roll",
+      "note": "Combined root candidate A; explicit roll retains the previous road-turn value"
+    },
+    {
+      "id": "combined_B_yaw24_pitch14_roll0",
+      "station_m": 50.0,
+      "pitch_deg": -14.0,
+      "yaw_deg": 24.0,
+      "lateral_m": -1.7,
+      "height_m": 1.65,
+      "fov_deg": 79.0,
+      "roll_deg": 0.0,
+      "variation": "yaw_pitch_combined_with_explicit_roll",
+      "note": "Combined root candidate B; zero roll isolates vertical building lines"
+    },
+    {
+      "id": "combined_C_yaw24_pitch14_roll0_lateral22",
+      "station_m": 50.0,
+      "pitch_deg": -14.0,
+      "yaw_deg": 24.0,
+      "lateral_m": -2.2,
+      "height_m": 1.65,
+      "fov_deg": 79.0,
+      "roll_deg": 0.0,
+      "variation": "yaw_pitch_lateral_combined_with_explicit_roll",
+      "note": "Combined root candidate C; adds route-right lateral test to B"
+    },
+    {
+      "id": "combined_D_yaw22_pitch14_roll0",
+      "station_m": 50.0,
+      "pitch_deg": -14.0,
+      "yaw_deg": 22.0,
+      "lateral_m": -1.7,
+      "height_m": 1.65,
+      "fov_deg": 79.0,
+      "roll_deg": 0.0,
+      "variation": "yaw_pitch_combined_with_explicit_roll",
+      "note": "Combined root candidate D; two-degree lower yaw than B"
+    }
+  ]
+}

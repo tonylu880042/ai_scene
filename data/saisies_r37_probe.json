@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "kind": "saisies_r37_camera_route_probe",
+  "status": "diagnostic_only",
+  "visual_acceptance": false,
+  "formal_integration_allowed": false,
+  "not_validated": true,
+  "world_scene": "res://export/saisies/SaisiesEnvironment_geo_r14.scn",
+  "geometry_cache": "res://export/saisies/release_candidate/saisies_release_geometry_cache.scn",
+  "route_contract": {
+    "station_start_m": 0.0,
+    "station_end_m": 14615.087922,
+    "video_start_s": 0.0,
+    "video_end_s": 920.067,
+    "mapping_note": "The probe samples the frozen route directly. It does not change or re-author release time mapping."
+  },
+  "candidates": [
+    {
+      "scene_id": "S06",
+      "tag": "source_station",
+      "video_seconds": 225.0,
+      "station_m": 3604.3967,
+      "pose": {
+        "pitch_deg": -16.0,
+        "yaw_deg": 0.0,
+        "lateral_m": -1.8,
+        "fov_deg": 78.0
+      }
+    },
+    {
+      "scene_id": "S10",
+      "tag": "source_station",
+      "video_seconds": 405.0,
+      "station_m": 6646.6746,
+      "pose": {
+        "pitch_deg": -8.0,
+        "yaw_deg": 0.0,
+        "lateral_m": -1.8,
+        "fov_deg": 78.0
+      }
+    },
+    {
+      "scene_id": "S12",
+      "tag": "source_station",
+      "video_seconds": 570.0,
+      "station_m": 9351.6813,
+      "pose": {
+        "pitch_deg": -8.0,
+        "yaw_deg": 0.0,
+        "lateral_m": -1.8,
+        "fov_deg": 78.0
+      }
+    }
+  ],
+  "matrix": {
+    "station_window_m": 250.0,
+    "station_step_m": 25.0,
+    "curvature_delta_m": 12.0,
+    "projection_ahead_m": 25.0,
+    "camera_height_m": 1.65,
+    "default_fov_deg": 78.0,
+    "default_pitch_deg": -8.0,
+    "default_yaw_deg": 0.0,
+    "default_lateral_m": -1.8,
+    "capture_wait_frames": 12,
+    "modes": ["baseline", "route_only"]
+  },
+  "geometry_audit": {
+    "chord_delta_m": 5.0,
+    "sample_step_m": 5.0,
+    "windows": [
+      {"id": "S06_window", "scene_id": "S06", "start_m": 3354.3967, "end_m": 3854.3967},
+      {"id": "S10_window", "scene_id": "S10", "start_m": 6396.6746, "end_m": 6896.6746},
+      {"id": "S12_pre_right_transition", "scene_id": "S12", "start_m": 8480.0, "end_m": 9000.0},
+      {"id": "S12_current_right_bend", "scene_id": "S12", "start_m": 9150.0, "end_m": 9550.0}
+    ]
+  },
+  "output": {
+    "schema": "saisies_r37_probe_trajectory_v1",
+    "records_are_diagnostic": true,
+    "projection_coordinates": "viewport_pixels_when_renderer_is_available",
+    "capture_policy": "optional center frame for explicitly selected targets only"
+  },
+  "notes": [
+    "baseline leaves the frozen R36 geometry cache visible over the R14 baked world",
+    "route_only hides only the frozen R36 geometry cache so route and camera projection can be read without release overlays",
+    "the S01-S04 builders are intentionally bypassed; no release controller is instantiated",
+    "this file is evidence input, not a visual acceptance or integration decision"
+  ]
+}

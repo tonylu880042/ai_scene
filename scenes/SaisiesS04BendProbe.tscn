@@ -1,0 +1,40 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/saisies_s04_bend_probe.gd" id="1_probe"]
+[ext_resource type="Script" path="res://scripts/saisies_geo_route.gd" id="2_geo_route"]
+
+[sub_resource type="Environment" id="Environment_s04_bend_probe"]
+background_mode = 1
+background_color = Color(0.55, 0.61, 0.66, 1)
+ambient_light_source = 3
+ambient_light_color = Color(0.72, 0.76, 0.78, 1)
+ambient_light_energy = 0.9
+tonemap_mode = 2
+
+[node name="SaisiesS04BendProbe" type="Node3D"]
+script = ExtResource("1_probe")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_s04_bend_probe")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-48, -30, 0)
+light_color = Color(1, 0.97, 0.9, 1)
+light_energy = 1.15
+shadow_enabled = true
+
+[node name="Route" type="Path3D" parent="."]
+script = ExtResource("2_geo_route")
+geo_route_file = "res://data/saisies_geo_route.json"
+centerline_start_m = 0.0
+shoulder_width_m = 0.28
+downhill_terrain_factor = 1.0
+
+[node name="CameraRig" type="Node3D" parent="."]
+
+[node name="Camera3D" type="Camera3D" parent="CameraRig"]
+position = Vector3(0, 1.65, 0)
+current = true
+fov = 77.0
+near = 0.05
+far = 30000.0

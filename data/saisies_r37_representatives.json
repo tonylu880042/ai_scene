@@ -1,0 +1,817 @@
+{
+  "schema_version": 1,
+  "kind": "saisies_r37_route_geometry_representatives",
+  "status": "draft_for_integrate",
+  "visual_acceptance": false,
+  "formal_integration_allowed": false,
+  "not_validated": true,
+  "provenance": {
+    "source_estimated": true,
+    "gps": false,
+    "source_timebase_manifest": "export/saisies/review/round37_route_diagnosis/source/manifest.json",
+    "source_frames": "export/saisies/review/round37_route_diagnosis/source",
+    "native_base_samples": "export/saisies/review/round37_route_diagnosis/geometry_audit/capture.json",
+    "native_anchor_capture": "export/saisies/review/round37_route_diagnosis/controlled/capture.json",
+    "native_authority": "The native route records are authoritative for position, heading and grade in this draft. The earlier offline S12 356-degree unwrap is superseded by the native records.",
+    "mapping_note": "Source seconds are evidence labels mapped to station by the existing estimated piecewise mapping. They do not establish GPS coordinates or authorize a time remap."
+  },
+  "route_contract": {
+    "station_start_m": 0.0,
+    "station_end_m": 14615.087922,
+    "sample_spacing_m": 10.0,
+    "road_width_m": 6.4,
+    "station_parameterization": "Preserve the existing station values and sample count. A fit may move XZ/Y samples inside a local window, but may not delete, reorder or rescale station samples."
+  },
+  "scope": {
+    "included_scene_ids": [
+      "S06",
+      "S10",
+      "S12"
+    ],
+    "untouched_scene_ids": [
+      "S01",
+      "S02",
+      "S03"
+    ],
+    "untouched_terminal_contract": true,
+    "old_route_outside_windows": true,
+    "time_mapping_unchanged": true,
+    "camera_compensation": false,
+    "release_data_mutation": false,
+    "preserved_neighbor_scene_ids": [
+      "S05",
+      "S07",
+      "S09",
+      "S11",
+      "S13"
+    ],
+    "untouched_terminal_station_m": 14615.087922,
+    "preserved_neighbor_scene_anchors": [
+      {
+        "scene_id": "S05",
+        "source_time_s": 180.0,
+        "station_m": 2844.0171,
+        "must_remain_outside_all_outer_windows": true
+      },
+      {
+        "scene_id": "S07",
+        "source_time_s": 270.0,
+        "station_m": 4345.0261,
+        "must_remain_outside_all_outer_windows": true
+      },
+      {
+        "scene_id": "S09",
+        "source_time_s": 330.0,
+        "station_m": 5431.2827,
+        "must_remain_outside_all_outer_windows": true
+      },
+      {
+        "scene_id": "S11",
+        "source_time_s": 510.0,
+        "station_m": 8295.0499,
+        "must_remain_outside_all_outer_windows": true
+      },
+      {
+        "scene_id": "S13",
+        "source_time_s": 630.0,
+        "station_m": 10339.1872,
+        "must_remain_outside_all_outer_windows": true
+      }
+    ]
+  },
+  "compiled_runtime_output": "export/saisies/review/round37_route_diagnosis/analysis/saisies_r37_representatives_compiled.json",
+  "shared_fit_contract": {
+    "base_sample_source": "Native SaisiesGeoRoute records in native_base_samples, interpolated only in station. Do not rebuild world coordinates from the offline geographic points for this candidate.",
+    "canonical_output": "One corrected station-indexed sample array is the source for runtime pos_at/tangent_at/left_at/ground_y, Curve3D, asphalt vertices, road collision, markings, shoulders, terrain projection and geography route samples.",
+    "centerline_fit": "Fit a local planar heading spline in route station, integrate it at the existing station samples, then anchor the XZ result to the old sample at both outer blend boundaries. Use a C1 smoothstep or cubic Hermite blend with zero correction and zero correction derivative at each outer boundary.",
+    "heading_convention": "Native heading is atan2(tangent.x, -tangent.z) in degrees. With this Godot frame, a decreasing heading is a route-left turn and an increasing heading is route-right. The stored heading_delta_deg is target_heading_minus_native_heading using the shortest signed angle.",
+    "grade_fit": "Use each segment's source grade contract as an authored target inside its edit window: S06 -6.5..-7.5%, S10 +7.5..+8.5%, S12 -3.0..-4.0%. Integrate the target grade in station and retain the road_height_delta hints as a reviewable vertical envelope. The fit must assert the source sign, especially the continuous uphill S10 passage; it must never silently turn it into a downhill segment.",
+    "height_fit": "road_height_delta_knots_m are relative to the native route height at the same station. They are hints generated from the requested grade, not a replacement for native terrain sampling. Close any integrated height residual only through the two explicit 200..250m outer blend windows, returning correction and derivative to zero at the edit/outer boundaries. Never compress a residual into a 44/50m return that creates an artificial steep grade.",
+    "boundary_contract": {
+      "blend_width_m": 250.0,
+      "blend_width_range_m": [
+        200.0,
+        250.0
+      ],
+      "outer_position_xz": "exact native sample at outer_start_m and outer_end_m",
+      "outer_heading": "exact native heading and zero correction at outer boundaries",
+      "outer_grade": "exact native grade at outer boundaries unless a native-ground audit rejects the transition",
+      "continuity": "C1 in centerline position/tangent and road height at both outer boundaries; no hard station seam",
+      "height_closure": "The fit tool reports raw residual, closure peak correction and maximum closed grade in both blend windows. The compiled sample is provisional until native coverage includes every expanded outer station."
+    },
+    "required_rebuild_together": [
+      "runtime route samples and heading/elevation/grade arrays",
+      "Curve3D and route API tangent/left/ground queries",
+      "asphalt visible mesh, road collision, center markings and gravel shoulders",
+      "SaisiesGeography.set_route_samples() data and route spatial hash",
+      "visible baked terrain/road ribbon and SaisiesS01Landscape triangle sampler/index when that baked surface is used",
+      "station/lateral authored roadside, forest and terminal instances, reprojected through the corrected route frame",
+      "native release geometry cache, rebuilt and re-hashed after the source scene is ready"
+    ],
+    "fixed_world_policy": "Houses, rocks and other fixed world anchors are not translated as a group. Audit each against the corrected route side contract; move only when its authored station/lateral contract explicitly binds it to the route.",
+    "reject_if": [
+      "station samples are not strictly increasing or the route endpoint changes",
+      "heading/grade correction leaks outside the outer blend window",
+      "visible asphalt or collision differs from runtime route API samples",
+      "geography route samples or baked terrain index still references the old centerline",
+      "road_height_delta blend produces unbounded grade, terrain penetration or a camera-only visual fix"
+    ]
+  },
+  "segments": [
+    {
+      "id": "S06",
+      "scene_id": "S06",
+      "route_section": "upper_meadows_to_farm_descent_boundary",
+      "baseline_anchor": {
+        "source_time_s": 225.0,
+        "station_m": 3604.3967,
+        "native_heading_deg": -79.2443,
+        "native_grade_pct": -6.3913,
+        "trace_filter": {
+          "target_scene_id": "S06",
+          "mode": "baseline",
+          "target_station_m": 3604.3967
+        }
+      },
+      "source_sequence": {
+        "time_to_station_estimates": [
+          {
+            "source_time_s": 213.0,
+            "station_m": 3406.8955,
+            "phase": "left_bend_end"
+          },
+          {
+            "source_time_s": 216.0,
+            "station_m": 3456.2708,
+            "phase": "left_bend_exit"
+          },
+          {
+            "source_time_s": 219.0,
+            "station_m": 3505.6461,
+            "phase": "near_straight_start"
+          },
+          {
+            "source_time_s": 228.0,
+            "station_m": 3653.772,
+            "phase": "near_straight_end"
+          },
+          {
+            "source_time_s": 231.0,
+            "station_m": 3703.1473,
+            "phase": "right_broadleaf_occlusion"
+          },
+          {
+            "source_time_s": 237.0,
+            "station_m": 3801.8979,
+            "phase": "open_exit"
+          }
+        ],
+        "expected_order": "left bend exit -> near-straight downhill/village approach -> right broadleaf occlusion -> open exit",
+        "source_estimated_not_gps": true,
+        "grade_contract": {
+          "sign": "negative",
+          "min_pct": -7.5,
+          "max_pct": -6.5,
+          "source_basis": "Source 213-237s is a continuous downhill village approach; the HUD is a visual reference and the native route grade is base evidence only."
+        }
+      },
+      "station_window": {
+        "edit_start_m": 3406.8955,
+        "edit_end_m": 3801.8979,
+        "outer_start_m": 3156.8955,
+        "outer_end_m": 4051.8979,
+        "boundary_blend_range_m": 250.0,
+        "preserve_endpoint_station_order": true,
+        "preserve_c1_at_outer_boundaries": true
+      },
+      "overall_orientation": {
+        "enabled": true,
+        "mode": "free_source_yaw",
+        "initial_deg": 14.6,
+        "search_half_range_deg": 20.0,
+        "max_abs_deg": 45.0,
+        "source_compass": false,
+        "source_basis": "The source sequence supplies relative bend phase but no world compass; optimize one overall yaw against native endpoint XZ residual."
+      },
+      "heading_delta_knots_deg": [
+        {
+          "station_m": 3156.8955,
+          "delta_deg": 0.0,
+          "role": "outer_blend_native"
+        },
+        {
+          "station_m": 3406.8955,
+          "delta_deg": 22.0,
+          "role": "left_bend_entry_strengthened"
+        },
+        {
+          "station_m": 3430.0,
+          "delta_deg": 8.0,
+          "role": "left_bend_mid_smooth"
+        },
+        {
+          "station_m": 3456.2708,
+          "delta_deg": -35.6,
+          "role": "left_bend_exit"
+        },
+        {
+          "station_m": 3479.397,
+          "delta_deg": -29.3,
+          "role": "straight_approach"
+        },
+        {
+          "station_m": 3505.6461,
+          "delta_deg": -43.3,
+          "role": "straight_start"
+        },
+        {
+          "station_m": 3529.397,
+          "delta_deg": -20.1,
+          "role": "straight_hold"
+        },
+        {
+          "station_m": 3554.397,
+          "delta_deg": -10.7,
+          "role": "straight_hold"
+        },
+        {
+          "station_m": 3579.397,
+          "delta_deg": -2.8,
+          "role": "straight_hold"
+        },
+        {
+          "station_m": 3604.3967,
+          "delta_deg": 5.2,
+          "role": "straight_hold_anchor"
+        },
+        {
+          "station_m": 3629.397,
+          "delta_deg": 3.1,
+          "role": "straight_hold"
+        },
+        {
+          "station_m": 3653.772,
+          "delta_deg": -8.0,
+          "role": "straight_end"
+        },
+        {
+          "station_m": 3704.397,
+          "delta_deg": -33.2,
+          "role": "right_exit"
+        },
+        {
+          "station_m": 3754.397,
+          "delta_deg": -8.0,
+          "role": "right_exit"
+        },
+        {
+          "station_m": 3801.8979,
+          "delta_deg": 0.0,
+          "role": "open_exit_anchor"
+        },
+        {
+          "station_m": 4051.8979,
+          "delta_deg": 0.0,
+          "role": "outer_blend_native"
+        }
+      ],
+      "grade_knots_pct": [
+        {
+          "station_m": 3406.8955,
+          "target_pct": -7.2,
+          "role": "left_bend_anchor"
+        },
+        {
+          "station_m": 3456.2708,
+          "target_pct": -7.0,
+          "role": "left_bend_exit"
+        },
+        {
+          "station_m": 3505.6461,
+          "target_pct": -6.8,
+          "role": "straight_start"
+        },
+        {
+          "station_m": 3653.772,
+          "target_pct": -6.8,
+          "role": "straight_end"
+        },
+        {
+          "station_m": 3801.8979,
+          "target_pct": -6.5,
+          "role": "open_exit_anchor"
+        }
+      ],
+      "road_height_delta_knots_m": [
+        {
+          "station_m": 3156.8955,
+          "delta_m": 0.0,
+          "role": "outer_blend_native"
+        },
+        {
+          "station_m": 3406.8955,
+          "delta_m": 0.0,
+          "role": "left_bend_anchor"
+        },
+        {
+          "station_m": 3456.2708,
+          "delta_m": 2.7,
+          "role": "left_bend_exit"
+        },
+        {
+          "station_m": 3505.6461,
+          "delta_m": 5.5,
+          "role": "straight_start"
+        },
+        {
+          "station_m": 3653.772,
+          "delta_m": 11.8,
+          "role": "straight_end"
+        },
+        {
+          "station_m": 3801.8979,
+          "delta_m": 15.3,
+          "role": "open_exit_anchor"
+        },
+        {
+          "station_m": 4051.8979,
+          "delta_m": 0.0,
+          "role": "outer_blend_native"
+        }
+      ],
+      "composition_contract": {
+        "route_frame": "Use route-left/right from the corrected tangent; do not infer side from world X.",
+        "nearfield": "A village opening remains readable through the 219-228 near-straight interval.",
+        "right_side": "The broadleaf tree occlusion seen near source 231s stays on route-right after the bend exit.",
+        "forest_policy": "Keep the opening and village silhouette; do not fill the straight interval with uniform canopy.",
+        "fixed_landmark_policy": "Existing houses are audited individually against the corrected station frame."
+      },
+      "acceptance_trace": [
+        "export/saisies/review/round37_route_diagnosis/source/S06_sequence.jpg",
+        "export/saisies/review/round37_route_diagnosis/source/manifest.json",
+        "export/saisies/review/round37_route_diagnosis/controlled/capture.json",
+        "export/saisies/review/round37_route_diagnosis/probe/trajectory.json"
+      ]
+    },
+    {
+      "id": "S10",
+      "scene_id": "S10",
+      "route_section": "woodland_entry",
+      "baseline_anchor": {
+        "source_time_s": 405.0,
+        "station_m": 6646.6746,
+        "native_heading_deg": 95.782,
+        "native_grade_pct": 3.003,
+        "trace_filter": {
+          "target_scene_id": "S10",
+          "mode": "baseline",
+          "target_station_m": 6646.6746
+        }
+      },
+      "source_sequence": {
+        "time_to_station_estimates": [
+          {
+            "source_time_s": 393.0,
+            "station_m": 6464.3658,
+            "phase": "near_straight_start"
+          },
+          {
+            "source_time_s": 405.0,
+            "station_m": 6646.6746,
+            "phase": "near_straight_anchor"
+          },
+          {
+            "source_time_s": 417.0,
+            "station_m": 6828.3131,
+            "phase": "near_straight_exit"
+          }
+        ],
+        "expected_order": "continuous near-straight uphill passage with high rock/wall on route-right and low guardrail/forest on route-left",
+        "source_estimated_not_gps": true,
+        "hud_grade_reference": "The source HUD estimate is visual evidence only; the source 393-417s passage rises continuously and the candidate target grade is the explicit +7.5..+8.5% uphill band.",
+        "grade_contract": {
+          "sign": "positive",
+          "min_pct": 7.5,
+          "max_pct": 8.5,
+          "source_basis": "Source 393-417s is a continuous uphill passage; HUD +8..+9 is a visual reference and the native route grade is base evidence only."
+        }
+      },
+      "station_window": {
+        "edit_start_m": 6464.3658,
+        "edit_end_m": 6828.3131,
+        "outer_start_m": 6214.3658,
+        "outer_end_m": 7078.3131,
+        "boundary_blend_range_m": 250.0,
+        "preserve_endpoint_station_order": true,
+        "preserve_c1_at_outer_boundaries": true
+      },
+      "overall_orientation": {
+        "enabled": true,
+        "mode": "free_source_yaw",
+        "initial_deg": -1.4,
+        "search_half_range_deg": 20.0,
+        "max_abs_deg": 45.0,
+        "source_compass": false,
+        "source_basis": "The source sequence supplies relative bend phase but no world compass; optimize one overall yaw against native endpoint XZ residual."
+      },
+      "heading_delta_knots_deg": [
+        {
+          "station_m": 6214.3658,
+          "delta_deg": 0.0,
+          "role": "outer_blend_native"
+        },
+        {
+          "station_m": 6464.3658,
+          "delta_deg": 1.5,
+          "role": "near_straight_start"
+        },
+        {
+          "station_m": 6496.675,
+          "delta_deg": 2.2,
+          "role": "straight_hold"
+        },
+        {
+          "station_m": 6521.675,
+          "delta_deg": -2.6,
+          "role": "straight_hold"
+        },
+        {
+          "station_m": 6546.675,
+          "delta_deg": -3.1,
+          "role": "straight_hold"
+        },
+        {
+          "station_m": 6571.675,
+          "delta_deg": 0.0,
+          "role": "straight_hold"
+        },
+        {
+          "station_m": 6596.675,
+          "delta_deg": 1.8,
+          "role": "straight_hold"
+        },
+        {
+          "station_m": 6621.675,
+          "delta_deg": 1.2,
+          "role": "straight_hold"
+        },
+        {
+          "station_m": 6646.6746,
+          "delta_deg": -2.8,
+          "role": "near_straight_anchor"
+        },
+        {
+          "station_m": 6671.675,
+          "delta_deg": -22.2,
+          "role": "turn_removed"
+        },
+        {
+          "station_m": 6696.675,
+          "delta_deg": -23.1,
+          "role": "turn_removed"
+        },
+        {
+          "station_m": 6721.675,
+          "delta_deg": 24.5,
+          "role": "turn_removed"
+        },
+        {
+          "station_m": 6746.675,
+          "delta_deg": 22.7,
+          "role": "straight_hold"
+        },
+        {
+          "station_m": 6771.675,
+          "delta_deg": 9.6,
+          "role": "straight_hold"
+        },
+        {
+          "station_m": 6796.675,
+          "delta_deg": 8.0,
+          "role": "straight_hold"
+        },
+        {
+          "station_m": 6828.3131,
+          "delta_deg": 12.5,
+          "role": "near_straight_exit"
+        },
+        {
+          "station_m": 7078.3131,
+          "delta_deg": 0.0,
+          "role": "outer_blend_native"
+        }
+      ],
+      "grade_knots_pct": [
+        {
+          "station_m": 6464.3658,
+          "target_pct": 7.5,
+          "role": "near_straight_start"
+        },
+        {
+          "station_m": 6646.6746,
+          "target_pct": 8.0,
+          "role": "near_straight_anchor"
+        },
+        {
+          "station_m": 6828.3131,
+          "target_pct": 8.5,
+          "role": "near_straight_exit"
+        }
+      ],
+      "road_height_delta_knots_m": [
+        {
+          "station_m": 6214.3658,
+          "delta_m": 0.0,
+          "role": "outer_blend_native"
+        },
+        {
+          "station_m": 6464.3658,
+          "delta_m": 0.0,
+          "role": "near_straight_start"
+        },
+        {
+          "station_m": 6646.6746,
+          "delta_m": 9.1,
+          "role": "near_straight_anchor"
+        },
+        {
+          "station_m": 6828.3131,
+          "delta_m": 18.2,
+          "role": "near_straight_exit"
+        },
+        {
+          "station_m": 7078.3131,
+          "delta_m": 0.0,
+          "role": "outer_blend_native"
+        }
+      ],
+      "composition_contract": {
+        "route_frame": "Route-right is -left_at and route-left is +left_at after the corrected tangent is built.",
+        "right_side": "Keep the high rock/stone wall on route-right, close enough to read beside the road but outside the collision envelope.",
+        "left_side": "Keep the low guardrail and downward forest on route-left; the slope must fall away from the road.",
+        "road_read": "The road edges and horizon should read as one continuous near-straight uphill passage; do not use a camera yaw or lateral shift to conceal residual bends.",
+        "feature_timing": "Roadside authored station ranges remain dependent evidence and must be reprojected only after route geometry passes."
+      },
+      "acceptance_trace": [
+        "export/saisies/review/round37_route_diagnosis/source/S10_sequence.jpg",
+        "export/saisies/review/round37_route_diagnosis/source/manifest.json",
+        "export/saisies/review/round37_route_diagnosis/controlled/capture.json",
+        "export/saisies/review/round37_route_diagnosis/probe/trajectory.json"
+      ]
+    },
+    {
+      "id": "S12",
+      "scene_id": "S12",
+      "route_section": "forest_descent",
+      "baseline_anchor": {
+        "source_time_s": 570.0,
+        "station_m": 9351.6813,
+        "native_heading_deg": 127.668,
+        "native_grade_pct": -18.003,
+        "trace_filter": {
+          "target_scene_id": "S12",
+          "mode": "baseline",
+          "target_station_m": 9351.6813
+        }
+      },
+      "source_sequence": {
+        "time_to_station_estimates": [
+          {
+            "source_time_s": 558.0,
+            "station_m": 9145.3445,
+            "phase": "left_bend_start"
+          },
+          {
+            "source_time_s": 561.0,
+            "station_m": 9198.169,
+            "phase": "left_bend_end"
+          },
+          {
+            "source_time_s": 564.0,
+            "station_m": 9249.3397,
+            "phase": "transition"
+          },
+          {
+            "source_time_s": 567.0,
+            "station_m": 9300.5105,
+            "phase": "right_bend_start"
+          },
+          {
+            "source_time_s": 570.0,
+            "station_m": 9351.6813,
+            "phase": "right_bend_end"
+          },
+          {
+            "source_time_s": 573.0,
+            "station_m": 9401.0566,
+            "phase": "straight_start"
+          },
+          {
+            "source_time_s": 582.0,
+            "station_m": 9549.1824,
+            "phase": "straight_end"
+          }
+        ],
+        "expected_order": "left bend -> right bend -> near-straight forest descent",
+        "source_estimated_not_gps": true,
+        "grade_contract": {
+          "sign": "negative",
+          "min_pct": -4.0,
+          "max_pct": -3.0,
+          "source_basis": "The authored representative target is a moderate downhill forest descent; source timing remains estimated rather than GPS."
+        }
+      },
+      "station_window": {
+        "edit_start_m": 9145.3445,
+        "edit_end_m": 9549.1824,
+        "outer_start_m": 8895.3445,
+        "outer_end_m": 9799.1824,
+        "boundary_blend_range_m": 250.0,
+        "preserve_endpoint_station_order": true,
+        "preserve_c1_at_outer_boundaries": true
+      },
+      "overall_orientation": {
+        "enabled": true,
+        "mode": "free_source_yaw",
+        "initial_deg": -25.19,
+        "search_half_range_deg": 20.0,
+        "max_abs_deg": 45.0,
+        "source_compass": false,
+        "source_basis": "The source sequence supplies relative bend phase but no world compass; optimize one overall yaw against native endpoint XZ residual."
+      },
+      "heading_delta_knots_deg": [
+        {
+          "station_m": 8895.3445,
+          "delta_deg": 0.0,
+          "role": "outer_blend_native"
+        },
+        {
+          "station_m": 9145.3445,
+          "delta_deg": 1.0,
+          "role": "left_bend_start"
+        },
+        {
+          "station_m": 9176.6813,
+          "delta_deg": -53.0,
+          "role": "left_bend"
+        },
+        {
+          "station_m": 9198.169,
+          "delta_deg": -58.0,
+          "role": "left_bend_end"
+        },
+        {
+          "station_m": 9226.6813,
+          "delta_deg": -55.0,
+          "role": "transition"
+        },
+        {
+          "station_m": 9249.3397,
+          "delta_deg": -40.0,
+          "role": "transition"
+        },
+        {
+          "station_m": 9276.6813,
+          "delta_deg": -10.0,
+          "role": "right_bend"
+        },
+        {
+          "station_m": 9300.5105,
+          "delta_deg": 7.0,
+          "role": "right_bend_start"
+        },
+        {
+          "station_m": 9326.6813,
+          "delta_deg": 20.0,
+          "role": "right_bend"
+        },
+        {
+          "station_m": 9351.6813,
+          "delta_deg": 35.0,
+          "role": "right_bend_end"
+        },
+        {
+          "station_m": 9401.0566,
+          "delta_deg": 40.0,
+          "role": "straight_start"
+        },
+        {
+          "station_m": 9451.6813,
+          "delta_deg": 40.0,
+          "role": "straight_hold"
+        },
+        {
+          "station_m": 9501.6813,
+          "delta_deg": 52.0,
+          "role": "straight_hold"
+        },
+        {
+          "station_m": 9549.1824,
+          "delta_deg": 38.0,
+          "role": "straight_end"
+        },
+        {
+          "station_m": 9799.1824,
+          "delta_deg": 0.0,
+          "role": "outer_blend_native"
+        }
+      ],
+      "grade_knots_pct": [
+        {
+          "station_m": 9145.3445,
+          "target_pct": -3.4,
+          "role": "left_bend_start"
+        },
+        {
+          "station_m": 9198.169,
+          "target_pct": -3.6,
+          "role": "left_bend_end"
+        },
+        {
+          "station_m": 9249.3397,
+          "target_pct": -3.8,
+          "role": "transition"
+        },
+        {
+          "station_m": 9300.5105,
+          "target_pct": -3.6,
+          "role": "right_bend_start"
+        },
+        {
+          "station_m": 9351.6813,
+          "target_pct": -3.5,
+          "role": "right_bend_end"
+        },
+        {
+          "station_m": 9401.0566,
+          "target_pct": -3.4,
+          "role": "straight_start"
+        },
+        {
+          "station_m": 9549.1824,
+          "target_pct": -3.8,
+          "role": "straight_end"
+        }
+      ],
+      "road_height_delta_knots_m": [
+        {
+          "station_m": 8895.3445,
+          "delta_m": 0.0,
+          "role": "outer_blend_native"
+        },
+        {
+          "station_m": 9145.3445,
+          "delta_m": 0.0,
+          "role": "left_bend_start"
+        },
+        {
+          "station_m": 9198.169,
+          "delta_m": -3.4,
+          "role": "left_bend_end"
+        },
+        {
+          "station_m": 9249.3397,
+          "delta_m": -6.9,
+          "role": "transition"
+        },
+        {
+          "station_m": 9300.5105,
+          "delta_m": -6.2,
+          "role": "right_bend_start"
+        },
+        {
+          "station_m": 9351.6813,
+          "delta_m": 1.1,
+          "role": "right_bend_end"
+        },
+        {
+          "station_m": 9401.0566,
+          "delta_m": 8.3,
+          "role": "straight_start"
+        },
+        {
+          "station_m": 9549.1824,
+          "delta_m": 24.1,
+          "role": "straight_end"
+        },
+        {
+          "station_m": 9799.1824,
+          "delta_m": 0.0,
+          "role": "outer_blend_native"
+        }
+      ],
+      "composition_contract": {
+        "route_frame": "Evaluate all side placement with the corrected route tangent and left_at; do not use the old tangent for scenery projection.",
+        "road_read": "The near camera should see a readable left bend, a right bend, then a straight exit in that order.",
+        "forest_policy": "Keep the forest descent framing and road clearance. Do not use a canopy wall to hide an incorrect turn sequence.",
+        "fixed_landmark_policy": "No global world translation; inspect rock/house anchors individually after route geometry parity passes."
+      },
+      "acceptance_trace": [
+        "export/saisies/review/round37_route_diagnosis/source/S12_sequence.jpg",
+        "export/saisies/review/round37_route_diagnosis/source/manifest.json",
+        "export/saisies/review/round37_route_diagnosis/controlled/capture.json",
+        "export/saisies/review/round37_route_diagnosis/probe/trajectory.json"
+      ]
+    }
+  ]
+}

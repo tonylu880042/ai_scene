@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "id": "saisies_geo_camera_poses",
+  "scope": "geo-only",
+  "estimated": true,
+  "note": "Candidate source-view poses inferred from full-resolution source sequence and native route probes; these are not GPS or camera calibration.",
+  "source_evidence": "res://export/saisies/review/round10_analysis/source_sequence/fullres/fullres_source_feature_annotations.json",
+  "camera_height_m": 1.65,
+  "fov_deg": 78.0,
+  "poses": [
+    {
+      "scene_id": "S13",
+      "pitch_deg": -24.0,
+      "yaw_deg": -4.0,
+      "lateral_m": -2.0,
+      "estimated": true,
+      "note": "Candidate10120m right-lane source view after corrected turn-direction analysis and native true-left probes; not calibrated or visually approved."
+    },
+    {
+      "scene_id": "S09",
+      "pitch_deg": -8.0,
+      "yaw_deg": -4.0,
+      "lateral_m": -2.0,
+      "estimated": true,
+      "station_m": 5431.282674,
+      "source_evidence": "res://export/saisies/review/round11_analysis/s09_gray2/native.log",
+      "probe_evidence": [
+        "res://export/saisies/review/round11_analysis/s09_gray/contact_sheet.jpg",
+        "res://export/saisies/review/round11_analysis/s09_gray2/contact_sheet.jpg"
+      ],
+      "note": "Candidate gray route-only native probe at the frozen S09 330 s station 5431.282674 m. Right-lane lateral -2.0 m and yaw -4 deg improved the source left road edge and bend exit versus centered and steeper-pitch probes; source view remains unaccepted and this is not GPS or camera calibration."
+    }
+  ]
+}

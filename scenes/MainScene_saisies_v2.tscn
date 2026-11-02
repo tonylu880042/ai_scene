@@ -1,0 +1,143 @@
+[gd_scene load_steps=16 format=3]
+
+[ext_resource type="Script" path="res://scripts/saisies_route.gd" id="1_route"]
+[ext_resource type="Script" path="res://scripts/saisies_camera.gd" id="2_camera"]
+[ext_resource type="Script" path="res://scripts/saisies_runtime.gd" id="3_runtime"]
+[ext_resource type="Script" path="res://scripts/saisies_landscape.gd" id="4_landscape"]
+[ext_resource type="Script" path="res://scripts/saisies_village.gd" id="5_village"]
+[ext_resource type="Script" path="res://scripts/saisies_upper_scenery.gd" id="6_upper"]
+[ext_resource type="Script" path="res://scripts/saisies_lower_scenery.gd" id="7_lower"]
+[ext_resource type="Shader" path="res://shaders/hdri_sky.gdshader" id="8_hdri"]
+[ext_resource type="Texture2D" path="res://assets/hdri/kloofendal_48d_partly_cloudy_puresky_8k.hdr" id="9_hdri"]
+[ext_resource type="Script" path="res://scripts/saisies_village_props.gd" id="10_village_props"]
+
+[sub_resource type="ShaderMaterial" id="SkyMaterial_saisies_v2"]
+shader = ExtResource("8_hdri")
+shader_parameter/pano = ExtResource("9_hdri")
+shader_parameter/energy = 1.0
+shader_parameter/ambient_clamp = 3.0
+shader_parameter/horizon_fill = 1.0
+
+[sub_resource type="Sky" id="Sky_saisies_v2"]
+sky_material = SubResource("SkyMaterial_saisies_v2")
+radiance_size = 2
+
+[sub_resource type="Environment" id="Environment_saisies_v2"]
+background_mode = 2
+sky = SubResource("Sky_saisies_v2")
+ambient_light_source = 3
+ambient_light_color = Color(0.72, 0.78, 0.68, 1)
+ambient_light_energy = 0.98
+reflected_light_source = 2
+tonemap_mode = 2
+tonemap_exposure = 1.13
+glow_enabled = true
+glow_intensity = 0.65
+adjustment_enabled = true
+adjustment_saturation = 1.16
+adjustment_contrast = 1.08
+fog_enabled = true
+fog_light_color = Color(0.63, 0.74, 0.82, 1)
+fog_light_energy = 0.82
+fog_density = 0.00008
+fog_height = 0.0
+fog_height_density = 0.0
+fog_aerial_perspective = 0.25
+fog_sky_affect = 0.12
+
+[node name="MainSceneSaisiesV2" type="Node3D"]
+script = ExtResource("3_runtime")
+camera_path = NodePath("CameraRig")
+route_path = NodePath("Route")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_saisies_v2")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-42, -32, 0)
+light_color = Color(1, 0.95, 0.82, 1)
+light_energy = 1.55
+light_angular_distance = 0.45
+shadow_enabled = true
+shadow_blur = 1.7
+directional_shadow_max_distance = 220.0
+
+[node name="Route" type="Path3D" parent="."]
+script = ExtResource("1_route")
+route_file = "res://data/saisies_route_v2.json"
+fallback_length_m = 14800.0
+fallback_start_elevation_m = 1608.0
+fallback_end_elevation_m = 717.0
+fallback_road_width_m = 6.4
+fallback_sample_spacing_m = 5.0
+random_seed = 2509
+centerline_start_m = 560.0
+shoulder_width_m = 0.28
+downhill_terrain_factor = 1.0
+shoulder_albedo_tint = Color(0.26, 0.28, 0.27, 1)
+village_flatten_radius_m = 18.0
+
+[node name="Landscape" type="Node3D" parent="."]
+script = ExtResource("4_landscape")
+route_path = NodePath("../Route")
+world_extent_m = 3000.0
+grid_spacing_m = 100.0
+route_sample_spacing_m = 120.0
+corridor_radius_m = 110.0
+protection_radius_m = 155.0
+transition_end_m = 720.0
+random_seed = 806
+max_vertices = 100000
+
+[node name="CameraRig" type="Node3D" parent="."]
+script = ExtResource("2_camera")
+route_path = NodePath("../Route")
+start_distance_m = 0.0
+cruise_speed_mps = 17.0
+camera_height = 1.65
+auto_advance = true
+
+[node name="Camera3D" type="Camera3D" parent="CameraRig"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.65, 0)
+current = true
+fov = 78.0
+near = 0.05
+far = 10000.0
+
+[node name="SceneryModules" type="Node3D" parent="."]
+
+[node name="VillageS01S03" type="Node3D" parent="SceneryModules"]
+script = ExtResource("5_village")
+route_path = NodePath("../../Route")
+from_m = 0.0
+to_m = 1300.0
+random_seed = 9127
+
+[node name="VillagePropsS01" type="Node3D" parent="SceneryModules"]
+script = ExtResource("10_village_props")
+route_path = NodePath("../../Route")
+from_m = 0.0
+to_m = 220.0
+random_seed = 1831
+
+[node name="UpperSceneryS04S09" type="Node3D" parent="SceneryModules"]
+script = ExtResource("6_upper")
+route_path = NodePath("../../Route")
+from_m = 1120.0
+to_m = 6577.0
+random_seed = 4407
+include_trees = true
+wall_sample_spacing_m = 8.0
+guardrail_spacing_m = 10.0
+
+[node name="LowerSceneryS10S18" type="Node3D" parent="SceneryModules"]
+script = ExtResource("7_lower")
+route_path = NodePath("../../Route")
+player_path = NodePath("../../CameraRig")
+random_seed = 1881
+lower_start_time_s = 395.0
+lower_end_time_s = 920.067
+chunk_length_m = 480.0
+view_distance_m = 1250.0
+build_foliage = true
+build_roadside_detail = true

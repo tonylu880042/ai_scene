@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/MainScene_saisies_s03_ground_review.tscn" id="1_ground_review"]
+[ext_resource type="Script" path="res://scripts/saisies_s03_lift_refinement.gd" id="2_lift"]
+
+[node name="MainSceneSaisiesS03LiftReview" type="Node3D"]
+
+[node name="GroundReview" parent="." instance=ExtResource("1_ground_review")]
+
+[node name="LiftRefinement" type="Node3D" parent="."]
+script = ExtResource("2_lift")
+ground_review_path = NodePath("../GroundReview")
+world_path = NodePath("../GroundReview/CafeReview/S03Review/S02Review/S01Review/World")
+s01_landscape_path = NodePath("../GroundReview/CafeReview/S03Review/S02Review/S01Review/S01Landscape")
+chairlift_path = NodePath("../GroundReview/CafeReview/S03Review/S02Review/S01Review/World/VillageS01S02/S03Chairlift")
+enable_refinement = true

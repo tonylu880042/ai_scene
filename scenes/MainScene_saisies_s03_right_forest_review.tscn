@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/MainScene_saisies_s03_forest_review.tscn" id="1_left_forest"]
+[ext_resource type="Script" path="res://scripts/saisies_s03_right_forest_refinement.gd" id="2_right_forest"]
+
+[node name="MainSceneSaisiesS03RightForestReview" type="Node3D"]
+
+[node name="LeftForestReview" parent="." instance=ExtResource("1_left_forest")]
+
+[node name="RightForestRefinement" type="Node3D" parent="."]
+script = ExtResource("2_right_forest")
+left_forest_review_path = NodePath("../LeftForestReview")
+flowers_review_path = NodePath("../LeftForestReview/FlowersReview")
+world_path = NodePath("../LeftForestReview/FlowersReview/SignsReview/LiftReview/GroundReview/CafeReview/S03Review/S02Review/S01Review/World")
+s01_landscape_path = NodePath("../LeftForestReview/FlowersReview/SignsReview/LiftReview/GroundReview/CafeReview/S03Review/S02Review/S01Review/S01Landscape")
+enable_refinement = true

@@ -1,0 +1,48 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/MainScene_saisies_s04_late_bends_review.tscn" id="1_batch_base"]
+[ext_resource type="Script" path="res://scripts/saisies_s04_forest_distribution.gd" id="2_forest"]
+[ext_resource type="Script" path="res://scripts/saisies_s04_bend_guardrail.gd" id="3_guardrail"]
+[ext_resource type="Script" path="res://scripts/saisies_s04_batch_review.gd" id="4_batch"]
+
+[node name="MainSceneSaisiesS04BatchReview" type="Node3D"]
+
+[node name="BatchBase" parent="." instance=ExtResource("1_batch_base")]
+
+[node name="ForestContinuation" type="Node3D" parent="."]
+script = ExtResource("2_forest")
+guardrail_base_path = NodePath("../BatchBase/ForestBase/GuardrailBase")
+candidate_path = "res://data/saisies_s04_batch_forest.json"
+enable_refinement = true
+left_forest_review_path = NodePath("../BatchBase/ForestBase/GuardrailBase/LinkedBendsBase/S03Base/JunctionShapeReview/ParasolReview/CafeTreesReview/RightForestReview/LeftForestReview")
+flowers_review_path = NodePath("../BatchBase/ForestBase/GuardrailBase/LinkedBendsBase/S03Base/JunctionShapeReview/ParasolReview/CafeTreesReview/RightForestReview/LeftForestReview/FlowersReview")
+world_path = NodePath("../BatchBase/ForestBase/GuardrailBase/LinkedBendsBase/S03Base/JunctionShapeReview/ParasolReview/CafeTreesReview/RightForestReview/LeftForestReview/FlowersReview/SignsReview/LiftReview/GroundReview/CafeReview/S03Review/S02Review/S01Review/World")
+s01_landscape_path = NodePath("../BatchBase/ForestBase/GuardrailBase/LinkedBendsBase/S03Base/JunctionShapeReview/ParasolReview/CafeTreesReview/RightForestReview/LeftForestReview/FlowersReview/SignsReview/LiftReview/GroundReview/CafeReview/S03Review/S02Review/S01Review/S01Landscape")
+
+[node name="GuardrailContinuation" type="Node3D" parent="."]
+script = ExtResource("3_guardrail")
+linked_bends_base_path = NodePath("../BatchBase/ForestBase/GuardrailBase/LinkedBendsBase")
+world_path = NodePath("../BatchBase/ForestBase/GuardrailBase/LinkedBendsBase/S03Base/JunctionShapeReview/ParasolReview/CafeTreesReview/RightForestReview/LeftForestReview/FlowersReview/SignsReview/LiftReview/GroundReview/CafeReview/S03Review/S02Review/S01Review/World")
+forest_refinement_path = NodePath("../BatchBase/ForestBase/GuardrailBase/LinkedBendsBase/S03Base/JunctionShapeReview/ParasolReview/CafeTreesReview/RightForestReview/RightForestRefinement")
+candidate_path = "res://data/saisies_s04_batch_guardrail.json"
+enable_refinement = true
+visibility_gate_end_m = 360.0
+
+[node name="S04BatchReview" type="Node3D" parent="."]
+script = ExtResource("4_batch")
+base_scene_path = NodePath("../BatchBase")
+world_path = NodePath("../BatchBase/ForestBase/GuardrailBase/LinkedBendsBase/S03Base/JunctionShapeReview/ParasolReview/CafeTreesReview/RightForestReview/LeftForestReview/FlowersReview/SignsReview/LiftReview/GroundReview/CafeReview/S03Review/S02Review/S01Review/World")
+s03_review_controller_path = NodePath("../BatchBase/S04LateBendsReview")
+candidate_path = "res://data/saisies_s04_batch.json"
+late_candidate_path = "res://data/saisies_s04_batch.json"
+batch_candidate_path = "res://data/saisies_s04_batch.json"
+default_video_seconds = 130.0
+late_default_video_seconds = 130.0
+batch_default_video_seconds = 130.0
+fov_deg = 58.0
+camera_height_m = 1.67
+pitch_deg = -8.0
+yaw_deg = 0.0
+lateral_m = -1.6
+roll_deg = 0.0
+preview_speed_kmh = 30.0

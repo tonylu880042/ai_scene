@@ -1,0 +1,30 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="PackedScene" path="res://export/saisies/SaisiesEnvironment_geo_r14.scn" id="1_r14_world"]
+[ext_resource type="Script" path="res://scripts/saisies_s01_architecture.gd" id="2_s01_architecture"]
+[ext_resource type="Script" path="res://scripts/saisies_s01_landscape.gd" id="3_s01_landscape"]
+[ext_resource type="Script" path="res://scripts/saisies_s01_camera_controller.gd" id="4_s01_camera"]
+
+[node name="MainSceneSaisiesS01Review" type="Node3D"]
+
+[node name="World" parent="." instance=ExtResource("1_r14_world")]
+
+[node name="S01Architecture" type="Node3D" parent="."]
+script = ExtResource("2_s01_architecture")
+world_path = NodePath("../World")
+build_on_ready = true
+
+[node name="S01Landscape" type="Node3D" parent="."]
+script = ExtResource("3_s01_landscape")
+world_path = NodePath("../World")
+landscape_path = NodePath("../World/Landscape")
+target_scene_id = "S01"
+build_on_ready = true
+enable_s01 = true
+
+[node name="S01CameraController" type="Node3D" parent="."]
+script = ExtResource("4_s01_camera")
+world_path = NodePath("../World")
+calibration_path = "res://data/saisies_s01_camera_calibration.json"
+tour_speed_kmh = 30.0
+tour_max_station_m = 220.0

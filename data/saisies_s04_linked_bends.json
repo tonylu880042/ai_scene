@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "kind": "saisies_s04_linked_bends_time_station_candidate",
+  "status": "root_selected_for_integrated_review",
+  "visual_acceptance": "pending",
+  "source_visual_estimate": true,
+  "gps_calibrated": false,
+  "formal_route_edit": false,
+  "note": "Controlled source-view time/station estimates for the S04 100..120s linked-bends review. This mapping is not GPS, route calibration, or visual acceptance; it must remain inside this review wrapper.",
+  "anchors": [
+    {"video_seconds": 100.0, "station_m": 1340.0},
+    {"video_seconds": 105.0, "station_m": 1435.0},
+    {"video_seconds": 110.0, "station_m": 1540.0},
+    {"video_seconds": 115.0, "station_m": 1630.0},
+    {"video_seconds": 120.0, "station_m": 1770.0}
+  ]
+}

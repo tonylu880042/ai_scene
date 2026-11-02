@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "kind": "saisies_s04_forest_distribution_candidate",
+  "status": "root_selected_for_integrated_review",
+  "visual_acceptance": "pending",
+  "source_visual_estimate": true,
+  "gps_calibrated": false,
+  "formal_route_edit": false,
+  "note": "Controlled S04 woodland distribution for the existing 100..120 second views. Route-relative stations and offsets are visual estimates, not GPS; acceptance remains pending native comparison.",
+  "source_frames": [
+    "export/saisies/review/round31_s04_linked_bends/source_frames/source_105_frame02517.png",
+    "export/saisies/review/round31_s04_linked_bends/source_frames/source_110_frame02637.png",
+    "export/saisies/review/round31_s04_linked_bends/source_frames/source_115_frame02757.png",
+    "export/saisies/review/round31_s04_linked_bends/source_frames/source_120_frame02877.png"
+  ],
+  "video_seconds": {
+    "from": 100.0,
+    "to": 120.0,
+    "station_estimate_from_m": 1340.0,
+    "station_estimate_to_m": 1770.0
+  },
+  "lod_gate_station_m": {
+    "from": 1200.0,
+    "to": 2100.0
+  },
+  "max_new_trees": 1000,
+  "tree_policy": "three conifer variants, irregular clustered groups, real nearest-route XZ clearance, preserve the 1575..1685 right-inner meadow opening",
+  "zones": [
+    {
+      "id": "A_right_core",
+      "station_from_m": 1400.0,
+      "station_to_m": 1555.0,
+      "side_route_left_sign": -1.0,
+      "offset_min_m": 110.0,
+      "offset_max_m": 220.0,
+      "target_count": 400
+    },
+    {
+      "id": "A_right_forest_edge",
+      "station_from_m": 1400.0,
+      "station_to_m": 1555.0,
+      "side_route_left_sign": -1.0,
+      "offset_min_m": 30.0,
+      "offset_max_m": 105.0,
+      "target_count": 60
+    },
+    {
+      "id": "B_right_core",
+      "station_from_m": 1700.0,
+      "station_to_m": 2000.0,
+      "side_route_left_sign": -1.0,
+      "offset_min_m": 55.0,
+      "offset_max_m": 150.0,
+      "target_count": 400
+    },
+    {
+      "id": "B_right_forest_edge",
+      "station_from_m": 1700.0,
+      "station_to_m": 2000.0,
+      "side_route_left_sign": -1.0,
+      "offset_min_m": 25.0,
+      "offset_max_m": 70.0,
+      "target_count": 100
+    },
+    {
+      "id": "left_slope_small_group",
+      "station_from_m": 1710.0,
+      "station_to_m": 1740.0,
+      "side_route_left_sign": 1.0,
+      "offset_min_m": 135.0,
+      "offset_max_m": 170.0,
+      "target_count": 12
+    }
+  ]
+}

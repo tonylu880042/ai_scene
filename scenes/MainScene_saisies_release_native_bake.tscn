@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/saisies_release_native_bake.gd" id="1_release_bake"]
+
+[node name="MainSceneSaisiesReleaseNativeBake" type="Node3D"]
+script = ExtResource("1_release_bake")

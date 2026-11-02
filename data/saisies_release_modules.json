@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "kind": "saisies_full_route_release_modules",
+  "status": "root_selected_for_integrated_review",
+  "visual_acceptance": "pending",
+  "formal_route_edit": false,
+  "modules": [
+    {
+      "id": "whole_route_forest",
+      "node_name": "ReleaseForest",
+      "script": "res://scripts/saisies_release_forest.gd",
+      "candidate": "res://data/saisies_release_forest.json",
+      "video_range_s": [0.0, 920.067],
+      "scene_scope": ["S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18"],
+      "ready_meta": "saisies_release_forest_ready",
+      "enable_property": "enable_refinement",
+      "features": ["S04-S07 meadow and forest openings", "S08-S15 continuous forest corridor", "S16-S18 valley reopening"],
+      "ground_strategy": "actual terrain triangles plus nearest-XZ route filtering",
+      "render_strategy": "chunked MultiMesh"
+    },
+    {
+      "id": "whole_route_roadside",
+      "node_name": "ReleaseRoadside",
+      "script": "res://scripts/saisies_release_roadside.gd",
+      "candidate": "res://data/saisies_release_roadside.json",
+      "video_range_s": [0.0, 920.067],
+      "scene_scope": ["S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18"],
+      "ready_meta": "saisies_release_roadside_ready",
+      "enable_property": "enable_refinement",
+      "features": ["walls", "rock cuts", "guardrails", "chalet/barn/shed massing", "S18 junction landmarks"],
+      "ground_strategy": "actual terrain contacts and route-relative placement",
+      "render_strategy": "bounded static meshes"
+    },
+    {
+      "id": "route_terminals",
+      "node_name": "ReleaseTerminals",
+      "script": "res://scripts/saisies_release_terminals.gd",
+      "candidate": "res://data/saisies_release_terminals.json",
+      "video_range_s": [0.0, 920.067],
+      "scene_scope": ["START", "S18", "FINISH"],
+      "ready_meta": "saisies_release_terminals_ready",
+      "enable_property": "enable_refinement",
+      "features": ["DÉPART / START sign", "ARRIVÉE / FINISH arch", "single endpoint-height textured arrival terrace", "continuous textured asphalt", "textured rider-facing chalets", "gardens, benches and timber rails", "dense conifer backdrop"],
+      "ground_strategy": "authored terminal terrain at route-end height with a -14m..0m route-sampled transition",
+      "render_strategy": "bounded authored MeshInstance3D and Label3D"
+    }
+  ],
+  "preserved_modules": ["R35_S04_batch", "S01_base", "S02_base", "S03_base", "R14_baked_world"],
+  "excluded": ["people", "cars", "bicycles", "HUD", "per_pixel_building_refinement", "formal_route_edit", "historical_review_pose_writers"]
+}

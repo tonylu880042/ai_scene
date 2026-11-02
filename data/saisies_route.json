@@ -1,0 +1,527 @@
+{
+  "id": "col_des_saisies",
+  "title": "Col des Saisies — French Alps descent",
+  "reference": {
+    "file": "video/Descending Col des Saisies _ French Alps #3_1080p.mp4",
+    "duration_seconds": 920.067483,
+    "notes": "Video-informed artistic reconstruction. No GPS/DEM calibration. Distances inferred from sampled speed; headings hand-authored. HUD elevations sampled at 30,90,...870 seconds; start elevation estimated; final section held at last readable 717m. Brief rise around 390–450s retained from HUD; local instantaneous grade differs from smoothed route. Landmark labels and road number are authored scene dressing, not transcribed signs."
+  },
+  "estimated_length_m": 14800,
+  "start_elevation_m": 1594,
+  "end_elevation_m": 717,
+  "road_width_m": 6.4,
+  "sample_spacing_m": 5,
+  "checkpoints": [
+    {
+      "distance_m": 0,
+      "video_seconds": 0,
+      "elevation_m": 1594,
+      "heading_deg": 0
+    },
+    {
+      "distance_m": 300,
+      "video_seconds": 30,
+      "elevation_m": 1590,
+      "heading_deg": -6
+    },
+    {
+      "distance_m": 850,
+      "video_seconds": 65,
+      "elevation_m": 1560,
+      "heading_deg": -10
+    },
+    {
+      "distance_m": 1300,
+      "video_seconds": 90,
+      "elevation_m": 1534,
+      "heading_deg": 0
+    },
+    {
+      "distance_m": 1850,
+      "video_seconds": 120,
+      "elevation_m": 1496,
+      "heading_deg": 12
+    },
+    {
+      "distance_m": 2380,
+      "video_seconds": 150,
+      "elevation_m": 1461,
+      "heading_deg": 4
+    },
+    {
+      "distance_m": 2880,
+      "video_seconds": 180,
+      "elevation_m": 1426,
+      "heading_deg": -12
+    },
+    {
+      "distance_m": 3400,
+      "video_seconds": 210,
+      "elevation_m": 1391,
+      "heading_deg": 0
+    },
+    {
+      "distance_m": 3900,
+      "video_seconds": 240,
+      "elevation_m": 1362,
+      "heading_deg": 12
+    },
+    {
+      "distance_m": 4400,
+      "video_seconds": 270,
+      "elevation_m": 1327,
+      "heading_deg": 8
+    },
+    {
+      "distance_m": 4860,
+      "video_seconds": 296,
+      "elevation_m": 1289,
+      "heading_deg": -18
+    },
+    {
+      "distance_m": 5150,
+      "video_seconds": 312,
+      "elevation_m": 1264,
+      "heading_deg": -48
+    },
+    {
+      "distance_m": 5500,
+      "video_seconds": 330,
+      "elevation_m": 1235,
+      "heading_deg": -2
+    },
+    {
+      "distance_m": 6000,
+      "video_seconds": 360,
+      "elevation_m": 1195,
+      "heading_deg": 22
+    },
+    {
+      "distance_m": 6500,
+      "video_seconds": 390,
+      "elevation_m": 1169,
+      "heading_deg": 4
+    },
+    {
+      "distance_m": 6900,
+      "video_seconds": 416,
+      "elevation_m": 1180,
+      "heading_deg": -12
+    },
+    {
+      "distance_m": 7400,
+      "video_seconds": 450,
+      "elevation_m": 1185,
+      "heading_deg": 6
+    },
+    {
+      "distance_m": 7900,
+      "video_seconds": 480,
+      "elevation_m": 1142,
+      "heading_deg": 18
+    },
+    {
+      "distance_m": 8400,
+      "video_seconds": 510,
+      "elevation_m": 1104,
+      "heading_deg": -8
+    },
+    {
+      "distance_m": 8920,
+      "video_seconds": 540,
+      "elevation_m": 1073,
+      "heading_deg": 18
+    },
+    {
+      "distance_m": 9280,
+      "video_seconds": 559,
+      "elevation_m": 1055,
+      "heading_deg": 55
+    },
+    {
+      "distance_m": 9470,
+      "video_seconds": 570,
+      "elevation_m": 1042,
+      "heading_deg": 16
+    },
+    {
+      "distance_m": 9970,
+      "video_seconds": 600,
+      "elevation_m": 1014,
+      "heading_deg": -15
+    },
+    {
+      "distance_m": 10470,
+      "video_seconds": 630,
+      "elevation_m": 991,
+      "heading_deg": -42
+    },
+    {
+      "distance_m": 11020,
+      "video_seconds": 660,
+      "elevation_m": 948,
+      "heading_deg": -6
+    },
+    {
+      "distance_m": 11570,
+      "video_seconds": 690,
+      "elevation_m": 903,
+      "heading_deg": 12
+    },
+    {
+      "distance_m": 12150,
+      "video_seconds": 720,
+      "elevation_m": 870,
+      "heading_deg": 2
+    },
+    {
+      "distance_m": 12730,
+      "video_seconds": 750,
+      "elevation_m": 835,
+      "heading_deg": -12
+    },
+    {
+      "distance_m": 13130,
+      "video_seconds": 775,
+      "elevation_m": 805,
+      "heading_deg": -18
+    },
+    {
+      "distance_m": 13330,
+      "video_seconds": 791,
+      "elevation_m": 789,
+      "heading_deg": 10
+    },
+    {
+      "distance_m": 13430,
+      "video_seconds": 800,
+      "elevation_m": 781,
+      "heading_deg": 78
+    },
+    {
+      "distance_m": 13560,
+      "video_seconds": 810,
+      "elevation_m": 771,
+      "heading_deg": 125
+    },
+    {
+      "distance_m": 13770,
+      "video_seconds": 825,
+      "elevation_m": 753,
+      "heading_deg": 96
+    },
+    {
+      "distance_m": 14000,
+      "video_seconds": 844,
+      "elevation_m": 736,
+      "heading_deg": 38
+    },
+    {
+      "distance_m": 14310,
+      "video_seconds": 870,
+      "elevation_m": 717,
+      "heading_deg": 2
+    },
+    {
+      "distance_m": 14600,
+      "video_seconds": 895,
+      "elevation_m": 717,
+      "heading_deg": -8
+    },
+    {
+      "distance_m": 14800,
+      "video_seconds": 920.067,
+      "elevation_m": 717,
+      "heading_deg": -8
+    }
+  ],
+  "sections": [
+    {
+      "id": "summit_village",
+      "name": "Les Saisies · Summit village",
+      "from_m": 0,
+      "to_m": 550,
+      "video_from_s": 0,
+      "video_to_s": 48,
+      "biome": "village",
+      "tree_density": 0.1,
+      "uphill_side": "left",
+      "guardrail": "none",
+      "wall": "none",
+      "chalet_density": 1.0,
+      "road_width_m": 7.6
+    },
+    {
+      "id": "upper_meadows",
+      "name": "Open alpine meadows",
+      "from_m": 550,
+      "to_m": 3900,
+      "video_from_s": 48,
+      "video_to_s": 240,
+      "biome": "meadow",
+      "tree_density": 0.16,
+      "uphill_side": "left",
+      "guardrail": "right",
+      "wall": "none",
+      "chalet_density": 0.3,
+      "road_width_m": 6.4
+    },
+    {
+      "id": "farm_descent",
+      "name": "Pastures & farm chalets",
+      "from_m": 3900,
+      "to_m": 4860,
+      "video_from_s": 240,
+      "video_to_s": 296,
+      "biome": "meadow",
+      "tree_density": 0.28,
+      "uphill_side": "right",
+      "guardrail": "left",
+      "wall": "none",
+      "chalet_density": 0.4,
+      "road_width_m": 6.4
+    },
+    {
+      "id": "stone_bends",
+      "name": "Stone wall bends",
+      "from_m": 4860,
+      "to_m": 6500,
+      "video_from_s": 296,
+      "video_to_s": 390,
+      "biome": "retaining_wall",
+      "tree_density": 0.4,
+      "uphill_side": "right",
+      "guardrail": "left",
+      "wall": "right",
+      "chalet_density": 0.05,
+      "road_width_m": 6.4
+    },
+    {
+      "id": "woodland_entry",
+      "name": "Woodland transition",
+      "from_m": 6500,
+      "to_m": 7900,
+      "video_from_s": 390,
+      "video_to_s": 480,
+      "biome": "forest",
+      "tree_density": 0.68,
+      "uphill_side": "right",
+      "guardrail": "none",
+      "wall": "right",
+      "chalet_density": 0,
+      "road_width_m": 6.2
+    },
+    {
+      "id": "forest_descent",
+      "name": "Mixed forest descent",
+      "from_m": 7900,
+      "to_m": 9970,
+      "video_from_s": 480,
+      "video_to_s": 600,
+      "biome": "forest",
+      "tree_density": 0.96,
+      "uphill_side": "right",
+      "guardrail": "left",
+      "wall": "none",
+      "chalet_density": 0,
+      "road_width_m": 6.2
+    },
+    {
+      "id": "rock_passage",
+      "name": "Shaded rock cuttings",
+      "from_m": 9970,
+      "to_m": 11020,
+      "video_from_s": 600,
+      "video_to_s": 660,
+      "biome": "rock_cut",
+      "tree_density": 0.78,
+      "uphill_side": "left",
+      "guardrail": "right",
+      "wall": "left",
+      "chalet_density": 0,
+      "road_width_m": 6.2
+    },
+    {
+      "id": "lower_forest",
+      "name": "Lower forest traverse",
+      "from_m": 11020,
+      "to_m": 13130,
+      "video_from_s": 660,
+      "video_to_s": 775,
+      "biome": "forest",
+      "tree_density": 0.9,
+      "uphill_side": "right",
+      "guardrail": "left",
+      "wall": "none",
+      "chalet_density": 0.04,
+      "road_width_m": 6.4
+    },
+    {
+      "id": "final_bends",
+      "name": "Tight lower bends",
+      "from_m": 13130,
+      "to_m": 14000,
+      "video_from_s": 775,
+      "video_to_s": 844,
+      "biome": "forest",
+      "tree_density": 0.8,
+      "uphill_side": "right",
+      "guardrail": "left",
+      "wall": "none",
+      "chalet_density": 0.08,
+      "road_width_m": 6.4
+    },
+    {
+      "id": "valley_hamlet",
+      "name": "Valley hamlet",
+      "from_m": 14000,
+      "to_m": 14800,
+      "video_from_s": 844,
+      "video_to_s": 920.067,
+      "biome": "hamlet",
+      "tree_density": 0.32,
+      "uphill_side": "right",
+      "guardrail": "none",
+      "wall": "none",
+      "chalet_density": 0.9,
+      "road_width_m": 6.8
+    }
+  ],
+  "landmarks": [
+    {
+      "distance_m": 30,
+      "side": "left",
+      "type": "chalet",
+      "offset_m": 10.5
+    },
+    {
+      "distance_m": 60,
+      "side": "right",
+      "type": "chalet",
+      "offset_m": 11
+    },
+    {
+      "distance_m": 80,
+      "side": "right",
+      "type": "sign",
+      "text": "LES SAISIES"
+    },
+    {
+      "distance_m": 105,
+      "side": "left",
+      "type": "chalet",
+      "offset_m": 11.2
+    },
+    {
+      "distance_m": 145,
+      "side": "right",
+      "type": "chalet",
+      "offset_m": 11
+    },
+    {
+      "distance_m": 210,
+      "side": "left",
+      "type": "chalet",
+      "offset_m": 12
+    },
+    {
+      "distance_m": 245,
+      "side": "right",
+      "type": "chalet",
+      "offset_m": 11.5
+    },
+    {
+      "distance_m": 300,
+      "side": "left",
+      "type": "chalet",
+      "offset_m": 12
+    },
+    {
+      "distance_m": 355,
+      "side": "right",
+      "type": "chalet",
+      "offset_m": 12
+    },
+    {
+      "distance_m": 410,
+      "side": "left",
+      "type": "chalet",
+      "offset_m": 11
+    },
+    {
+      "distance_m": 450,
+      "side": "right",
+      "type": "sign",
+      "text": "DESCENTE · D218B"
+    },
+    {
+      "distance_m": 460,
+      "side": "right",
+      "type": "chalet",
+      "offset_m": 12
+    },
+    {
+      "distance_m": 1700,
+      "side": "left",
+      "type": "power_pole"
+    },
+    {
+      "distance_m": 2300,
+      "side": "right",
+      "type": "chalet"
+    },
+    {
+      "distance_m": 3150,
+      "side": "left",
+      "type": "chalet"
+    },
+    {
+      "distance_m": 4150,
+      "side": "left",
+      "type": "chalet"
+    },
+    {
+      "distance_m": 5450,
+      "side": "left",
+      "type": "sign",
+      "text": "VIRAGES"
+    },
+    {
+      "distance_m": 6400,
+      "side": "right",
+      "type": "rock"
+    },
+    {
+      "distance_m": 10300,
+      "side": "left",
+      "type": "rock"
+    },
+    {
+      "distance_m": 13400,
+      "side": "left",
+      "type": "sign",
+      "text": "RALENTIR"
+    },
+    {
+      "distance_m": 14150,
+      "side": "right",
+      "type": "sign",
+      "text": "VILLAGE"
+    },
+    {
+      "distance_m": 14400,
+      "side": "right",
+      "type": "power_pole"
+    },
+    {
+      "distance_m": 14480,
+      "side": "right",
+      "type": "bus_stop"
+    },
+    {
+      "distance_m": 14550,
+      "side": "left",
+      "type": "chalet"
+    }
+  ]
+}

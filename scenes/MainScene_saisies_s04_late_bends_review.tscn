@@ -1,0 +1,25 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/MainScene_saisies_s04_forest_review.tscn" id="1_forest_base"]
+[ext_resource type="Script" path="res://scripts/saisies_s04_late_bends_review.gd" id="2_late_bends"]
+
+[node name="MainSceneSaisiesS04LateBendsReview" type="Node3D"]
+
+[node name="ForestBase" parent="." instance=ExtResource("1_forest_base")]
+
+[node name="S04LateBendsReview" type="Node3D" parent="."]
+script = ExtResource("2_late_bends")
+base_scene_path = NodePath("../ForestBase")
+world_path = NodePath("../ForestBase/GuardrailBase/LinkedBendsBase/S03Base/JunctionShapeReview/ParasolReview/CafeTreesReview/RightForestReview/LeftForestReview/FlowersReview/SignsReview/LiftReview/GroundReview/CafeReview/S03Review/S02Review/S01Review/World")
+s03_review_controller_path = NodePath("../ForestBase/GuardrailBase/LinkedBendsBase/S04LinkedBendsReview")
+candidate_path = "res://data/saisies_s04_late_bends.json"
+default_video_seconds = 130.0
+late_candidate_path = "res://data/saisies_s04_late_bends.json"
+late_default_video_seconds = 130.0
+fov_deg = 58.0
+camera_height_m = 1.67
+pitch_deg = -8.0
+yaw_deg = 0.0
+lateral_m = -1.6
+roll_deg = 0.0
+preview_speed_kmh = 30.0

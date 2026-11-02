@@ -1,0 +1,16 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/saisies_r37_representative.gd" id="1_representative"]
+
+[node name="SaisiesR37Representative" type="Node3D"]
+script = ExtResource("1_representative")
+representatives_path = "res://data/saisies_r37_representatives.json"
+world_scene_path = "res://export/saisies/SaisiesEnvironment_geo_r14.scn"
+geometry_cache_path = "res://export/saisies/release_candidate/saisies_release_geometry_cache.scn"
+dressing_path = "res://data/saisies_r37_dressing.json"
+enable_dressing = true
+auto_quit = false
+auto_capture = false
+auto_tour = true
+tour_loop = true
+tour_playback_rate = 1.0

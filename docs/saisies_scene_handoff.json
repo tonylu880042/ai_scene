@@ -1,0 +1,59 @@
+{
+  "current_scene": "R37_S06_S10_S12",
+  "current_status": "Godot S06 v10 foundation repair verified: 8 houses/56 support meshes, 19408 bottom probes, no floating; S10/S12 retain v9",
+  "next_single_item": "Godot: natural rock-cut silhouette, understory/canopy openings, and S06 grass slope/chalet proportions; preserve physical road profile",
+  "current_review": "/Users/tunghunglu/projects/ai_scene/export/saisies/review/round37_route_diagnosis/review.html",
+  "source_frame": "video/saisies_analysis/acceptance/S04_f002877.png",
+  "source_pts_seconds": 119.994875,
+  "source_sha256": "dffa0a24785095907ccb27b149920438a2a2a0681dbeb83aad4e33cc0b6a3f85",
+  "closed_s03": {
+    "status": "closed_with_user_waivers",
+    "final_round": 28,
+    "review": "/Users/tunghunglu/projects/ai_scene/export/saisies/review/round28_s03_right_forest_distribution/review.html",
+    "selected_completed": 5,
+    "waived_ids": [
+      1,
+      2,
+      3,
+      4,
+      6,
+      7,
+      8
+    ],
+    "do_not_reopen_without_user_request": true
+  },
+  "workflow": "root analysis/native acceptance; Luna development; approximately80% target; user now asks for efficient complete-segment batches instead of10s micro-rounds",
+  "user_priority": {
+    "first": "high bend similarity across a sequence",
+    "second": "tree distribution",
+    "scenery_detail": "deferred",
+    "latest_override": "2026-10-20: endpoint presentation, start/finish signage and complete final-frame composition; endpoint is authorized creative scenery rather than source-matching only"
+  },
+  "active_evidence": "/Users/tunghunglu/projects/ai_scene/export/saisies/review/round37_route_diagnosis/geometry_candidate_v10",
+  "latest_acceptance": "/Users/tunghunglu/projects/ai_scene/export/saisies/review/round37_route_diagnosis/geometry_candidate_v10/foundation_verification.json",
+  "completed_r33": {
+    "new_conifers": 845,
+    "groups": 3,
+    "left_small_group": 8,
+    "technical_verification": "/Users/tunghunglu/projects/ai_scene/export/saisies/review/round33_s04_forest/verification.json",
+    "scope": "100-120s views; forest only"
+  },
+  "efficiency_proposal": {
+    "status": "accepted by user continue; applied R35",
+    "batch": "complete terrain/landscape segment, generally60-120s;30-60s if dense linked bends",
+    "acceptance": "representative frames every10-15s and transition/apex views, plus continuous tour",
+    "iterations": "fast route-only skeleton first, one integrated scenery delivery, final single frozen acceptance",
+    "detail_policy": "prioritize wrong bend direction, floating geometry, major missing forests; defer small differences"
+  },
+  "latest_user_scope": "2026-10-21: continue the morning scene development, retaining Godot as the output target; current increment completes S06/S10/S12 representative candidate.",
+  "latest_delivery": "/Users/tunghunglu/projects/ai_scene/docs/saisies_r37_progress.md",
+  "output_target": "Godot",
+  "stable_full_route": "export/saisies/review/round36_release",
+  "r37_whole_route_integration": false,
+  "r37_selected_version": "per_segment",
+  "r37_selected_versions": {
+    "S06": "geometry_candidate_v10",
+    "S10": "geometry_candidate_v9",
+    "S12": "geometry_candidate_v9"
+  }
+}

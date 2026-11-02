@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/saisies_s02_shop.gd" id="1_s02_shop"]
+
+[node name="SaisiesS02Shop" type="Node3D"]
+script = ExtResource("1_s02_shop")
+build_on_ready = true

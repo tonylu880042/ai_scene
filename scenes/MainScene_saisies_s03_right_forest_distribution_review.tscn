@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/MainScene_saisies_s03_junction_shape_review.tscn" id="1_junction_shape"]
+[ext_resource type="Script" path="res://scripts/saisies_s03_right_forest_distribution.gd" id="2_distribution"]
+
+[node name="MainSceneSaisiesS03RightForestDistributionReview" type="Node3D"]
+
+[node name="JunctionShapeReview" parent="." instance=ExtResource("1_junction_shape")]
+
+[node name="RightForestDistribution" type="Node3D" parent="."]
+script = ExtResource("2_distribution")
+left_forest_review_path = NodePath("../JunctionShapeReview/ParasolReview/CafeTreesReview/RightForestReview/LeftForestReview")
+flowers_review_path = NodePath("../JunctionShapeReview/ParasolReview/CafeTreesReview/RightForestReview/LeftForestReview/FlowersReview")
+world_path = NodePath("../JunctionShapeReview/ParasolReview/CafeTreesReview/RightForestReview/LeftForestReview/FlowersReview/SignsReview/LiftReview/GroundReview/CafeReview/S03Review/S02Review/S01Review/World")
+s01_landscape_path = NodePath("../JunctionShapeReview/ParasolReview/CafeTreesReview/RightForestReview/LeftForestReview/FlowersReview/SignsReview/LiftReview/GroundReview/CafeReview/S03Review/S02Review/S01Review/S01Landscape")
+legacy_right_forest_refinement_path = NodePath("../JunctionShapeReview/ParasolReview/CafeTreesReview/RightForestReview/RightForestRefinement")
+enable_refinement = true

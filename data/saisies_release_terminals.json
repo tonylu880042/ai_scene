@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "kind": "saisies_full_route_release_terminals",
+  "status": "root_selected_for_integrated_review",
+  "visual_acceptance": "pending",
+  "gps_calibrated": false,
+  "formal_route_edit": false,
+  "route": {
+    "station_start_m": 0.0,
+    "station_end_m": 14615.087922,
+    "start_sign_station_m": 14.0,
+    "start_sign_lateral_m": 6.8,
+    "finish_offset_m": 16.0,
+    "arrival_extension_start_m": -14.0,
+    "arrival_extension_end_m": 180.0,
+    "arrival_road_rows_m": [-14.0, -7.0, 0.0, 16.0, 114.0],
+    "approach_stations_m": [14535.087922, 14580.087922, 14615.087922],
+    "endpoint_camera_policy": "release_controller eases S18 yaw to route tangent over final 80m"
+  },
+  "composition": {
+    "start": ["DÉPART", "START", "D218B route crest"],
+    "finish": ["ARRIVÉE", "FINISH", "overhead gate", "clear road width"],
+    "arrival_square": ["single endpoint-height textured terrace", "continuous textured asphalt", "cobble side plazas", "two textured chalets facing the rider", "flower gardens with benches and rails", "dense near and far conifer belts", "textured alpine mounds"]
+  },
+  "ground_strategy": "authored_terminal_terrain: one endpoint-height terrace with a -14m..0m route-sampled transition; no clamped far-end terrain extrapolation",
+  "features": [
+    "world-space departure and finish signage",
+    "finish arch 16m beyond the actual 14615.087922m stopping station",
+    "arrival paving continues through the endpoint extension",
+    "alpine chalet and garden massing fills near and mid field",
+    "layered tree and hill backdrop fills the far field"
+  ],
+  "excluded": ["people", "cars", "bicycles", "HUD", "road-centreline obstacles"],
+  "visual_estimate": true
+}

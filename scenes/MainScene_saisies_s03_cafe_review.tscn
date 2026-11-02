@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/MainScene_saisies_s03_review.tscn" id="1_s03_review"]
+[ext_resource type="Script" path="res://scripts/saisies_s03_cafe_refinement.gd" id="2_s03_cafe"]
+
+[node name="MainSceneSaisiesS03CafeReview" type="Node3D"]
+
+[node name="S03Review" parent="." instance=ExtResource("1_s03_review")]
+
+[node name="CafeRefinement" type="Node3D" parent="."]
+script = ExtResource("2_s03_cafe")
+s03_review_path = NodePath("../S03Review")
+world_path = NodePath("../S03Review/S02Review/S01Review/World")
+s01_landscape_path = NodePath("../S03Review/S02Review/S01Review/S01Landscape")
+junction_path = NodePath("../S03Review/S03JunctionRefinement")
+enable_refinement = true

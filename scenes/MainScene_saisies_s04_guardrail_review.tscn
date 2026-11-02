@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/MainScene_saisies_s04_linked_bends_review.tscn" id="1_linked_bends"]
+[ext_resource type="Script" path="res://scripts/saisies_s04_bend_guardrail.gd" id="2_guardrail"]
+
+[node name="MainSceneSaisiesS04GuardrailReview" type="Node3D"]
+
+[node name="LinkedBendsBase" parent="." instance=ExtResource("1_linked_bends")]
+
+[node name="BendGuardrail" type="Node3D" parent="."]
+script = ExtResource("2_guardrail")
+linked_bends_base_path = NodePath("../LinkedBendsBase")
+world_path = NodePath("../LinkedBendsBase/S03Base/JunctionShapeReview/ParasolReview/CafeTreesReview/RightForestReview/LeftForestReview/FlowersReview/SignsReview/LiftReview/GroundReview/CafeReview/S03Review/S02Review/S01Review/World")
+forest_refinement_path = NodePath("../LinkedBendsBase/S03Base/JunctionShapeReview/ParasolReview/CafeTreesReview/RightForestReview/RightForestRefinement")
+candidate_path = "res://data/saisies_s04_bend_guardrail.json"
+enable_refinement = true
+visibility_gate_end_m = 360.0

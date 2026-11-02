@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "kind": "saisies_full_route_release_candidate",
+  "release_id": "saisies_full_route_r01",
+  "status": "root_selected_for_integrated_review",
+  "visual_acceptance": "pending",
+  "source_video": "video/Descending Col des Saisies _ French Alps #3_1080p.mp4",
+  "source_video_duration_s": 920.067,
+  "source_frame_contract": "data/saisies_acceptance_frames.json",
+  "source_visual_estimate": true,
+  "gps_calibrated": false,
+  "formal_route_edit": false,
+  "scope": "One continuous release candidate from the frozen R14 geographic world. S01-S04 review modules remain inherited; upper meadow, farm, wall, rock-cut, guardrail and lower-valley dressing cover the full source route without people, vehicles or HUD.",
+  "route": {
+    "first_video_seconds": 0.0,
+    "last_video_seconds": 920.067,
+    "station_start_m": 0.0,
+    "station_end_m": 14615.087922,
+    "mapping_source": "World/Route.distance_for_video_seconds",
+    "preview_speed_kmh": 30.0,
+    "preview_mode": "station_delta_at_30kmh"
+  },
+  "camera": {
+    "height_m": 1.65,
+    "default_fov_deg": 78.0,
+    "default_pitch_deg": -8.0,
+    "default_yaw_deg": 0.0,
+    "default_lateral_m": -1.8,
+    "roll_deg": 0.0,
+    "pose_mapping": "piecewise-linear source-view pose interpolation; estimated visual offsets, not calibration"
+  },
+  "source_views": [
+    {"scene_id":"S01","video_seconds":5.0,"frame_index_zero_based":120,"source_image":"video/saisies_analysis/acceptance/S01_f000120.png","title":"商業街起點","pitch_deg":-16.0,"yaw_deg":20.0,"lateral_m":-1.7,"fov_deg":79.0,"historical_scope":"accepted_base_preserved"},
+    {"scene_id":"S02","video_seconds":30.0,"frame_index_zero_based":719,"source_image":"video/saisies_analysis/acceptance/S02_f000719.png","title":"植栽島路口","pitch_deg":-8.0,"yaw_deg":2.0,"lateral_m":-1.8,"fov_deg":77.0,"historical_scope":"accepted_base_preserved"},
+    {"scene_id":"S03","video_seconds":75.0,"frame_index_zero_based":1798,"source_image":"video/saisies_analysis/acceptance/S03_f001798.png","title":"跨路纜椅設施","pitch_deg":-8.0,"yaw_deg":0.0,"lateral_m":-1.8,"fov_deg":77.0,"historical_scope":"accepted_base_preserved"},
+    {"scene_id":"S04","video_seconds":120.0,"frame_index_zero_based":2877,"source_image":"video/saisies_analysis/acceptance/S04_f002877.png","title":"草甸與林帶","pitch_deg":-8.0,"yaw_deg":0.0,"lateral_m":-1.6,"height_m":1.67,"fov_deg":58.0,"historical_scope":"R35_batch_preserved"},
+    {"scene_id":"S05","video_seconds":180.0,"frame_index_zero_based":4316,"source_image":"video/saisies_analysis/acceptance/S05_f004316.png","title":"山谷外彎","pitch_deg":-8.0,"yaw_deg":0.0,"lateral_m":-1.8,"fov_deg":78.0},
+    {"scene_id":"S06","video_seconds":225.0,"frame_index_zero_based":5395,"source_image":"video/saisies_analysis/acceptance/S06_f005395.png","title":"錯層山坡住宅","pitch_deg":-16.0,"yaw_deg":0.0,"lateral_m":-1.8,"fov_deg":78.0},
+    {"scene_id":"S07","video_seconds":270.0,"frame_index_zero_based":6474,"source_image":"video/saisies_analysis/acceptance/S07_f006474.png","title":"農舍支路與谷地","pitch_deg":-8.0,"yaw_deg":0.0,"lateral_m":-1.8,"fov_deg":78.0},
+    {"scene_id":"S08","video_seconds":315.0,"frame_index_zero_based":7552,"source_image":"video/saisies_analysis/acceptance/S08_f007552.png","title":"林道實體護牆","pitch_deg":-8.0,"yaw_deg":0.0,"lateral_m":-1.8,"fov_deg":78.0},
+    {"scene_id":"S09","video_seconds":330.0,"frame_index_zero_based":7912,"source_image":"video/saisies_analysis/acceptance/S09_f007912.png","title":"石牆與金屬護欄彎道","pitch_deg":-8.0,"yaw_deg":-4.0,"lateral_m":-2.0,"fov_deg":78.0},
+    {"scene_id":"S10","video_seconds":405.0,"frame_index_zero_based":9710,"source_image":"video/saisies_analysis/acceptance/S10_f009710.png","title":"岩切林道","pitch_deg":-8.0,"yaw_deg":0.0,"lateral_m":-1.8,"fov_deg":78.0},
+    {"scene_id":"S11","video_seconds":510.0,"frame_index_zero_based":12228,"source_image":"video/saisies_analysis/acceptance/S11_f012228.png","title":"森林下坡與針闊葉層次","pitch_deg":-8.0,"yaw_deg":0.0,"lateral_m":-1.8,"fov_deg":78.0},
+    {"scene_id":"S12","video_seconds":570.0,"frame_index_zero_based":13666,"source_image":"video/saisies_analysis/acceptance/S12_f013666.png","title":"貼坡林間彎道","pitch_deg":-8.0,"yaw_deg":0.0,"lateral_m":-1.8,"fov_deg":78.0},
+    {"scene_id":"S13","video_seconds":630.0,"frame_index_zero_based":15105,"source_image":"video/saisies_analysis/acceptance/S13_f015105.png","title":"高岩壁切口","pitch_deg":-20.0,"yaw_deg":0.0,"lateral_m":-1.8,"fov_deg":78.0},
+    {"scene_id":"S14","video_seconds":675.0,"frame_index_zero_based":16184,"source_image":"video/saisies_analysis/acceptance/S14_f016184.png","title":"下段森林外緣護欄","pitch_deg":-8.0,"yaw_deg":0.0,"lateral_m":-1.8,"fov_deg":78.0},
+    {"scene_id":"S15","video_seconds":765.0,"frame_index_zero_based":18342,"source_image":"video/saisies_analysis/acceptance/S15_f018342.png","title":"突出岩角與外彎護欄","pitch_deg":-8.0,"yaw_deg":0.0,"lateral_m":-1.8,"fov_deg":78.0},
+    {"scene_id":"S16","video_seconds":840.0,"frame_index_zero_based":20140,"source_image":"video/saisies_analysis/acceptance/S16_f020140.png","title":"谷地入口與 50 標誌","pitch_deg":-8.0,"yaw_deg":0.0,"lateral_m":-1.8,"fov_deg":78.0},
+    {"scene_id":"S17","video_seconds":870.0,"frame_index_zero_based":20859,"source_image":"video/saisies_analysis/acceptance/S17_f020859.png","title":"住屋、木棚與架空電線","pitch_deg":-8.0,"yaw_deg":0.0,"lateral_m":-1.8,"fov_deg":78.0},
+    {"scene_id":"S18","video_seconds":900.0,"frame_index_zero_based":21578,"source_image":"video/saisies_analysis/acceptance/S18_f021578.png","title":"片尾道路交會","pitch_deg":-8.0,"yaw_deg":65.0,"lateral_m":-1.8,"fov_deg":78.0}
+  ]
+}

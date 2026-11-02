@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/MainScene_saisies_s03_signs_review.tscn" id="1_signs_review"]
+[ext_resource type="Script" path="res://scripts/saisies_s03_flowers_refinement.gd" id="2_flowers"]
+
+[node name="MainSceneSaisiesS03FlowersReview" type="Node3D"]
+
+[node name="SignsReview" parent="." instance=ExtResource("1_signs_review")]
+
+[node name="FlowersRefinement" type="Node3D" parent="."]
+script = ExtResource("2_flowers")
+signs_review_path = NodePath("../SignsReview")
+world_path = NodePath("../SignsReview/LiftReview/GroundReview/CafeReview/S03Review/S02Review/S01Review/World")
+s01_landscape_path = NodePath("../SignsReview/LiftReview/GroundReview/CafeReview/S03Review/S02Review/S01Review/S01Landscape")
+junction_path = NodePath("../SignsReview/LiftReview/GroundReview/CafeReview/S03Review/S03JunctionRefinement")
+chairlift_path = NodePath("../SignsReview/LiftReview/GroundReview/CafeReview/S03Review/S02Review/S01Review/World/VillageS01S02/S03Chairlift")
+enable_refinement = true

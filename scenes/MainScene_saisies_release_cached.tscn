@@ -1,0 +1,34 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/MainScene_saisies_s04_batch_review.tscn" id="1_release_base"]
+[ext_resource type="PackedScene" path="res://export/saisies/release_candidate/saisies_release_geometry_cache.scn" id="2_geometry_cache"]
+[ext_resource type="Script" path="res://scripts/saisies_release_cache_gate.gd" id="3_cache_gate"]
+[ext_resource type="Script" path="res://scripts/saisies_release_controller.gd" id="4_release_controller"]
+
+[node name="MainSceneSaisiesReleaseCached" type="Node3D"]
+
+[node name="ReleaseBase" parent="." instance=ExtResource("1_release_base")]
+
+[node name="ReleaseCacheGate" type="Node3D" parent="."]
+script = ExtResource("3_cache_gate")
+cache_path = NodePath("ReleaseGeometryCache")
+enable_refinement = true
+
+[node name="ReleaseGeometryCache" parent="ReleaseCacheGate" instance=ExtResource("2_geometry_cache")]
+
+[node name="ReleaseController" type="Node3D" parent="."]
+script = ExtResource("4_release_controller")
+release_base_path = NodePath("../ReleaseBase")
+world_path = NodePath("../ReleaseBase/BatchBase/ForestBase/GuardrailBase/LinkedBendsBase/S03Base/JunctionShapeReview/ParasolReview/CafeTreesReview/RightForestReview/LeftForestReview/FlowersReview/SignsReview/LiftReview/GroundReview/CafeReview/S03Review/S02Review/S01Review/World")
+release_forest_path = NodePath("../ReleaseCacheGate")
+release_roadside_path = NodePath("")
+release_terminals_path = NodePath("../ReleaseCacheGate")
+release_candidate_path = "res://data/saisies_release.json"
+default_video_seconds = 5.0
+preview_speed_kmh = 30.0
+camera_height_m = 1.65
+default_fov_deg = 78.0
+default_pitch_deg = -8.0
+default_yaw_deg = 0.0
+default_lateral_m = -1.8
+roll_deg = 0.0

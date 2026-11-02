@@ -1,0 +1,43 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/MainScene_saisies_s04_batch_review.tscn" id="1_release_base"]
+[ext_resource type="Script" path="res://scripts/saisies_release_forest.gd" id="2_release_forest"]
+[ext_resource type="Script" path="res://scripts/saisies_release_roadside.gd" id="3_release_roadside"]
+[ext_resource type="Script" path="res://scripts/saisies_release_controller.gd" id="4_release_controller"]
+[ext_resource type="Script" path="res://scripts/saisies_release_terminals.gd" id="5_release_terminals"]
+
+[node name="MainSceneSaisiesRelease" type="Node3D"]
+
+[node name="ReleaseBase" parent="." instance=ExtResource("1_release_base")]
+
+[node name="ReleaseForest" type="Node3D" parent="."]
+script = ExtResource("2_release_forest")
+world_path = NodePath("../ReleaseBase/BatchBase/ForestBase/GuardrailBase/LinkedBendsBase/S03Base/JunctionShapeReview/ParasolReview/CafeTreesReview/RightForestReview/LeftForestReview/FlowersReview/SignsReview/LiftReview/GroundReview/CafeReview/S03Review/S02Review/S01Review/World")
+enable_refinement = true
+
+[node name="ReleaseRoadside" type="Node3D" parent="."]
+script = ExtResource("3_release_roadside")
+world_path = NodePath("../ReleaseBase/BatchBase/ForestBase/GuardrailBase/LinkedBendsBase/S03Base/JunctionShapeReview/ParasolReview/CafeTreesReview/RightForestReview/LeftForestReview/FlowersReview/SignsReview/LiftReview/GroundReview/CafeReview/S03Review/S02Review/S01Review/World")
+enable_refinement = true
+
+[node name="ReleaseTerminals" type="Node3D" parent="."]
+script = ExtResource("5_release_terminals")
+world_path = NodePath("../ReleaseBase/BatchBase/ForestBase/GuardrailBase/LinkedBendsBase/S03Base/JunctionShapeReview/ParasolReview/CafeTreesReview/RightForestReview/LeftForestReview/FlowersReview/SignsReview/LiftReview/GroundReview/CafeReview/S03Review/S02Review/S01Review/World")
+enable_refinement = true
+
+[node name="ReleaseController" type="Node3D" parent="."]
+script = ExtResource("4_release_controller")
+release_base_path = NodePath("../ReleaseBase")
+world_path = NodePath("../ReleaseBase/BatchBase/ForestBase/GuardrailBase/LinkedBendsBase/S03Base/JunctionShapeReview/ParasolReview/CafeTreesReview/RightForestReview/LeftForestReview/FlowersReview/SignsReview/LiftReview/GroundReview/CafeReview/S03Review/S02Review/S01Review/World")
+release_forest_path = NodePath("../ReleaseForest")
+release_roadside_path = NodePath("../ReleaseRoadside")
+release_terminals_path = NodePath("../ReleaseTerminals")
+release_candidate_path = "res://data/saisies_release.json"
+default_video_seconds = 5.0
+preview_speed_kmh = 30.0
+camera_height_m = 1.65
+default_fov_deg = 78.0
+default_pitch_deg = -8.0
+default_yaw_deg = 0.0
+default_lateral_m = -1.8
+roll_deg = 0.0

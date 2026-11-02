@@ -1,0 +1,26 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/MainScene_saisies_s02_review.tscn" id="1_s02_review"]
+[ext_resource type="Script" path="res://scripts/saisies_s03_junction_refinement.gd" id="2_s03_junction"]
+[ext_resource type="Script" path="res://scripts/saisies_s03_review_controller.gd" id="3_s03_controller"]
+
+[node name="MainSceneSaisiesS03Review" type="Node3D"]
+
+[node name="S02Review" parent="." instance=ExtResource("1_s02_review")]
+
+[node name="S03JunctionRefinement" type="Node3D" parent="."]
+script = ExtResource("2_s03_junction")
+s02_review_path = NodePath("../S02Review")
+world_path = NodePath("../S02Review/S01Review/World")
+s01_landscape_path = NodePath("../S02Review/S01Review/S01Landscape")
+chairlift_path = NodePath("../S02Review/S01Review/World/VillageS01S02/S03Chairlift")
+old_apron_path = NodePath("../S02Review/S01Review/World/VillageS01S02/S03Chairlift/S03BroadJunctionApron")
+enable_refinement = true
+
+[node name="S03ReviewController" type="Node3D" parent="."]
+script = ExtResource("3_s03_controller")
+s02_review_path = NodePath("../S02Review")
+world_path = NodePath("../S02Review/S01Review/World")
+s02_controller_path = NodePath("../S02Review/S02ReviewController")
+s01_camera_controller_path = NodePath("../S02Review/S01Review/S01CameraController")
+junction_refinement_path = NodePath("../S03JunctionRefinement")

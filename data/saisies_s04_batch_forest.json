@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "kind": "saisies_s04_batch_forest_distribution_candidate",
+  "status": "root_selected_for_integrated_review",
+  "visual_acceptance": "pending",
+  "source_visual_estimate": true,
+  "gps_calibrated": false,
+  "formal_route_edit": false,
+  "scope": "S04 late林緣到入林 continuity only; R33 forest remains inherited and visible",
+  "note": "New trees are clustered continuation patches. Existing 100..120 meadow openings and R33 forest are retained; all placement uses the inherited XZ route clearance and actual terrain contact checks.",
+  "max_tree_count": 1000,
+  "tree_family": "conifer",
+  "source_frames": [
+    "export/saisies/review/round34_s04_late_bends/source_frames/source_125_frame02997.png",
+    "export/saisies/review/round34_s04_late_bends/source_frames/source_127.5_frame03057.png",
+    "export/saisies/review/round34_s04_late_bends/source_frames/source_130_frame03117.png",
+    "export/saisies/review/round34_s04_late_bends/source_frames/source_132.5_frame03177.png",
+    "export/saisies/review/round34_s04_late_bends/source_frames/source_135_frame03237.png"
+  ],
+  "zones": [
+    {"id": "right_core_continuation", "station_from_m": 1870.0, "station_to_m": 2070.0, "side_route_left_sign": -1.0, "offset_min_m": 25.0, "offset_max_m": 75.0, "target_count": 250},
+    {"id": "right_edge_continuation", "station_from_m": 1835.0, "station_to_m": 2020.0, "side_route_left_sign": -1.0, "offset_min_m": 12.0, "offset_max_m": 28.0, "target_count": 140},
+    {"id": "left_core_late_entry", "station_from_m": 1960.0, "station_to_m": 2130.0, "side_route_left_sign": 1.0, "offset_min_m": 20.0, "offset_max_m": 65.0, "target_count": 250},
+    {"id": "left_edge_late_entry", "station_from_m": 1950.0, "station_to_m": 2050.0, "side_route_left_sign": 1.0, "offset_min_m": 12.0, "offset_max_m": 25.0, "target_count": 80}
+  ]
+}

@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/MainScene_saisies_s03_cafe_parasol_review.tscn" id="1_parasol_review"]
+[ext_resource type="Script" path="res://scripts/saisies_s03_junction_shape.gd" id="2_junction_shape"]
+
+[node name="MainSceneSaisiesS03JunctionShapeReview" type="Node3D"]
+
+[node name="ParasolReview" parent="." instance=ExtResource("1_parasol_review")]
+
+[node name="JunctionShapeRefinement" type="Node3D" parent="."]
+script = ExtResource("2_junction_shape")
+parasol_review_path = NodePath("../ParasolReview")
+world_path = NodePath("../ParasolReview/CafeTreesReview/RightForestReview/LeftForestReview/FlowersReview/SignsReview/LiftReview/GroundReview/CafeReview/S03Review/S02Review/S01Review/World")
+s01_landscape_path = NodePath("../ParasolReview/CafeTreesReview/RightForestReview/LeftForestReview/FlowersReview/SignsReview/LiftReview/GroundReview/CafeReview/S03Review/S02Review/S01Review/S01Landscape")
+junction_path = NodePath("../ParasolReview/CafeTreesReview/RightForestReview/LeftForestReview/FlowersReview/SignsReview/LiftReview/GroundReview/CafeReview/S03Review/S03JunctionRefinement")
+enable_refinement = true

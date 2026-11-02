@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "kind": "saisies_release_roadside_module",
+  "module_id": "saisies_release_roadside_r01",
+  "status": "root_selected_for_integrated_review",
+  "visual_acceptance": "pending",
+  "gps_calibrated": false,
+  "formal_route_edit": false,
+  "source_video": "video/Descending Col des Saisies _ French Alps #3_1080p.mp4",
+  "span_s": [135.0, 920.067],
+  "scope": "Whole-route release roadside dressing after the accepted S01-S04 world; large spatial identities only, with no people, vehicles or HUD.",
+  "source_priority": "R36 source_manifest.json and docs/saisies_scene_storyboard.md",
+  "modules": [
+    {
+      "id": "upper_meadow_and_protection",
+      "script": "res://scripts/saisies_release_roadside_upper.gd",
+      "video_range_s": [135.0, 395.0],
+      "scene_ids": ["S05", "S06", "S07", "S08", "S09"],
+      "features": ["staggered_farmhouses", "utility_poles", "S05_right_metal_guardrail", "S08_left_cut_right_low_solid_wall", "S09_stone_wall_rail_side_switch"],
+      "trees_owned_here": false,
+      "ground_strategy": "route tangent placement plus post-generation visible terrain/shoulder triangle audit"
+    },
+    {
+      "id": "lower_forest_valley_roadside",
+      "script": "res://scripts/saisies_release_roadside_lower.gd",
+      "video_range_s": [395.0, 920.067],
+      "scene_ids": ["S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18"],
+      "features": ["rock_cuts", "alternating_guardrails", "S16_50_sign", "S17_house_shed_powerline", "S18_junction_signs_bridge_rail"],
+      "trees_owned_here": false,
+      "ground_strategy": "route tangent placement plus post-generation visible terrain/shoulder triangle audit"
+    },
+    {
+      "id": "nearfield_contact_details",
+      "script": "res://scripts/saisies_geo_nearfield_details.gd",
+      "video_ranges_s": [[328.0, 336.0], [627.5, 632.5]],
+      "scene_ids": ["S09", "S13"],
+      "features": ["S09_low_stone_wall", "S09_grass_bank", "S13_high_rock_cut"],
+      "trees_owned_here": false,
+      "ground_strategy": "actual_visible_terrain_mesh_triangle_sampling"
+    }
+  ],
+  "nearfield_default": "disabled_when_R35_base_already_contains_S09_S13_geometry",
+  "contact_contract": {
+    "roadside_posts": "upright world Y with route tangent alignment",
+    "wall_and_rock_foot": "independent actual visible terrain/shoulder triangle audit after generation; missing samples fail ground proof",
+    "visible_mesh_sampler": "bounded spatial index over visible SaisiesGeoTerrain and SaisiesGeoGravelShoulders triangles",
+    "fallback_sampler": "diagnostic only; SaisiesGeoTerrain.sample_mesh_triangle cannot establish visible-mesh proof",
+    "support_point_semantics": {
+      "houses_and_landmarks": "first direct foundation/base MeshInstance actual indexed bottom vertices; roofs, signs and decorative descendants are excluded",
+      "power_poles": "first direct mast MeshInstance actual indexed bottom vertices; crossarms and wires are excluded",
+      "speed_signs": "first direct sign mast MeshInstance actual indexed bottom vertices; the sign face is excluded",
+      "direction_signs": "first direct junction sign mast MeshInstance actual indexed bottom vertices; sign boards and labels are excluded",
+      "junction_branch": "actual indexed pavement bottom vertices; the release branch is draped from the helper's cached visible terrain triangles after cache warm-up; painted edge bars and give-way/centre marks are excluded",
+      "wall_caps": "upper wall cap segments are named uniquely for side-clearance coverage but excluded from terrain-foot support auditing",
+      "rock_cuts": "actual indexed mesh footline vertices selected against the authored route-ground toe",
+      "rail_posts": "transformed BoxMesh bottom-face support points, not MultiMesh origins",
+      "foundation_embedding": "farm foundation burial is reported as a declared depth range and classified as expected embedding; positive float and over-embedding remain failures",
+      "pre_fix_audit": "round36_release/capture.json retained as the pre_support_semantics_fix audit; its AABB-derived rock extremes are diagnostic only",
+      "geometry_repair": {
+        "pass_order": "warm the bounded visible-terrain triangle cache, fit release support meshes, drape the S18 branch, then rerun the actual-vertex audit",
+        "solid_supports": "first direct foundation/base meshes are rebuilt from actual indexed vertices with bottoms sampled from the visible terrain; farm bottoms retain their declared burial depth",
+        "wall_segments": "wall body endpoints are shifted outward at route bends and fitted at their actual bottom vertices; paired caps receive the same endpoint shifts and remain excluded from terrain-foot counts",
+        "rock_toes": "only positive vertices in the actual route-ground-selected rock toe ring are lowered to the sampled terrain; high rock faces remain authored",
+        "mesh_streams": "single-surface fitted meshes preserve indexed UVs and the authored surface material while retaining any node material_override; multi-surface meshes are left unrepaired rather than losing a stream",
+        "solid_inversion": "each fitted bottom vertex is checked against the nearest corresponding authored top XZ vertex; terrain above that top leaves the original solid and records a repair miss",
+        "cache_padding": "plain baked terrain contact bins use one 24m query-bin radius so sub-metre wall endpoint corrections remain queryable before exact XZ resampling",
+        "failure_policy": "positive floats, unexpected deep embedding and route-side clearance failures remain blocking contract results"
+      }
+    },
+    "contact_tolerance_m": 0.45,
+    "rail_clearance": "rails use road half width plus 0.66m side offset; S18 bridge rails are checked against the branch throat",
+    "rail_source": {
+      "base_geo_roadside_match_spans": ["right_145_205", "right_exit_last_115m", "right_330_360", "left_360_390", "left_392_431", "right_660_730", "left_748_804", "right_824_861", "left_905_916"],
+      "reuse_contract": "When the accepted R14/R35 SaisiesGeoRoadside guardrail groups are present, matching upper and lower spans are reused and release duplicates are suppressed.",
+      "release_additions": ["S18 junction throat bridge rail, left", "S18 junction throat bridge rail, right"],
+      "missing_base_behavior": "If the base guardrail groups are absent, release Upper/Lower author the same matched spans and publish source metadata as release-authored."
+    },
+    "hero_rocks": {
+      "S13": {"side": "left", "minimum_height_m": 9.2, "minimum_depth_m": 4.2, "scene_node_suffix": "S13"},
+      "S15": {"side": "right", "minimum_height_m": 4.2, "minimum_depth_m": 3.0, "scene_node_suffix": "S15"}
+    },
+    "landmarks": ["S16_speed_limit_50", "S17_chalet_shed_powerline", "S18_direction_signs_kiosk_junction_bridge"],
+    "forest_clearance": "roadside module does not spawn trees; release forest owns tree roots and openings",
+    "duplicate_hides": "only bounded S09 upper-wall overlap may be hidden and is recorded in runtime metadata"
+  },
+  "excluded": ["people", "cars", "bicycles", "HUD", "window_by_window_matching", "minor_sign_wording", "flowers", "road_marking_tuning"],
+  "preserved": ["R35_frozen_base", "S01_S02_accepted", "S03_user_waived", "R35_S04_forest_and_rail"]
+}

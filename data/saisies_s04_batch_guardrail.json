@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "kind": "saisies_s04_batch_guardrail_candidate",
+  "status": "root_selected_for_integrated_review",
+  "visual_acceptance": "pending",
+  "source_visual_estimate": true,
+  "gps_calibrated": false,
+  "formal_route_edit": false,
+  "scope": "S04 125..135 second right-side guardrail continuation",
+  "note": "The short right-side span reuses the accepted R32 W-beam geometry and actual local terrain sampling; it does not alter road, route, terrain, or the R32 base rail.",
+  "source_frames": [
+    "export/saisies/review/round34_s04_late_bends/source_frames/source_125_frame02997.png",
+    "export/saisies/review/round34_s04_late_bends/source_frames/source_127.5_frame03057.png",
+    "export/saisies/review/round34_s04_late_bends/source_frames/source_130_frame03117.png",
+    "export/saisies/review/round34_s04_late_bends/source_frames/source_132.5_frame03177.png",
+    "export/saisies/review/round34_s04_late_bends/source_frames/source_135_frame03237.png"
+  ],
+  "from_station_m": 1855.0,
+  "to_station_m": 1942.0,
+  "side_route_left_sign": -1.0,
+  "asphalt_edge_offset_m": 0.45,
+  "beam_top_above_asphalt_edge_m": 0.80,
+  "beam_profile_height_m": 0.30,
+  "beam_sample_step_m": 2.0,
+  "post_spacing_m": 3.0
+}
