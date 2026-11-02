@@ -44,8 +44,15 @@ and Unity import are not part of this skill unless the user asks.
 - **Time boxes.** Phase 0 + 1 ≤ half a day; each later gate ≤ 2 rounds. Over budget: stop and ask the user.
 - **Stop at valid.** Once a stage validator passes, do not chase sub-mm / float32 / triangulation polish unless a
   validator fails or a gate item depends on it.
-- **One package per milestone.** Work in one package directory; copy to a new `<id>_rNN` only when a gate passes.
-  Delete diagnostic / failed candidates once their finding is written down (Gold Coast left 58 package dirs).
+- **One package per milestone.** At most two package dirs per scene: the working one and the last that passed a
+  gate. Copy to a new `<id>_rNN` only when a gate passes. Delete diagnostic / failed candidates once their finding
+  is written down (Gold Coast left 58 package dirs).
+- **Reviews keep evidence, not copies.** Freeze a version by committing and recording the commit hash + package
+  file SHA-256 — never by copying source, the Godot project, packages, SDKs or toolchains into a review folder.
+  A round keeps `review.json` + one comparison sheet; raw shots live in the scratchpad. When a gate passes or the
+  scene is delivered, delete that scene's earlier rounds and keep only the final sheet and acceptance JSON.
+  Review folders get a `.gdignore` (Godot otherwise imports them: Gold Coast reached 30 GB of review copies and a
+  12 GB `.godot/imported`). No platform data (Android / iOS SDKs, export presets) in the project; Godot only.
 - **One agent.** Do the work in this session; split across agents only when the user asks.
 
 Layout of a package (`docs/AI_SCENE_PACKAGE.md`):

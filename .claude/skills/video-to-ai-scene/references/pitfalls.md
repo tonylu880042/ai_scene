@@ -85,5 +85,7 @@ the layer where they now apply. Adapter-only mechanics are in [adapters.md](adap
   each costs a round of tuning. Real assets wired only into a preview adapter (`package_preview.gd`
   `PROTOTYPE_LIBRARY`) do not reach Unity; put them in the package via the library file.
 - Change one controlled thing per candidate; keep rejected candidates and why.
-- Freeze a version before testing; tests and shots from the same version.
+- Freeze a version before testing (commit hash, not a copy); tests and shots from the same version. Copied
+  `source_snapshot` folders with `class_name` scripts collided with the real classes in Godot's class cache
+  (`RouteData` resolved to a review copy).
 - macOS `sed -i ''`; prefer Python for edits. Commit only when asked; never push `assets/`, `export*/`, `video/`.

@@ -76,7 +76,8 @@ afterwards it is frozen: no deleting or softening items to pass a gate. Scoring 
 
 ## Evidence records per review round
 
-Frozen snapshot of code / data / key assets (hashes), camera settings, renderer; per ID the reference SHA, render
-SHA, sizes, outputs and errors; technical and visual verdicts kept separately (not_reviewed, needs_revision,
+One `review.json` per round, next to one comparison sheet — nothing else is kept. Version = git commit hash
+(commit before the round) + package id + SHA-256 of the package files; never a copied source / project / package
+snapshot. Camera settings, renderer; per ID the reference SHA, render SHA, sizes, outputs and errors; technical and visual verdicts kept separately (not_reviewed, needs_revision,
 accepted); who reviewed (an agent review is not human approval); rejected candidates and failed measurements with
 reasons. A partial success is not a pass.
