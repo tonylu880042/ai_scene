@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "estimated": true,
+  "target_tile_id": "49",
+  "provenance": {
+    "source": "procedural_estimated_current_visit_land_continuity",
+    "status": "estimated",
+    "rationale": "Bounded current-visit P1 continuity over the two unchanged R38 ROI complements. Only serialized terrain owners 47\u201352 provide P1 coverage and terrain support; all package P0 road faces remain excluded from fill and available as road support. If same-owner terrain hits disagree by more than 2 mm, canonical target-tile route S/U selects a coherent visit chart within explicit 1 m station / 0.05 m lateral windows; sole or already-consistent face support keeps its actual height and chart offsets remain diagnostic. This duplicates measured foreign owner 03 P1 coverage (0.660616387 m\u00b2 total) in a new package-local estimated patch; it does not claim zero overlap or global terrain ownership. The ROI extents remain estimates, not surveyed land boundaries. R46 appends two R45-derived bounded components while preserving the original R44 regions and mesh prefix. R46b adds an explicitly bounded 4 m support-only sample halo; fill coverage remains restricted to the unchanged ROI, selected P1 owners 47\u201352, and all-P0 exclusion. The existing four-neighbor maximum sample distance remains 4 m.",
+    "supplementary_inputs": [
+      {
+        "path": "export/gold_coast/review/shore_geo_source_r39_sol/current_osm_map.osm",
+        "use": "supplementary contemporary geographic context only",
+        "limitation": "not historical source-video registration and not survey-grade land ownership"
+      }
+    ],
+    "r42c_route_attribute_chart": {
+      "status": "estimated",
+      "source": "target-owner serialized tile49 road triangle attributes",
+      "policy": "For newly appended land-infill vertices within 0.02m of tile49 road faces, assign _ROUTE_S/_ROUTE_U by unrestricted affine barycentrics at the vertex original world XZ. Do not snap/clamp positions or copy foreign-owner route attributes.",
+      "purpose": "Prevent false route-relative road-band validation overlaps caused by chord projection at curved road edges; XYZ and surface faces remain unchanged."
+    },
+    "expected_duplicate_foreign_p1_area_m2": 0.6606163872181963,
+    "r45_extension": {
+      "source": "export/gold_coast/review/shore_coverage_r45_sol/worker_coverage_probe.json",
+      "status": "estimated_localization",
+      "rationale": "Two additional s12390 references had zero serialized selected-P1/all-P0 XZ coverage. 0.25m center-sampled components were bounded and expanded by 1m; resulting rectangles are estimated local continuity ROIs, not surveyed boundaries. Contemporary OSM is supplementary only."
+    },
+    "r46b_support_halo": {
+      "status": "estimated",
+      "source": "selected serialized P1 owners 47\u201352 and all package P0 triangles in an ROI-bounds query expanded by 4 m",
+      "policy": "support samples only; ROI coverage subtraction is unchanged; every estimated vertex still requires four same-pool samples within 4 m"
+    }
+  },
+  "height_rule": {
+    "kind": "boundary_supported_idw",
+    "neighbors": 4,
+    "max_estimated_support_distance_m": 4.0,
+    "max_boundary_mismatch_m": 0.002,
+    "terrain_support_chart": {
+      "kind": "canonical_route_local",
+      "station_window_m": 1.0,
+      "lateral_window_m": 0.05,
+      "distinct_branch_station_separation_m": 5.0,
+      "branch_ambiguity_distance_m": 0.02,
+      "source": "target tile 49 canonical route projection compared with serialized selected-P1 face attributes",
+      "status": "estimated current-visit continuity policy"
+    },
+    "description": "At supported points prefer tile49 road P0, then selected visit P1 owners 47\u201352, then other all-package P0 roads under this explicit policy. When multiple same-owner/layer P1 faces disagree by more than the unchanged 2 mm bound, use the canonical target-tile route chart to select faces within the stated station/lateral gates, then enforce that same 2 mm bound; sole or already-consistent support keeps the actual face height and records chart offsets. Use only selected P1 and all P0 support samples for the unchanged four-neighbor, 4 m inverse-square continuity rule. Foreign owner 03 P1 is deliberately excluded from coverage and support, and its duplicated footprint/height difference is reported separately. Route S/U for appended points uses the R42c target tile49 road-face affine chart within 20 mm, with no clamping or position changes. Collect selected-P1/all-P0 support samples from a 4 m expanded ROI bounds query only; do not change the fill ROI or four-neighbor 4 m estimate-distance bound.",
+    "foreign_fallback_owner_ids": [],
+    "support_owner_policy": {
+      "terrain": "terrain_coverage_owner_ids",
+      "road": "all_package_p0",
+      "foreign_terrain": "excluded"
+    },
+    "support_halo_m": 4.0
+  },
+  "material": {
+    "name": "terrain_ground",
+    "color": [
+      0.3,
+      0.42,
+      0.2
+    ],
+    "roughness": 0.95
+  },
+  "regions": [
+    {
+      "id": "late_tile49_inland_sampled_component",
+      "logical_owner_ids": [
+        "47",
+        "48",
+        "49",
+        "50",
+        "51",
+        "52"
+      ],
+      "input_component_bbox_xz": [
+        162.095916748,
+        178.595916748,
+        769.385864258,
+        775.635864258
+      ],
+      "polygon_xz": [
+        [
+          161.095916748,
+          768.385864258
+        ],
+        [
+          179.595916748,
+          768.385864258
+        ],
+        [
+          179.595916748,
+          776.635864258
+        ],
+        [
+          161.095916748,
+          776.635864258
+        ]
+      ],
+      "boundary_provenance": "estimated from 0.25m all-height selected-P1/all-P0 raster component bbox expanded 1m; not a surveyed land boundary",
+      "terrain_coverage_owner_ids": [
+        "47",
+        "48",
+        "49",
+        "50",
+        "51",
+        "52"
+      ],
+      "coverage_policy_provenance": "estimated current-visit continuity; selected P1 owners 47\u201352, all package P0 excluded from fill and retained as support"
+    },
+    {
+      "id": "late_tile49_seaward_sampled_component",
+      "logical_owner_ids": [
+        "47",
+        "48",
+        "49",
+        "50",
+        "51",
+        "52"
+      ],
+      "input_component_bbox_xz": [
+        193.826370239,
+        199.576370239,
+        775.547302246,
+        780.297302246
+      ],
+      "polygon_xz": [
+        [
+          192.826370239,
+          774.547302246
+        ],
+        [
+          200.576370239,
+          774.547302246
+        ],
+        [
+          200.576370239,
+          781.297302246
+        ],
+        [
+          192.826370239,
+          781.297302246
+        ]
+      ],
+      "boundary_provenance": "estimated from 0.25m all-height selected-P1/all-P0 raster component bbox expanded 1m; not a surveyed land boundary",
+      "terrain_coverage_owner_ids": [
+        "47",
+        "48",
+        "49",
+        "50",
+        "51",
+        "52"
+      ],
+      "coverage_policy_provenance": "estimated current-visit continuity; selected P1 owners 47\u201352, all package P0 excluded from fill and retained as support"
+    }
+  ],
+  "route_attribute_chart": {
+    "kind": "target_road_affine",
+    "max_distance_m": 0.02
+  }
+}

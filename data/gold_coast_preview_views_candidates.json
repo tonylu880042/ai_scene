@@ -1,0 +1,245 @@
+[
+  {
+    "id": "S01",
+    "time_s": 80.013267,
+    "s": 522.744795140918,
+    "camera_override": {
+      "pitch_down_deg": 8.0,
+      "vertical_fov_deg": 75.0
+    },
+    "role": "frozen estimated station; renderer inventory only, source-time correspondence unaccepted"
+  },
+  {
+    "id": "S02",
+    "time_s": 210.0098,
+    "s": 1456.290039665029,
+    "camera_override": {
+      "pitch_down_deg": 8.0,
+      "vertical_fov_deg": 75.0
+    },
+    "role": "frozen estimated station; renderer inventory only, source-time correspondence unaccepted"
+  },
+  {
+    "id": "S03",
+    "time_s": 260.00975,
+    "s": 1650.0,
+    "camera_override": {
+      "pitch_down_deg": 8.0,
+      "vertical_fov_deg": 75.0
+    },
+    "role": "candidate station (not adopted): OSM Marine Parade 0.8-2.3 m from the path edge only for s 1530-1690 (39 m at the frozen s); S02 210 s @ s1456 + 50 s x ~4.5 m/s ~ 1680; render matches road right / water left / skyline across",
+    "frozen_s": 1860.4646412960522
+  },
+  {
+    "id": "S04",
+    "time_s": 310.0097,
+    "s": 2316.712030860851,
+    "camera_override": {
+      "pitch_down_deg": 8.0,
+      "vertical_fov_deg": 75.0
+    },
+    "role": "frozen estimated station; renderer inventory only, source-time correspondence unaccepted"
+  },
+  {
+    "id": "S05",
+    "time_s": 375.007967,
+    "s": 2980.3090845103065,
+    "camera_override": {
+      "pitch_down_deg": 8.0,
+      "vertical_fov_deg": 75.0
+    },
+    "role": "frozen estimated station; renderer inventory only, source-time correspondence unaccepted"
+  },
+  {
+    "id": "S06",
+    "time_s": 420.002917,
+    "s": 3392.852481502271,
+    "camera_override": {
+      "pitch_down_deg": 8.0,
+      "vertical_fov_deg": 75.0
+    },
+    "role": "frozen estimated station; renderer inventory only, source-time correspondence unaccepted"
+  },
+  {
+    "id": "S07",
+    "time_s": 460.00955,
+    "s": 3700.3650112862524,
+    "camera_override": {
+      "pitch_down_deg": 8.0,
+      "vertical_fov_deg": 75.0
+    },
+    "role": "frozen estimated station; renderer inventory only, source-time correspondence unaccepted"
+  },
+  {
+    "id": "S08",
+    "time_s": 520.002817,
+    "s": 3992.192957623526,
+    "camera_override": {
+      "pitch_down_deg": 8.0,
+      "vertical_fov_deg": 75.0
+    },
+    "role": "frozen estimated station; renderer inventory only, source-time correspondence unaccepted"
+  },
+  {
+    "id": "S09",
+    "time_s": 570.002767,
+    "s": 4179.759181280406,
+    "camera_override": {
+      "pitch_down_deg": 8.0,
+      "vertical_fov_deg": 75.0
+    },
+    "role": "frozen estimated station; renderer inventory only, source-time correspondence unaccepted"
+  },
+  {
+    "id": "S10",
+    "time_s": 630.012717,
+    "s": 4663.321240521632,
+    "camera_override": {
+      "pitch_down_deg": 8.0,
+      "vertical_fov_deg": 75.0
+    },
+    "role": "frozen estimated station; renderer inventory only, source-time correspondence unaccepted"
+  },
+  {
+    "id": "S11",
+    "time_s": 715.0143,
+    "s": 5260.0,
+    "camera_override": {
+      "pitch_down_deg": 8.0,
+      "vertical_fov_deg": 75.0
+    },
+    "role": "candidate station (not adopted): source: on the Sundale Bridge deck with a long deck still ahead and the skyline ahead-left; the elevated deck runs s ~5216-5486, so the frozen s5408 leaves only ~80 m ahead; s5260 renders water both sides with the long deck ahead",
+    "frozen_s": 5408.348705569373
+  },
+  {
+    "id": "S12",
+    "time_s": 795.010883,
+    "s": 6002.364788446462,
+    "camera_override": {
+      "pitch_down_deg": 8.0,
+      "vertical_fov_deg": 75.0
+    },
+    "role": "frozen estimated station; renderer inventory only, source-time correspondence unaccepted"
+  },
+  {
+    "id": "S13",
+    "time_s": 870.002467,
+    "s": 6613.04384292451,
+    "camera_override": {
+      "pitch_down_deg": 8.0,
+      "vertical_fov_deg": 75.0
+    },
+    "role": "frozen estimated station; renderer inventory only, source-time correspondence unaccepted"
+  },
+  {
+    "id": "S14",
+    "time_s": 935.000733,
+    "s": 7250.0,
+    "camera_override": {
+      "pitch_down_deg": 8.0,
+      "vertical_fov_deg": 75.0
+    },
+    "role": "candidate station (not adopted): hard cut_09 at 894.76 s ('sidewalk -> bridge approach') is 40 s before S14 (935.0 s); from the ramp foot (s ~7090) at ~4 m/s -> s ~7250, the crest where OSM has water on both sides; source shows water right of the deck, towers close on the left",
+    "frozen_s": 7185.5409920074235
+  },
+  {
+    "id": "S15",
+    "time_s": 1010.009,
+    "s": 7824.810992010719,
+    "camera_override": {
+      "pitch_down_deg": 8.0,
+      "vertical_fov_deg": 75.0
+    },
+    "role": "frozen estimated station; renderer inventory only, source-time correspondence unaccepted"
+  },
+  {
+    "id": "S16",
+    "time_s": 1090.005583,
+    "s": 8392.21232758719,
+    "camera_override": {
+      "pitch_down_deg": 8.0,
+      "vertical_fov_deg": 75.0
+    },
+    "role": "frozen estimated station; renderer inventory only, source-time correspondence unaccepted"
+  },
+  {
+    "id": "S17",
+    "time_s": 1150.015533,
+    "s": 8619.212827499774,
+    "camera_override": {
+      "pitch_down_deg": 8.0,
+      "vertical_fov_deg": 75.0
+    },
+    "role": "frozen estimated station; renderer inventory only, source-time correspondence unaccepted"
+  },
+  {
+    "id": "S18",
+    "time_s": 1220.002117,
+    "s": 8850.958079145625,
+    "camera_override": {
+      "pitch_down_deg": 8.0,
+      "vertical_fov_deg": 75.0
+    },
+    "role": "frozen estimated station; renderer inventory only, source-time correspondence unaccepted"
+  },
+  {
+    "id": "S19",
+    "time_s": 1300.015383,
+    "s": 9461.932610545271,
+    "camera_override": {
+      "pitch_down_deg": 8.0,
+      "vertical_fov_deg": 75.0
+    },
+    "role": "frozen estimated station; renderer inventory only, source-time correspondence unaccepted"
+  },
+  {
+    "id": "S20",
+    "time_s": 1375.006967,
+    "s": 10195.420929143507,
+    "camera_override": {
+      "pitch_down_deg": 8.0,
+      "vertical_fov_deg": 75.0
+    },
+    "role": "frozen estimated station; renderer inventory only, source-time correspondence unaccepted"
+  },
+  {
+    "id": "S21",
+    "time_s": 1450.015233,
+    "s": 10774.206105545163,
+    "camera_override": {
+      "pitch_down_deg": 8.0,
+      "vertical_fov_deg": 75.0
+    },
+    "role": "frozen estimated station; renderer inventory only, source-time correspondence unaccepted"
+  },
+  {
+    "id": "S22",
+    "time_s": 1570.001767,
+    "s": 11665.45357824713,
+    "camera_override": {
+      "pitch_down_deg": 8.0,
+      "vertical_fov_deg": 75.0
+    },
+    "role": "frozen estimated station; renderer inventory only, source-time correspondence unaccepted"
+  },
+  {
+    "id": "S23",
+    "time_s": 1680.011667,
+    "s": 12404.423730681752,
+    "camera_override": {
+      "pitch_down_deg": 8.0,
+      "vertical_fov_deg": 75.0
+    },
+    "role": "frozen estimated station; renderer inventory only, source-time correspondence unaccepted"
+  },
+  {
+    "id": "S24",
+    "time_s": 1780.011567,
+    "s": 12963.294754389457,
+    "camera_override": {
+      "pitch_down_deg": 8.0,
+      "vertical_fov_deg": 75.0
+    },
+    "role": "frozen estimated station; renderer inventory only, source-time correspondence unaccepted"
+  }
+]

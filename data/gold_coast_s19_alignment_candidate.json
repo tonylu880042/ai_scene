@@ -1,0 +1,78 @@
+{
+  "status": "tested_diagnostic_only_no_mapping_change",
+  "baseline_package": "export/packages/gold_coast_broadwater_s19_buildings_r13_luna6",
+  "baseline_sha256": "1758c45dcde66d843425cf1eebd5c3451e086043acb2bfe5c456f73036a3c26e",
+  "baseline_file_count": 277,
+  "existing_anchor_interpolation": {
+    "from_time_s": 1265,
+    "from_s_m": 9013.463242939184,
+    "to_time_s": 1340,
+    "to_s_m": 9974.046840452786
+  },
+  "requested_vs_decoded_1300_delta_s_m": 0.197,
+  "route_turn_evidence": "Opposing signed curvature near s=9398 and s=9590; no claim about independent video camera yaw.",
+  "conclusion": "Within the tested scans only, no single fixed s offset in \u00b1100m or single yaw in \u00b115\u00b0 jointly fits both landmarks and preserves their observed approach/pass/leave sequence. Untested hypotheses include a local building anchor/route-side estimate or local route-path correspondence; none is established. Keep r13 and frozen mapping data unchanged.",
+  "rejected_package": "export/packages/gold_coast_broadwater_s19_visibility_r14_luna6",
+  "tested_probes": {
+    "s_offset_m": {
+      "range": [
+        -100,
+        100
+      ],
+      "step": 5,
+      "count": 41,
+      "best_low_house_only_offset_m": 25,
+      "tested_joint_result": "No robust joint alignment; +25m moves house toward source but worsens apartment visible-right/crop and violates approach/pass/leave timing."
+    },
+    "yaw_offset_deg": {
+      "range": [
+        -15,
+        15
+      ],
+      "step": 2.5,
+      "count": 13,
+      "tested_joint_result": "Positive yaw improves house horizontal position but moves apartment out of source crop; negative yaw improves apartment crop and moves house farther left."
+    }
+  },
+  "native_confirmation": {
+    "views": [
+      "S19_baseline_pitch8",
+      "S19_splus25_pitch8",
+      "S19_yawplus12_5_pitch8",
+      "S19_1305_splus25_pitch8",
+      "S19_1310_splus25_pitch8"
+    ],
+    "result": "Confirms bbox conflict and house occlusion; +25 at 1305 is too close and +25 at 1310 has passed the house."
+  },
+  "next_hypothesis": "Local structure anchor/route-side or local route-path correspondence remains untested; the next evidence step is to identify the video landmarks against OSM footprints before changing an anchor.",
+  "osm_handoff": {
+    "status": "candidate_search_only_no_matching_footprint_identified",
+    "api_url": "https://api.openstreetmap.org/api/0.6/map?bbox=153.411,-27.965,153.418,-27.959",
+    "raw_sha256": "29f16925aea0f27ef8fe248da2cf4f3be555690f0b1a5c0a99acb16a1772aa8a",
+    "source_attribution": "\u00a9 OpenStreetMap contributors; ODbL 1.0",
+    "evidence": "export/gold_coast/review/s19_alignment_luna6/evidence/osm_nearby_buildings.json",
+    "r13_object_estimated_latlon": {
+      "st0361": [
+        -27.963251,
+        153.4138906
+      ],
+      "st0362": [
+        -27.9629272,
+        153.4142585
+      ]
+    },
+    "nearest_candidate_ways": {
+      "st0361": [
+        "way/1115310618",
+        "way/1080420742",
+        "way/1115310617"
+      ],
+      "st0362": [
+        "way/1310786950",
+        "way/1115385677",
+        "way/1080420742"
+      ]
+    },
+    "next_work": "Compare source silhouettes and approach/pass order against OSM footprints across the S19 turn; identify landmarks before reconsidering any anchor."
+  }
+}

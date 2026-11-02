@@ -1,0 +1,32 @@
+{
+  "source": {
+    "kind": "video",
+    "estimated": true,
+    "ref": "video/gold_coast_ref/S18.png plus local review frames at 1210 s and 1230 s",
+    "note": "A dark timber post/rail boundary is visible along the left wetland edge in the 1210 s and fixed 1220.002117 s frames. Its continuation is unclear by 1230 s; location and dimensions are video estimates, not survey data. No left-side mesh color or pattern is asserted."
+  },
+  "zones": [
+    {
+      "id": "s18_left_timber_rail",
+      "semantic_type": "fence",
+      "side": "left",
+      "from_s": 8858.0,
+      "to_s": 8884.0,
+      "lateral_offset_m": [9.4, 9.6],
+      "vertical_offset_m": null,
+      "confidence": 0.55,
+      "attributes": {
+        "kind": "timber_rail",
+        "appearance": "dark timber posts and two horizontal rails",
+        "section": "S18",
+        "source_basis": "The near tree at route u≈5.1m occludes the left fence in S18; place the candidate farther outboard. Exact lateral offset is estimated."
+      },
+      "source": {
+        "kind": "video",
+        "estimated": true,
+        "ref": "video/gold_coast_ref/S18.png; 1220.002117 s / route s=8850.958079 m; adjacent 1210 s frame",
+        "note": "Short local candidate; source supports a left timber boundary but not a verified mesh appearance or full S18 continuity."
+      }
+    }
+  ]
+}

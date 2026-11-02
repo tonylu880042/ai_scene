@@ -1,0 +1,731 @@
+{
+  "title": "Gold Coast Broadwater out-and-back",
+  "video_id": "Qu4vsKXiRtM",
+  "duration_s": 1816.154,
+  "sections": [
+    {
+      "id": "S01",
+      "name": "北段海灣松樹步道",
+      "from_time_s": 0,
+      "to_time_s": 170,
+      "reference_time_s": 80.013267,
+      "width_m": 4,
+      "surface_type": "concrete",
+      "water_side": "left",
+      "water_edge_m": 15,
+      "vegetation": "Norfolk pine / palm / broadleaf",
+      "landmark": "公寓與路旁長椅",
+      "source": {
+        "kind": "video",
+        "ref": "video/gold_coast_ref/S01.png",
+        "estimated": true,
+        "confidence": 0.7
+      },
+      "unknown": [
+        "exact riding track within mapped path",
+        "surveyed path width",
+        "physical bridge deck elevation"
+      ],
+      "stems_per_ha": 42,
+      "species": {
+        "norfolk_pine": 0.3,
+        "palm": 0.4,
+        "beech": 0.3
+      }
+    },
+    {
+      "id": "S02",
+      "name": "狹窄石護岸",
+      "from_time_s": 170,
+      "to_time_s": 245,
+      "reference_time_s": 210.0098,
+      "width_m": 2.8,
+      "surface_type": "concrete",
+      "water_side": "left",
+      "water_edge_m": 2.4,
+      "vegetation": "sparse / none on bridge",
+      "landmark": "右側高層公寓、低石護岸",
+      "source": {
+        "kind": "video",
+        "ref": "video/gold_coast_ref/S02.png",
+        "estimated": true,
+        "confidence": 0.7
+      },
+      "unknown": [
+        "exact riding track within mapped path",
+        "surveyed path width",
+        "physical bridge deck elevation"
+      ],
+      "stems_per_ha": 15,
+      "species": {
+        "palm": 0.8,
+        "beech": 0.2
+      },
+      "barrier_start_gap_m": 3.0
+    },
+    {
+      "id": "S03",
+      "name": "路旁步道與開放沙岸",
+      "from_time_s": 245,
+      "to_time_s": 280,
+      "reference_time_s": 260.00975,
+      "width_m": 3,
+      "surface_type": "concrete",
+      "water_side": "left",
+      "water_edge_m": 5,
+      "vegetation": "Norfolk pine / palm / broadleaf",
+      "landmark": "矮層公寓與白色路燈",
+      "source": {
+        "kind": "video",
+        "ref": "video/gold_coast_ref/S03.png",
+        "estimated": true,
+        "confidence": 0.7
+      },
+      "unknown": [
+        "exact riding track within mapped path",
+        "surveyed path width",
+        "physical bridge deck elevation"
+      ],
+      "stems_per_ha": 42,
+      "species": {
+        "norfolk_pine": 0.3,
+        "palm": 0.4,
+        "beech": 0.3
+      }
+    },
+    {
+      "id": "S04",
+      "name": "螺旋樹與草地公園",
+      "from_time_s": 280,
+      "to_time_s": 355,
+      "reference_time_s": 310.0097,
+      "width_m": 3.2,
+      "surface_type": "concrete",
+      "water_side": "left",
+      "water_edge_m": 18,
+      "vegetation": "Norfolk pine / palm / broadleaf",
+      "landmark": "海螺樹及藍色遮陽棚",
+      "source": {
+        "kind": "video",
+        "ref": "video/gold_coast_ref/S04.png",
+        "estimated": true,
+        "confidence": 0.7
+      },
+      "unknown": [
+        "exact riding track within mapped path",
+        "surveyed path width",
+        "physical bridge deck elevation"
+      ],
+      "stems_per_ha": 42,
+      "species": {
+        "norfolk_pine": 0.3,
+        "palm": 0.4,
+        "beech": 0.3
+      }
+    },
+    {
+      "id": "S05",
+      "name": "露營區林蔭小徑",
+      "from_time_s": 355,
+      "to_time_s": 400,
+      "reference_time_s": 375.007967,
+      "width_m": 2.7,
+      "surface_type": "concrete",
+      "water_side": "right",
+      "water_edge_m": 30,
+      "vegetation": "Norfolk pine / palm / broadleaf",
+      "landmark": "左側白色露營屋及鐵絲圍欄",
+      "source": {
+        "kind": "video",
+        "ref": "video/gold_coast_ref/S05.png",
+        "estimated": true,
+        "confidence": 0.7
+      },
+      "unknown": [
+        "exact riding track within mapped path",
+        "surveyed path width",
+        "physical bridge deck elevation"
+      ],
+      "stems_per_ha": 65,
+      "species": {
+        "norfolk_pine": 0.3,
+        "palm": 0.4,
+        "beech": 0.3
+      }
+    },
+    {
+      "id": "S06",
+      "name": "白色小教堂與涼棚",
+      "from_time_s": 400,
+      "to_time_s": 435,
+      "reference_time_s": 420.002917,
+      "width_m": 4,
+      "surface_type": "concrete",
+      "water_side": "left",
+      "water_edge_m": 35,
+      "vegetation": "Norfolk pine / palm / broadleaf",
+      "landmark": "右前方白色斜頂小教堂",
+      "source": {
+        "kind": "video",
+        "ref": "video/gold_coast_ref/S06.png",
+        "estimated": true,
+        "confidence": 0.7
+      },
+      "unknown": [
+        "exact riding track within mapped path",
+        "surveyed path width",
+        "physical bridge deck elevation"
+      ],
+      "stems_per_ha": 42,
+      "species": {
+        "palm": 0.65,
+        "beech": 0.35
+      }
+    },
+    {
+      "id": "S07",
+      "name": "Mitchell Park 船坡",
+      "from_time_s": 435,
+      "to_time_s": 490,
+      "reference_time_s": 460.00955,
+      "width_m": 3.5,
+      "surface_type": "concrete",
+      "water_side": "left",
+      "water_edge_m": 12,
+      "vegetation": "Norfolk pine / palm / broadleaf",
+      "landmark": "右側船棚、左側船坡",
+      "source": {
+        "kind": "video",
+        "ref": "video/gold_coast_ref/S07.png",
+        "estimated": true,
+        "confidence": 0.7
+      },
+      "unknown": [
+        "exact riding track within mapped path",
+        "surveyed path width",
+        "physical bridge deck elevation"
+      ],
+      "stems_per_ha": 42,
+      "species": {
+        "norfolk_pine": 0.3,
+        "palm": 0.4,
+        "beech": 0.3
+      }
+    },
+    {
+      "id": "S08",
+      "name": "水岸公園與碼頭",
+      "from_time_s": 490,
+      "to_time_s": 550,
+      "reference_time_s": 520.002817,
+      "width_m": 4,
+      "surface_type": "concrete",
+      "water_side": "left",
+      "water_edge_m": 20,
+      "vegetation": "Norfolk pine / palm / broadleaf",
+      "landmark": "左側碼頭、右側公園草地",
+      "source": {
+        "kind": "video",
+        "ref": "video/gold_coast_ref/S08.png",
+        "estimated": true,
+        "confidence": 0.7
+      },
+      "unknown": [
+        "exact riding track within mapped path",
+        "surveyed path width",
+        "physical bridge deck elevation"
+      ],
+      "stems_per_ha": 42,
+      "species": {
+        "norfolk_pine": 0.3,
+        "palm": 0.4,
+        "beech": 0.3
+      }
+    },
+    {
+      "id": "S09",
+      "name": "彩色遊樂場與護牆",
+      "from_time_s": 550,
+      "to_time_s": 590,
+      "reference_time_s": 570.002767,
+      "width_m": 3,
+      "surface_type": "asphalt",
+      "water_side": "left",
+      "water_edge_m": 45,
+      "vegetation": "Norfolk pine / palm / broadleaf",
+      "landmark": "左側彩色遊樂設施、右側護牆",
+      "source": {
+        "kind": "video",
+        "ref": "video/gold_coast_ref/S09.png",
+        "estimated": true,
+        "confidence": 0.7
+      },
+      "unknown": [
+        "exact riding track within mapped path",
+        "surveyed path width",
+        "physical bridge deck elevation"
+      ],
+      "stems_per_ha": 42,
+      "species": {
+        "norfolk_pine": 0.3,
+        "palm": 0.4,
+        "beech": 0.3
+      }
+    },
+    {
+      "id": "S10",
+      "name": "主幹道旁柏油步道",
+      "from_time_s": 590,
+      "to_time_s": 675,
+      "reference_time_s": 630.012717,
+      "width_m": 3,
+      "surface_type": "asphalt",
+      "water_side": "left",
+      "water_edge_m": 80,
+      "vegetation": "Norfolk pine / palm / broadleaf",
+      "landmark": "右側高層大樓與多車道道路",
+      "source": {
+        "kind": "video",
+        "ref": "video/gold_coast_ref/S10.png",
+        "estimated": true,
+        "confidence": 0.7
+      },
+      "unknown": [
+        "exact riding track within mapped path",
+        "surveyed path width",
+        "physical bridge deck elevation"
+      ],
+      "stems_per_ha": 42,
+      "species": {
+        "norfolk_pine": 0.3,
+        "palm": 0.4,
+        "beech": 0.3
+      }
+    },
+    {
+      "id": "S11",
+      "name": "跨水橋去程",
+      "from_time_s": 675,
+      "to_time_s": 750,
+      "reference_time_s": 715.0143,
+      "width_m": 3.8,
+      "surface_type": "concrete",
+      "water_side": "both",
+      "water_edge_m": 3,
+      "vegetation": "sparse / none on bridge",
+      "landmark": "兩側白色欄杆及彎曲燈桿",
+      "source": {
+        "kind": "video",
+        "ref": "video/gold_coast_ref/S11.png",
+        "estimated": true,
+        "confidence": 0.7
+      },
+      "unknown": [
+        "exact riding track within mapped path",
+        "surveyed path width",
+        "physical bridge deck elevation"
+      ],
+      "stems_per_ha": 42,
+      "species": {
+        "norfolk_pine": 0.3,
+        "palm": 0.4,
+        "beech": 0.3
+      }
+    },
+    {
+      "id": "S12",
+      "name": "Main Beach 濱水步道",
+      "from_time_s": 750,
+      "to_time_s": 835,
+      "reference_time_s": 795.010883,
+      "width_m": 4,
+      "surface_type": "concrete",
+      "water_side": "left",
+      "water_edge_m": 18,
+      "vegetation": "Norfolk pine / palm / broadleaf",
+      "landmark": "右側公寓、左側泊船碼頭",
+      "source": {
+        "kind": "video",
+        "ref": "video/gold_coast_ref/S12.png",
+        "estimated": true,
+        "confidence": 0.7
+      },
+      "unknown": [
+        "exact riding track within mapped path",
+        "surveyed path width",
+        "physical bridge deck elevation"
+      ],
+      "stems_per_ha": 42,
+      "species": {
+        "norfolk_pine": 0.3,
+        "palm": 0.4,
+        "beech": 0.3
+      }
+    },
+    {
+      "id": "S13",
+      "name": "折返後河岸步道",
+      "from_time_s": 835,
+      "to_time_s": 900,
+      "reference_time_s": 870.002467,
+      "width_m": 4,
+      "surface_type": "concrete",
+      "water_side": "right",
+      "water_edge_m": 18,
+      "vegetation": "Norfolk pine / palm / broadleaf",
+      "landmark": "左側道路、右側海灣",
+      "source": {
+        "kind": "video",
+        "ref": "video/gold_coast_ref/S13.png",
+        "estimated": true,
+        "confidence": 0.7
+      },
+      "unknown": [
+        "exact riding track within mapped path",
+        "surveyed path width",
+        "physical bridge deck elevation"
+      ],
+      "stems_per_ha": 42,
+      "species": {
+        "norfolk_pine": 0.3,
+        "palm": 0.4,
+        "beech": 0.3
+      }
+    },
+    {
+      "id": "S14",
+      "name": "跨水橋回程",
+      "from_time_s": 900,
+      "to_time_s": 970,
+      "reference_time_s": 935.000733,
+      "width_m": 3.8,
+      "surface_type": "concrete",
+      "water_side": "both",
+      "water_edge_m": 3,
+      "vegetation": "sparse / none on bridge",
+      "landmark": "兩側白色橋欄杆",
+      "source": {
+        "kind": "video",
+        "ref": "video/gold_coast_ref/S14.png",
+        "estimated": true,
+        "confidence": 0.7
+      },
+      "unknown": [
+        "exact riding track within mapped path",
+        "surveyed path width",
+        "physical bridge deck elevation"
+      ],
+      "stems_per_ha": 42,
+      "species": {
+        "norfolk_pine": 0.3,
+        "palm": 0.4,
+        "beech": 0.3
+      }
+    },
+    {
+      "id": "S15",
+      "name": "主幹道旁公園回程",
+      "from_time_s": 970,
+      "to_time_s": 1060,
+      "reference_time_s": 1010.009,
+      "width_m": 3,
+      "surface_type": "asphalt",
+      "water_side": "right",
+      "water_edge_m": 80,
+      "vegetation": "Norfolk pine / palm / broadleaf",
+      "landmark": "左側道路與遠方高樓",
+      "source": {
+        "kind": "video",
+        "ref": "video/gold_coast_ref/S15.png",
+        "estimated": true,
+        "confidence": 0.7
+      },
+      "unknown": [
+        "exact riding track within mapped path",
+        "surveyed path width",
+        "physical bridge deck elevation"
+      ],
+      "stems_per_ha": 42,
+      "species": {
+        "norfolk_pine": 0.3,
+        "palm": 0.4,
+        "beech": 0.3
+      }
+    },
+    {
+      "id": "S16",
+      "name": "遊樂場林蔭回程",
+      "from_time_s": 1060,
+      "to_time_s": 1130,
+      "reference_time_s": 1090.005583,
+      "width_m": 3,
+      "surface_type": "asphalt",
+      "water_side": "right",
+      "water_edge_m": 45,
+      "vegetation": "Norfolk pine / palm / broadleaf",
+      "landmark": "右側彩色遮陽帆與遊樂場",
+      "source": {
+        "kind": "video",
+        "ref": "video/gold_coast_ref/S16.png",
+        "estimated": true,
+        "confidence": 0.7
+      },
+      "unknown": [
+        "exact riding track within mapped path",
+        "surveyed path width",
+        "physical bridge deck elevation"
+      ],
+      "landmark_ahead_m": 3,
+      "stems_per_ha": 42,
+      "species": {
+        "norfolk_pine": 0.3,
+        "palm": 0.4,
+        "beech": 0.3
+      }
+    },
+    {
+      "id": "S17",
+      "name": "咖啡館與南段水岸",
+      "from_time_s": 1130,
+      "to_time_s": 1180,
+      "reference_time_s": 1150.015533,
+      "width_m": 3.8,
+      "surface_type": "concrete",
+      "water_side": "right",
+      "water_edge_m": 20,
+      "vegetation": "Norfolk pine / palm / broadleaf",
+      "landmark": "左側咖啡館、右側草地水岸",
+      "source": {
+        "kind": "video",
+        "ref": "video/gold_coast_ref/S17.png",
+        "estimated": true,
+        "confidence": 0.7
+      },
+      "unknown": [
+        "exact riding track within mapped path",
+        "surveyed path width",
+        "physical bridge deck elevation"
+      ],
+      "stems_per_ha": 65,
+      "species": {
+        "norfolk_pine": 0.3,
+        "palm": 0.4,
+        "beech": 0.3
+      }
+    },
+    {
+      "id": "S18",
+      "name": "半島砂土與木樁圍欄",
+      "from_time_s": 1180,
+      "to_time_s": 1265,
+      "reference_time_s": 1220.002117,
+      "width_m": 2.4,
+      "surface_type": "dirt",
+      "water_side": "right",
+      "water_edge_m": 7,
+      "vegetation": "Norfolk pine / palm / broadleaf",
+      "landmark": "左側木樁網圍欄、右側水岸",
+      "source": {
+        "kind": "video",
+        "ref": "video/gold_coast_ref/S18.png",
+        "estimated": true,
+        "confidence": 0.7
+      },
+      "unknown": [
+        "exact riding track within mapped path",
+        "surveyed path width",
+        "physical bridge deck elevation"
+      ],
+      "stems_per_ha": 65,
+      "species": {
+        "norfolk_pine": 0.3,
+        "palm": 0.4,
+        "beech": 0.3
+      }
+    },
+    {
+      "id": "S19",
+      "name": "運動設施與草坪",
+      "from_time_s": 1265,
+      "to_time_s": 1340,
+      "reference_time_s": 1300.015383,
+      "width_m": 4,
+      "surface_type": "concrete",
+      "water_side": "right",
+      "water_edge_m": 30,
+      "vegetation": "Norfolk pine / palm / broadleaf",
+      "landmark": "左側健身架、遠處高樓",
+      "source": {
+        "kind": "video",
+        "ref": "video/gold_coast_ref/S19.png",
+        "estimated": true,
+        "confidence": 0.7
+      },
+      "unknown": [
+        "exact riding track within mapped path",
+        "surveyed path width",
+        "physical bridge deck elevation"
+      ],
+      "stems_per_ha": 42,
+      "species": {
+        "norfolk_pine": 0.3,
+        "palm": 0.4,
+        "beech": 0.3
+      }
+    },
+    {
+      "id": "S20",
+      "name": "小教堂／溪橋回程",
+      "from_time_s": 1340,
+      "to_time_s": 1405,
+      "reference_time_s": 1375.006967,
+      "width_m": 3,
+      "surface_type": "asphalt",
+      "water_side": "right",
+      "water_edge_m": 30,
+      "vegetation": "Norfolk pine / palm / broadleaf",
+      "landmark": "小橋欄杆及白色小教堂",
+      "source": {
+        "kind": "video",
+        "ref": "video/gold_coast_ref/S20.png",
+        "estimated": true,
+        "confidence": 0.7
+      },
+      "unknown": [
+        "exact riding track within mapped path",
+        "surveyed path width",
+        "physical bridge deck elevation"
+      ],
+      "stems_per_ha": 65,
+      "species": {
+        "norfolk_pine": 0.3,
+        "palm": 0.4,
+        "beech": 0.3
+      }
+    },
+    {
+      "id": "S21",
+      "name": "北段公園回程",
+      "from_time_s": 1405,
+      "to_time_s": 1500,
+      "reference_time_s": 1450.015233,
+      "width_m": 3.2,
+      "surface_type": "concrete",
+      "water_side": "right",
+      "water_edge_m": 18,
+      "vegetation": "Norfolk pine / palm / broadleaf",
+      "landmark": "左側公寓、右側水岸長椅",
+      "source": {
+        "kind": "video",
+        "ref": "video/gold_coast_ref/S21.png",
+        "estimated": true,
+        "confidence": 0.7
+      },
+      "unknown": [
+        "exact riding track within mapped path",
+        "surveyed path width",
+        "physical bridge deck elevation"
+      ],
+      "stems_per_ha": 65,
+      "species": {
+        "norfolk_pine": 0.3,
+        "palm": 0.4,
+        "beech": 0.3
+      }
+    },
+    {
+      "id": "S22",
+      "name": "狹窄石護岸回程",
+      "from_time_s": 1500,
+      "to_time_s": 1635,
+      "reference_time_s": 1570.001767,
+      "width_m": 2.8,
+      "surface_type": "concrete",
+      "water_side": "right",
+      "water_edge_m": 2.4,
+      "vegetation": "sparse / none on bridge",
+      "landmark": "左側公寓、右側護岸與水",
+      "source": {
+        "kind": "video",
+        "ref": "video/gold_coast_ref/S22.png",
+        "estimated": true,
+        "confidence": 0.7
+      },
+      "unknown": [
+        "exact riding track within mapped path",
+        "surveyed path width",
+        "physical bridge deck elevation"
+      ],
+      "stems_per_ha": 42,
+      "species": {
+        "norfolk_pine": 0.3,
+        "palm": 0.4,
+        "beech": 0.3
+      }
+    },
+    {
+      "id": "S23",
+      "name": "海灣松樹與公寓回程",
+      "from_time_s": 1635,
+      "to_time_s": 1735,
+      "reference_time_s": 1680.011667,
+      "width_m": 4,
+      "surface_type": "concrete",
+      "water_side": "right",
+      "water_edge_m": 15,
+      "vegetation": "Norfolk pine / palm / broadleaf",
+      "landmark": "松樹成排、左側公寓",
+      "source": {
+        "kind": "video",
+        "ref": "video/gold_coast_ref/S23.png",
+        "estimated": true,
+        "confidence": 0.7
+      },
+      "unknown": [
+        "exact riding track within mapped path",
+        "surveyed path width",
+        "physical bridge deck elevation"
+      ],
+      "stems_per_ha": 15,
+      "species": {
+        "palm": 0.8,
+        "beech": 0.2
+      }
+    },
+    {
+      "id": "S24",
+      "name": "北段步道終點",
+      "from_time_s": 1735,
+      "to_time_s": 1816.154,
+      "reference_time_s": 1780.011567,
+      "width_m": 4,
+      "surface_type": "concrete",
+      "water_side": "right",
+      "water_edge_m": 15,
+      "vegetation": "Norfolk pine / palm / broadleaf",
+      "landmark": "右側涼棚與近水草地",
+      "source": {
+        "kind": "video",
+        "ref": "video/gold_coast_ref/S24.png",
+        "estimated": true,
+        "confidence": 0.7
+      },
+      "unknown": [
+        "exact riding track within mapped path",
+        "surveyed path width",
+        "physical bridge deck elevation"
+      ],
+      "stems_per_ha": 42,
+      "species": {
+        "norfolk_pine": 0.3,
+        "palm": 0.4,
+        "beech": 0.3
+      }
+    }
+  ],
+  "provenance": {
+    "reference": "private video frames; not distributable assets",
+    "coordinates": "OSM footway graph, manual landmark/time alignment; estimated",
+    "elevation": "DEM-derived profile; bridge deck requires estimated override"
+  }
+}

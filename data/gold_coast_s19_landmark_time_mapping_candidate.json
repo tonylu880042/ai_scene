@@ -1,0 +1,327 @@
+{
+  "schema": "ai_scene.s19_landmark_time_mapping_candidate.v1",
+  "status": "local_diagnostic_not_adopted",
+  "baseline_package": "export/packages/gold_coast_broadwater_s19_buildings_r13_luna6",
+  "candidate_package": "export/packages/gold_coast_broadwater_s19_landmarks_r15_luna6",
+  "scope": {
+    "section": "S19",
+    "decoded_source_interval_s": [
+      1285.000383,
+      1315.0137
+    ],
+    "apply_to_global_24_viewpoints": false,
+    "canonical_route_modified": false,
+    "physical_grade_modified": false
+  },
+  "formula": "candidate_s = frozen r13 time→s interpolation over 1265s/9013.463242939184m to 1340s/9974.046840452786m + 294m; six observed source frames share one constant offset; camera pose/yaw remains estimated.",
+  "anchors": [
+    {
+      "requested_time_s": 1285,
+      "decoded_time_s": 1285.000383,
+      "decoded_pts": 77100023,
+      "time_base": "1/60000",
+      "source_sha256": "c8cc41bf93dc3dfc23a1f59ae964dffee3f454c9dd101f982e28ec54cc050776",
+      "baseline_s_m": 9269.624,
+      "candidate_s_m": 9563.624,
+      "offset_m": 294,
+      "method": "local constant offset diagnostic; one shared offset across the six source observations",
+      "landmark_check": {
+        "s_m": 9563.624,
+        "x_m": 736.0766968,
+        "z_m": 3134.6462008,
+        "route_heading_deg": 335.0322959999992,
+        "decoded_time_s": 1285.000383,
+        "pose": "diagnostic_constant_plus_294m",
+        "targets": {
+          "rotary_chapel": {
+            "distance_m": 289.6,
+            "bearing_deg": 327.48,
+            "relative_to_route_tangent_deg": -7.55
+          },
+          "sky_broadwater_footprint": {
+            "distance_m": 341.51,
+            "bearing_deg": 307.68,
+            "relative_to_route_tangent_deg": -27.35
+          },
+          "sky_broadwater_podium_part": {
+            "distance_m": 350.35,
+            "bearing_deg": 307.85,
+            "relative_to_route_tangent_deg": -27.18
+          },
+          "sky_broadwater_tower_part": {
+            "distance_m": 352.78,
+            "bearing_deg": 306.78,
+            "relative_to_route_tangent_deg": -28.25
+          },
+          "palmerston_tower": {
+            "distance_m": 303.94,
+            "bearing_deg": 307.02,
+            "relative_to_route_tangent_deg": -28.02
+          }
+        }
+      }
+    },
+    {
+      "requested_time_s": 1295,
+      "decoded_time_s": 1295.010383,
+      "decoded_pts": 77700623,
+      "time_base": "1/60000",
+      "source_sha256": "399b89d168ab8c756f44796eaf3bc7bab7f0d0b1a9b98be97c3b4c75c583df6c",
+      "baseline_s_m": 9397.83,
+      "candidate_s_m": 9691.83,
+      "offset_m": 294,
+      "method": "local constant offset diagnostic; one shared offset across the six source observations",
+      "landmark_check": {
+        "s_m": 9691.83,
+        "x_m": 704.862493,
+        "z_m": 3031.75097,
+        "route_heading_deg": 316.13934,
+        "decoded_time_s": 1295.010383,
+        "pose": "diagnostic_constant_plus_294m",
+        "targets": {
+          "rotary_chapel": {
+            "distance_m": 188.3,
+            "bearing_deg": 318.63,
+            "relative_to_route_tangent_deg": 2.49
+          },
+          "sky_broadwater_footprint": {
+            "distance_m": 261.46,
+            "bearing_deg": 293.88,
+            "relative_to_route_tangent_deg": -22.26
+          },
+          "sky_broadwater_podium_part": {
+            "distance_m": 269.81,
+            "bearing_deg": 294.54,
+            "relative_to_route_tangent_deg": -21.6
+          },
+          "sky_broadwater_tower_part": {
+            "distance_m": 273.69,
+            "bearing_deg": 293.32,
+            "relative_to_route_tangent_deg": -22.82
+          },
+          "palmerston_tower": {
+            "distance_m": 226.13,
+            "bearing_deg": 290.74,
+            "relative_to_route_tangent_deg": -25.4
+          }
+        }
+      }
+    },
+    {
+      "requested_time_s": 1300,
+      "decoded_time_s": 1300.015383,
+      "decoded_pts": 78000923,
+      "time_base": "1/60000",
+      "source_sha256": "38104403ac12cdcdd5bf11d4b2829d301db634be9c4b4a43e0147d465806203b",
+      "baseline_s_m": 9461.933,
+      "candidate_s_m": 9755.933,
+      "offset_m": 294,
+      "method": "local constant offset diagnostic; one shared offset across the six source observations",
+      "landmark_check": {
+        "s_m": 9755.933,
+        "x_m": 659.0988345999995,
+        "z_m": 2987.0102683999994,
+        "route_heading_deg": 320.5309490000014,
+        "decoded_time_s": 1300.015383,
+        "pose": "diagnostic_constant_plus_294m",
+        "targets": {
+          "rotary_chapel": {
+            "distance_m": 124.57,
+            "bearing_deg": 320.82,
+            "relative_to_route_tangent_deg": 0.29
+          },
+          "sky_broadwater_footprint": {
+            "distance_m": 202.74,
+            "bearing_deg": 287.55,
+            "relative_to_route_tangent_deg": -32.99
+          },
+          "sky_broadwater_podium_part": {
+            "distance_m": 210.72,
+            "bearing_deg": 288.63,
+            "relative_to_route_tangent_deg": -31.9
+          },
+          "sky_broadwater_tower_part": {
+            "distance_m": 215.18,
+            "bearing_deg": 287.19,
+            "relative_to_route_tangent_deg": -33.34
+          },
+          "palmerston_tower": {
+            "distance_m": 169.44,
+            "bearing_deg": 282.04,
+            "relative_to_route_tangent_deg": -38.49
+          }
+        }
+      }
+    },
+    {
+      "requested_time_s": 1305,
+      "decoded_time_s": 1305.0037,
+      "decoded_pts": 78300222,
+      "time_base": "1/60000",
+      "source_sha256": "7ec99df23c4876eebc4e55f7be8f1c634cda862dc20db8f74031235beb54a3db",
+      "baseline_s_m": 9525.822,
+      "candidate_s_m": 9819.822,
+      "offset_m": 294,
+      "method": "local constant offset diagnostic; one shared offset across the six source observations",
+      "landmark_check": {
+        "s_m": 9819.822,
+        "x_m": 621.8688212,
+        "z_m": 2935.0952934,
+        "route_heading_deg": 320.76584399999984,
+        "decoded_time_s": 1305.0037,
+        "pose": "diagnostic_constant_plus_294m",
+        "targets": {
+          "rotary_chapel": {
+            "distance_m": 60.93,
+            "bearing_deg": 317.11,
+            "relative_to_route_tangent_deg": -3.65
+          },
+          "sky_broadwater_footprint": {
+            "distance_m": 156.35,
+            "bearing_deg": 273.37,
+            "relative_to_route_tangent_deg": -47.39
+          },
+          "sky_broadwater_podium_part": {
+            "distance_m": 163.17,
+            "bearing_deg": 275.42,
+            "relative_to_route_tangent_deg": -45.35
+          },
+          "sky_broadwater_tower_part": {
+            "distance_m": 168.75,
+            "bearing_deg": 273.97,
+            "relative_to_route_tangent_deg": -46.8
+          },
+          "palmerston_tower": {
+            "distance_m": 129.55,
+            "bearing_deg": 262.65,
+            "relative_to_route_tangent_deg": -58.11
+          }
+        }
+      }
+    },
+    {
+      "requested_time_s": 1310,
+      "decoded_time_s": 1310.0087,
+      "decoded_pts": 78600522,
+      "time_base": "1/60000",
+      "source_sha256": "9df74576805bd99383ba67607e385d92c72b8a859658b410014fd37076c516c8",
+      "baseline_s_m": 9589.925,
+      "candidate_s_m": 9883.925,
+      "offset_m": 294,
+      "method": "local constant offset diagnostic; one shared offset across the six source observations",
+      "landmark_check": {
+        "s_m": 9883.925,
+        "x_m": 594.2496425000003,
+        "z_m": 2882.7908025000006,
+        "route_heading_deg": 335.4592999999994,
+        "decoded_time_s": 1310.0087,
+        "pose": "diagnostic_constant_plus_294m",
+        "targets": {
+          "rotary_chapel": {
+            "distance_m": 15.82,
+            "bearing_deg": 241.05,
+            "relative_to_route_tangent_deg": -94.41
+          },
+          "sky_broadwater_footprint": {
+            "distance_m": 135.49,
+            "bearing_deg": 251.45,
+            "relative_to_route_tangent_deg": -84.01
+          },
+          "sky_broadwater_podium_part": {
+            "distance_m": 139.78,
+            "bearing_deg": 254.7,
+            "relative_to_route_tangent_deg": -80.76
+          },
+          "sky_broadwater_tower_part": {
+            "distance_m": 146.47,
+            "bearing_deg": 253.9,
+            "relative_to_route_tangent_deg": -81.56
+          },
+          "palmerston_tower": {
+            "distance_m": 122.14,
+            "bearing_deg": 235.67,
+            "relative_to_route_tangent_deg": -99.79
+          }
+        }
+      }
+    },
+    {
+      "requested_time_s": 1315,
+      "decoded_time_s": 1315.0137,
+      "decoded_pts": 78900822,
+      "time_base": "1/60000",
+      "source_sha256": "3ebadbeca67115f9a9af7a8faa259ba7efc63d7a5aea6472d2d01c7f2803931e",
+      "baseline_s_m": 9654.028,
+      "candidate_s_m": 9948.028,
+      "offset_m": 294,
+      "method": "local constant offset diagnostic; one shared offset across the six source observations",
+      "landmark_check": {
+        "s_m": 9948.028,
+        "x_m": 590.0863532000001,
+        "z_m": 2819.2639268000003,
+        "route_heading_deg": 7.29114800000001,
+        "decoded_time_s": 1315.0137,
+        "pose": "diagnostic_constant_plus_294m",
+        "targets": {
+          "rotary_chapel": {
+            "distance_m": 71.84,
+            "bearing_deg": 187.75,
+            "relative_to_route_tangent_deg": -179.54
+          },
+          "sky_broadwater_footprint": {
+            "distance_m": 163.76,
+            "bearing_deg": 229.37,
+            "relative_to_route_tangent_deg": -137.92
+          },
+          "sky_broadwater_podium_part": {
+            "distance_m": 164.79,
+            "bearing_deg": 232.46,
+            "relative_to_route_tangent_deg": -134.84
+          },
+          "sky_broadwater_tower_part": {
+            "distance_m": 171.74,
+            "bearing_deg": 232.67,
+            "relative_to_route_tangent_deg": -134.62
+          },
+          "palmerston_tower": {
+            "distance_m": 163.95,
+            "bearing_deg": 216.14,
+            "relative_to_route_tangent_deg": -151.15
+          }
+        }
+      }
+    }
+  ],
+  "neighbor_guards": {
+    "S18_endpoint": {
+      "time_s": 1265,
+      "frozen_s_m": 9013.463242939184,
+      "role": "monotonic lower guard only; fixed guard view is unchanged"
+    },
+    "S20_reference": {
+      "time_s": 1375.006967,
+      "frozen_s_m": 10195.421,
+      "role": "section S20 reference view neighbor; do not substitute S20 section boundary 1340s"
+    },
+    "candidate_interval_is_bounded_and_increasing": true,
+    "implied_boundary_rates_m_per_s": {
+      "1265_to_1285_entry": 27.51,
+      "1315_to_S20_1375_exit": 4.12
+    },
+    "finding": "Candidate stations lie monotonically between S18 and S20. Boundary rates differ strongly from the frozen path pace; the local offset is not authorized for global adoption until the full turn sequence establishes the 1265 boundary and S20 transition."
+  },
+  "identity_event_sequence": {
+    "chapel": "At 1285 it is not clearly dominant; at 1295 it is ahead and distant; at 1300–1305 it approaches; at 1310 only its left edge/end wall remains during pass; at 1315 it is gone. The 294m candidate moves from ahead-left to pass/behind in the same order.",
+    "sky": "At 1295 the Sky blue-glass/white podium mass is large at upper-left; at 1300–1305 the tower remains left of the chapel. OSM/architect/owner joint layout agrees with these side/order cues.",
+    "later_sequence": "1320–1375 frames show park/open-lawn, pavilion/parking, path/fence and a west-facing street approach. 1340–1350 changes path/environment and may be a turn or edit; these later events remain a separate guard, not an extrapolation of +294m."
+  },
+  "camera_uncertainty": "Candidate uses canonical route-tangent positions only for comparison. Video yaw, pitch, lateral path within the park and edit/cut points are not calibrated.",
+  "adopted": false,
+  "evidence": {
+    "landmark_report": "export/gold_coast/review/s19_landmarks_luna6/report.md",
+    "source_frames": "export/gold_coast/review/s19_alignment_luna6/source_frames.json",
+    "extra_source_frames": "export/gold_coast/review/s19_landmarks_luna6/source_frames.json",
+    "osm_bbox_sha256": "29f16925aea0f27ef8fe248da2cf4f3be555690f0b1a5c0a99acb16a1772aa8a",
+    "public_visual_sources": "export/gold_coast/review/s19_alignment_luna6/evidence/public_visual_sources_review.json"
+  }
+}

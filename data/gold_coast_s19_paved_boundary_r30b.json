@@ -1,0 +1,100 @@
+{
+  "id": "gold_coast_s19_estimated_paved_service_apron_exact_boundary_r30b",
+  "source": {
+    "kind": "OSM_map_plus_video_estimate",
+    "estimated": true,
+    "confidence": 0.48,
+    "references": [
+      "export/gold_coast/review/s19_path_correspondence_sol/chapel_path_map.json",
+      "export/gold_coast/review/s19_alignment_luna6/source_frames.json",
+      "OSM way/1310786947",
+      "OSM way/1310786948",
+      "video/gold_coast_ref/S19.png (comparison reference only; not an asset)"
+    ],
+    "note": "Estimated paved service/parking apron beside the pre-cut S19 approach from cached OSM access geometry and visible source frames. The film-to-route mapping remains diagnostic and unadopted; this is not a survey boundary. Existing owner-terrain triangles and elevations are retained. The opt-in exact triangle-boundary mode splits owner terrain faces at the authored route-relative mask while preserving their piecewise-planar surface. R30b retains correctly wound nonzero float32 faces and removes only collapsed or rigorously bounded precision-flipped facets."
+  },
+  "overrides": [
+    {
+      "id": "s19_paved_service_apron_exact_boundary",
+      "from_s": 9780.0,
+      "to_s": 9868.0,
+      "side": "left",
+      "edge_m": 40.0,
+      "width_m": 32.0,
+      "surface": "parking_asphalt",
+      "material": {
+        "name": "parking_asphalt",
+        "color": [
+          0.2,
+          0.21,
+          0.22
+        ],
+        "roughness": 0.96
+      },
+      "osm_features": [
+        "way/1310786947",
+        "way/1310786948"
+      ],
+      "boundary_note": "Route-relative estimated box s=9780..9868 m, u=8..40 m (+left). The inner edge leaves a narrow planted verge; the north end stops before the mapped chapel footprint/support. Exact boundary mode clips/splits existing terrain triangles; no terrain height or road geometry changes.",
+      "boundary_mode": "exact_triangle_clip"
+    }
+  ],
+  "vegetation_exclusions": [
+    {
+      "proto": "deciduous_broadleaf",
+      "index": 2,
+      "tile": "39",
+      "s": 9814.516,
+      "lateral_offset_m": 21.796
+    },
+    {
+      "proto": "deciduous_broadleaf",
+      "index": 3,
+      "tile": "39",
+      "s": 9850.803,
+      "lateral_offset_m": 14.939
+    },
+    {
+      "proto": "norfolk_pine",
+      "index": 1,
+      "tile": "39",
+      "s": 9793.342,
+      "lateral_offset_m": 12.915
+    },
+    {
+      "proto": "norfolk_pine",
+      "index": 2,
+      "tile": "39",
+      "s": 9804.565,
+      "lateral_offset_m": 10.146
+    },
+    {
+      "proto": "rock_small",
+      "index": 1,
+      "tile": "39",
+      "s": 9791.742,
+      "lateral_offset_m": 16.372
+    },
+    {
+      "proto": "rock_small",
+      "index": 3,
+      "tile": "39",
+      "s": 9840.934,
+      "lateral_offset_m": 25.588
+    },
+    {
+      "proto": "tropical_palm",
+      "index": 0,
+      "tile": "39",
+      "s": 9799.127,
+      "lateral_offset_m": 17.434
+    },
+    {
+      "proto": "tropical_palm",
+      "index": 2,
+      "tile": "39",
+      "s": 9806.38,
+      "lateral_offset_m": 23.22
+    }
+  ]
+}

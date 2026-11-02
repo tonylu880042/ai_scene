@@ -1,0 +1,44 @@
+[
+  {
+    "semantic_type": "commercial_building",
+    "prototype": "coastal_apartment_corner_36",
+    "importance": "high",
+    "name": "S19 cropped coastal apartment mass",
+    "s": 9550.0,
+    "side": "left",
+    "lateral_offset_m": 62.0,
+    "dimensions_m": [
+      12.0,
+      36.0,
+      8.0
+    ],
+    "confidence": 0.4,
+    "source": {
+      "kind": "video_estimate",
+      "estimated": true,
+      "ref": "video/gold_coast_ref/S19.png at 1300.015383s; existing estimated route anchor 9461.932611m",
+      "note": "Upper-left cropped light apartment silhouette with repeated balcony bands; s/u and dimensions are visual estimates, not surveyed. Uses a new shared procedural corner variant derived from the existing apartment shape; no external asset or source pixels were used."
+    }
+  },
+  {
+    "semantic_type": "house",
+    "prototype": "coastal_house_gable",
+    "importance": "high",
+    "name": "S19 low pale pitched-roof building",
+    "s": 9560.0,
+    "side": "left",
+    "lateral_offset_m": 12.0,
+    "dimensions_m": [
+      24.0,
+      7.0,
+      8.0
+    ],
+    "confidence": 0.5,
+    "source": {
+      "kind": "video_estimate",
+      "estimated": true,
+      "ref": "video/gold_coast_ref/S19.png at 1300.015383s; existing estimated route anchor 9461.932611m",
+      "note": "Ahead-left low light building with a pitched roof. Generic massing only; no signs, people, cars or source pixels are reproduced. s/u and dimensions are visual estimates, not surveyed."
+    }
+  }
+]

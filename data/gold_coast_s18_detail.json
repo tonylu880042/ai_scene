@@ -1,0 +1,73 @@
+{
+  "candidate": "gold_coast_broadwater_s18_r5",
+  "base": "gold_coast_broadwater_r4",
+  "section_id": "S18",
+  "source_frame": {
+    "requested_time_s": 1220,
+    "decoded_pts": 73200127,
+    "time_base": "1/60000",
+    "decoded_time_s": 1220.002117,
+    "zero_based_frame_index": 73127,
+    "width": 1920,
+    "height": 1080,
+    "path": "video/gold_coast_ref/S18.png",
+    "sha256": "cb349552571ccb0da985f9ff381272f03d6b074b415a22634b21374d4452d819"
+  },
+  "route_s": {
+    "from_time_s": 1180,
+    "from_s": 8689.8348,
+    "to_time_s": 1265,
+    "to_s": 9013.4632,
+    "view_time_s": 1220.002117,
+    "view_s": 8850.958079145625,
+    "mapping_basis": "route.json section S18 boundaries plus fixed decoded-frame reference anchor; no cross-section linear interpolation"
+  },
+  "edit": {
+    "layer": "P2",
+    "semantic_type": "fence",
+    "side": "right",
+    "edge_offset_m": [
+      0.05,
+      0.15
+    ],
+    "style": "lattice",
+    "confidence": 0.6,
+    "basis": "Visible timber posts and green mesh form a continuous route-edge boundary in S18; fence lies immediately beside the trail."
+  },
+  "limits": [
+    "P0 route/time mapping stays estimated; no canonical route edits.",
+    "S18 source frame places the mesh fence on the right despite the old checklist wording “left”; side is confirmed by the pixels.",
+    "The shared Godot barrier renderer ignores style and renders all fences as white rails; this candidate checks placement only.",
+    "Vegetation and landmark changes deferred until route correspondence and fence representation are reviewed."
+  ],
+  "derived_zone": {
+    "id": "s18_lattice_fence",
+    "semantic_type": "fence",
+    "side": "right",
+    "from_s": 8689.8348,
+    "to_s": 9013.4632,
+    "lateral_offset_m": [
+      -2.15,
+      -2.05
+    ],
+    "vertical_offset_m": null,
+    "confidence": 0.6,
+    "attributes": {
+      "kind": "lattice",
+      "appearance": "timber posts with green mesh",
+      "section": "S18"
+    },
+    "source": {
+      "kind": "video",
+      "ref": "video/gold_coast_ref/S18.png; 1220.002117 s",
+      "estimated": true,
+      "note": "Continuous route-edge mesh fence visible; lateral stand-off from route edge is estimated."
+    }
+  },
+  "corrected_candidate": "gold_coast_broadwater_s18_r5a",
+  "prototype_asset_correction": {
+    "r5_regression": "tools/build_package_assets.py was invoked without optional data/gold_coast_library.json, replacing deciduous_broadleaf library mesh/source and leaving other used structure prototypes without mesh_file references.",
+    "r5a_action": "restore both prototype catalogs, all assets/prototypes and assets/library byte-for-byte from r4; do not rerun the asset builder for this restore-only candidate.",
+    "correct_rebuild_command": "python3 tools/build_package_assets.py export/packages/gold_coast_broadwater data/gold_coast_library.json"
+  }
+}

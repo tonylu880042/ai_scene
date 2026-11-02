@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "estimated": true,
+  "target_tile_id": "49",
+  "provenance": {
+    "source": "procedural_estimated_land_continuity",
+    "status": "estimated",
+    "rationale": "Two compact sampled P1/P0 XZ complement regions are filled as bounded land continuity patches. Their boundaries are derived from serialized package geometry; the ROI extents originate in a 0.25 m occupancy probe and are not surveyed land boundaries. Height support prefers logical tile 49; cross-owner height disagreement is retained as a diagnostic and does not change the selected logical surface.",
+    "supplementary_inputs": [
+      {
+        "path": "export/gold_coast/review/shore_geo_source_r39_sol/current_osm_map.osm",
+        "use": "supplementary contemporary geographic context only",
+        "limitation": "not historical source-video registration and not survey-grade land ownership"
+      }
+    ]
+  },
+  "height_rule": {
+    "kind": "boundary_supported_idw",
+    "neighbors": 4,
+    "max_estimated_support_distance_m": 4.0,
+    "max_boundary_mismatch_m": 0.002,
+    "description": "At supported XZ points, prefer target tile 49 road P0 at road boundaries, otherwise target tile 49 terrain P1; among overlapping triangles of the selected owner/layer choose the topmost surface with deterministic primitive/triangle tie-break and gate same-owner/layer spread at 2 mm. Cross-owner differences are diagnostic only and never averaged. Use target-owner P1 then P0 samples for deterministic inverse-square four-neighbor continuity at unsupported decomposition/interior vertices; borrow one foreign owner only if target-owner support is absent within the configured distance. Never use camera height or y=0.",
+    "foreign_fallback_owner_ids": [
+      "03"
+    ]
+  },
+  "material": {
+    "name": "terrain_ground",
+    "color": [
+      0.3,
+      0.42,
+      0.2
+    ],
+    "roughness": 0.95
+  },
+  "regions": [
+    {
+      "id": "tile49_lower_sampled_gap",
+      "logical_owner_ids": [
+        "47",
+        "48",
+        "49",
+        "50",
+        "51",
+        "52"
+      ],
+      "input_component_bbox_xz": [
+        235.75,
+        242.25,
+        809.0,
+        812.25
+      ],
+      "polygon_xz": [
+        [
+          234.75,
+          808.0
+        ],
+        [
+          243.25,
+          808.0
+        ],
+        [
+          243.25,
+          813.25
+        ],
+        [
+          234.75,
+          813.25
+        ]
+      ],
+      "boundary_provenance": "estimated from package-wide P1/P0 serialized triangle complement inside the occupancy-derived ROI; current OSM is supplementary only"
+    },
+    {
+      "id": "tile49_upper_sampled_gap",
+      "logical_owner_ids": [
+        "47",
+        "48",
+        "49",
+        "50",
+        "51",
+        "52"
+      ],
+      "input_component_bbox_xz": [
+        228.0,
+        234.0,
+        799.75,
+        802.75
+      ],
+      "polygon_xz": [
+        [
+          227.0,
+          798.75
+        ],
+        [
+          235.0,
+          798.75
+        ],
+        [
+          235.0,
+          803.75
+        ],
+        [
+          227.0,
+          803.75
+        ]
+      ],
+      "boundary_provenance": "estimated from package-wide P1/P0 serialized triangle complement inside the occupancy-derived ROI; current OSM is supplementary only"
+    }
+  ]
+}

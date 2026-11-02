@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "source": {
+    "kind": "video_estimated",
+    "ref": "video/gold_coast_ref/S18.png; 1220.002117 s / route s=8850.958079 m",
+    "estimated": true,
+    "note": "S18-local silhouette proxy for the six remaining pointed Norfolk pine instances; species and proportions are visual estimates. Source image is private evidence only, not packaged or used as a texture."
+  },
+  "prototype_aliases": [
+    {
+      "id": "s18_slender_canopy_candidate",
+      "base": "deciduous_broadleaf",
+      "category": "deciduous_tree",
+      "scale": [0.4, 2.0],
+      "height_m": [16.6, 24.2],
+      "footprint_radius_m": 0.4,
+      "min_spacing_m": 3.0,
+      "source": {
+        "kind": "video_estimated",
+        "estimated": true,
+        "asset_source": "Island Tree 02 — Poly Haven",
+        "asset_license": "CC0",
+        "asset_ref": "https://polyhaven.com/a/island_tree_02",
+        "note": "Local canopy shape proxy, not species identification. Reuses the unchanged deciduous_broadleaf GLTF asset; per-instance XYZ scales are derived from the asset AABBs to retain the Norfolk proxy height while narrowing crown width."
+      }
+    }
+  ],
+  "zone_rules": [
+    {
+      "zones": ["v1100", "v1104", "v1108", "v1112", "v1116", "v1120"],
+      "replace": [
+        {"from": "norfolk_pine", "to": "s18_slender_canopy_candidate", "scale_multiplier_xyz": [0.55, 1.7773, 0.55]}
+      ],
+      "mix": [
+        {"prototype": "s18_fine_canopy_candidate", "density_per_ha": 48.75, "target_count": 3, "count": 3},
+        {"prototype": "s18_slender_canopy_candidate", "density_per_ha": 16.25, "target_count": 1, "count": 1}
+      ]
+    }
+  ]
+}

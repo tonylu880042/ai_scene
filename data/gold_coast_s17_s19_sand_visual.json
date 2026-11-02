@@ -1,0 +1,26 @@
+{
+  "id": "gold_coast_s17_s19_compacted_sand_preview",
+  "source": {
+    "kind": "video_estimate",
+    "references": ["video/gold_coast_ref/S17.png", "video/gold_coast_ref/S18.png", "video/gold_coast_ref/S19.png"],
+    "estimated": true,
+    "confidence": 0.55,
+    "note": "S17–S19 source views show a pale, compacted fine-grain path. This is a Godot adapter appearance probe only; it does not reclassify route surface_type or gameplay friction."
+  },
+  "overrides": [
+    {
+      "from_s": 8572.0705,
+      "to_s": 9974.0468,
+      "surface_types": ["concrete", "dirt"],
+      "appearance": "compacted_fine_sand",
+      "base_color_linear": [0.48, 0.32, 0.14],
+      "cluster_scale_per_m": 7.5,
+      "grain_scale_per_m": 22.0,
+      "mottle_scale_per_m": 2.2,
+      "track_centres_m": [-0.34, 0.34],
+      "track_width_m": 0.20,
+      "roughness": 0.97,
+      "provenance": "video_estimated; procedural original shader, not sampled from source pixels"
+    }
+  ]
+}

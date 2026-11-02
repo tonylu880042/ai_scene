@@ -1,0 +1,80 @@
+{
+ "source": {
+  "kind": "video",
+  "estimated": true,
+  "ref": "Qu4vsKXiRtM",
+  "confidence": 0.55,
+  "note": "Estimated midday clear coastal lighting; no capture date, compass or measured irradiance available"
+ },
+ "sun": {
+  "direction_to_sun": [
+   -0.5,
+   0.75,
+   -0.43
+  ],
+  "mode": "world",
+  "energy": 1.0,
+  "color": [
+   1,
+   0.97,
+   0.91
+  ]
+ },
+ "ambient": {
+  "source": "sky",
+  "energy": 0.35
+ },
+ "fog": {
+  "density": 9e-05,
+  "color": [
+   0.71,
+   0.81,
+   0.86
+  ],
+  "aerial_perspective": 0.2,
+  "sun_scatter": 0.1,
+  "sky_affect": 0.05
+ },
+ "time_of_day": {
+  "phase": [
+   0.45,
+   0.45
+  ]
+ },
+ "grading": {
+  "tonemap": "agx",
+  "exposure": 1,
+  "saturation": 1,
+  "contrast": 1,
+  "glow": false
+ },
+ "sky": {
+  "hdri": "assets/hdri/kloofendal_43d_clear_puresky_4k.hdr",
+  "sun_u": 0.74,
+  "sun_elevation_deg": 43,
+  "energy": 1
+ },
+ "water": [
+  {
+   "name": "Broadwater",
+   "kind": "sea",
+   "size_m": [
+    12000,
+    12000
+   ],
+   "base_y": 0,
+   "follows_route_water": false,
+   "deep_color": [
+    0.08,
+    0.39,
+    0.48
+   ],
+   "shallow_color": [
+    0.23,
+    0.52,
+    0.5
+   ],
+   "roughness": 0.23
+  }
+ ]
+}

@@ -1,0 +1,24 @@
+{
+ "version": "1.0",
+ "source": {
+  "kind": "video_estimated",
+  "estimated": true,
+  "ref": "video/gold_coast_ref/S18.png; 1220.002117s / route s=8850.958079m",
+  "note": "Local procedural P1 surface appearance estimate from visible sandy path/bank. Not surveyed; source frame is private and is not shipped or used as a texture."
+ },
+ "overrides": [
+  {
+   "id": "s18_right_sandy_shore_band",
+   "from_s": 8823.0,
+   "to_s": 8900.0,
+   "side": "right",
+   "edge_m": 7.0,
+   "sand_width_m": 5.8,
+   "material": {
+    "name": "shore_sand",
+    "color": [0.68, 0.59, 0.39],
+    "roughness": 0.95
+   }
+  }
+ ]
+}

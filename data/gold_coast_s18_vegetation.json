@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "source": {
+    "kind": "video_estimated",
+    "ref": "video/gold_coast_ref/S18.png; 1220.002117 s / route s=8850.958079 m",
+    "estimated": true,
+    "note": "Local left-forest visual proxy only. Fine, airy coastal canopy inferred from the fixed S18/S17 frames; species is not identified with certainty. Source frame remains private and is not packaged or used as a texture."
+  },
+  "prototype_aliases": [
+    {
+      "id": "s18_fine_canopy_candidate",
+      "base": "deciduous_broadleaf",
+      "height_m": [6.0, 10.0],
+      "scale": [0.43, 0.8],
+      "source": {
+        "kind": "video_estimated",
+        "estimated": true,
+        "derived_from": "deciduous_broadleaf",
+        "note": "S18 local fine-canopy visual proxy using the existing Island Tree 02 library mesh at 0.55x source-instance scale; species identity uncertain."
+      }
+    }
+  ],
+  "zone_rules": [
+    {
+      "zones": ["v1100", "v1104", "v1108", "v1112", "v1116", "v1120"],
+      "replace": [
+        {"from": "tropical_palm", "to": "s18_fine_canopy_candidate", "scale_multiplier": 0.55},
+        {"from": "deciduous_broadleaf", "to": "s18_fine_canopy_candidate", "scale_multiplier": 0.55}
+      ],
+      "mix": [
+        {"prototype": "norfolk_pine", "density_per_ha": 16.25, "target_count": 1, "count": 1},
+        {"prototype": "s18_fine_canopy_candidate", "density_per_ha": 48.75, "target_count": 3, "count": 3}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+ "id": "gold_coast_s17_s18_compacted_sand_pbr_preview_r30b",
+ "source": {
+  "kind": "video_estimate",
+  "references": [
+   "video/gold_coast_ref/S17.png",
+   "video/gold_coast_ref/S18.png",
+   "video/gold_coast_ref/S19.png"
+  ],
+  "estimated": true,
+  "confidence": 0.55,
+  "note": "Godot adapter-only material appearance probe. It preserves route surface_type and gameplay friction. The source images are comparison references only and are not used to create or modify textures. This copy ends before S19 so the source-supported S19 concrete path retains its intended appearance."
+ },
+ "overrides": [
+  {
+   "from_s": 8572.0705,
+   "to_s": 9013.4632,
+   "surface_types": [
+    "concrete",
+    "dirt"
+   ],
+   "appearance": "polyhaven_coast_sand_pbr",
+   "textures": {
+    "diffuse": "res://assets/textures/coast_sand_01_diff.jpg",
+    "normal_opengl": "res://assets/textures/coast_sand_01_nor.jpg",
+    "roughness": "res://assets/textures/coast_sand_01_rough.jpg"
+   },
+   "source_asset": {
+    "name": "Coast Sand 01",
+    "author": "Rob Tuytel",
+    "url": "https://polyhaven.com/a/coast_sand_01",
+    "license": "CC0",
+    "original_texture_width_m": 15.0
+   },
+   "texture_repeat_m": 0.4,
+   "uv_warp_m": 0.035,
+   "albedo_tint_linear": [
+    2.0,
+    1.8,
+    1.2
+   ],
+   "normal_depth": 0.42,
+   "roughness_scale": 1.0,
+   "provenance": "Licensed Poly Haven CC0 PBR maps; video_estimated visual interval and repeat scale. Texture scale is an appearance proxy, not measured ground material scale."
+  }
+ ]
+}

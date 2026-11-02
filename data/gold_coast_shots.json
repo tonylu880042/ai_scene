@@ -1,0 +1,633 @@
+{
+  "kind": "source_video_shot_authoring",
+  "schema_version": 1,
+  "source": {
+    "path": "video/Virtual Bike Ride 30 Mins - Burn Fat To Music & Beach Views On Australia's Gold Coast [Qu4vsKXiRtM]_1080p.mp4",
+    "sha256": "eda2f4cbe90de013df93aad1f224a94dcd63430dd8ed563beb73aaf25ef66d6a",
+    "duration_s": 1816.154,
+    "video_time_base": "1/60000",
+    "frame_rate": "60000/1001",
+    "privacy": "private reference only; never package or use as generated assets"
+  },
+  "provenance": {
+    "method": "FFmpeg low-resolution scene-change screening followed by original-resolution adjacent decoded frame review",
+    "screening_resolution_px": [
+      160,
+      90
+    ],
+    "scene_threshold": 0.2,
+    "reviewer": "Sol",
+    "review_date": "2026-10-24",
+    "evidence_manifest": "export/gold_coast/review/global_shot_segmentation_sol/adjacent_frames.json",
+    "status": "15 observed hard cuts confirmed; not a guarantee that every edit was detected",
+    "measured": [
+      "decoded frame PTS",
+      "adjacent frame interval",
+      "source and frame SHA256"
+    ],
+    "estimated": [
+      "visual scene-change descriptions"
+    ],
+    "not_established": [
+      "omitted physical route distance",
+      "absolute world location per shot",
+      "camera calibration per shot"
+    ]
+  },
+  "rules": [
+    "Physical canonical route remains continuous and unchanged.",
+    "Do not interpolate source-time station or camera mapping across a confirmed edit.",
+    "Each shot requires independent landmark and route correspondence; no station mapping is adopted here.",
+    "Checklist frame membership is a source-time lookup and is not visual acceptance."
+  ],
+  "cuts": [
+    {
+      "id": "cut_01",
+      "last_before_pts": 10809799,
+      "first_after_pts": 10810800,
+      "time_s": 180.18,
+      "observation": "Foreground playground/path arrangement changes abruptly to beachside road.",
+      "before": {
+        "pts": 10809799,
+        "decoded_time_s": 180.16331666666667,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_01/frame_02.png",
+        "sha256": "7ffe950df29414a0c263ffc6c08cbdbe29f03ff5afe7240de3430aa11c8ef91f"
+      },
+      "after": {
+        "pts": 10810800,
+        "decoded_time_s": 180.18,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_01/frame_03.png",
+        "sha256": "c28d4e5d6333356645fef0b73e7a56421fe5f38637cab3d8619f3f7ca86b8c8b"
+      }
+    },
+    {
+      "id": "cut_02",
+      "last_before_pts": 14471457,
+      "first_after_pts": 14472458,
+      "time_s": 241.207633,
+      "observation": "Pavilion and tall-building approach changes abruptly to a low-apartment frontage.",
+      "before": {
+        "pts": 14471457,
+        "decoded_time_s": 241.19095,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_02/frame_02.png",
+        "sha256": "5c61e921771520179e43d94f2bfb778d78d030e23c24b3d06c175bebe85d56a5"
+      },
+      "after": {
+        "pts": 14472458,
+        "decoded_time_s": 241.20763333333332,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_02/frame_03.png",
+        "sha256": "156aece5aebcc036ea558d88fc0241ddebb72eff687d186e85b243d5eacf6110"
+      }
+    },
+    {
+      "id": "cut_03",
+      "last_before_pts": 15153138,
+      "first_after_pts": 15154139,
+      "time_s": 252.568983,
+      "observation": "Parking/pier approach changes abruptly to beach-verge path.",
+      "before": {
+        "pts": 15153138,
+        "decoded_time_s": 252.5523,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_03/frame_02.png",
+        "sha256": "4fcbc640bfcc8ef68807488e3f4336ba8c7a0be6a19eb56ab81bcc5ad25e418a"
+      },
+      "after": {
+        "pts": 15154139,
+        "decoded_time_s": 252.56898333333334,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_03/frame_03.png",
+        "sha256": "bc13fe50dd73e9de0bd16b6528aa7d8fdf0ea75f3494c130f46d08de513b4313"
+      }
+    },
+    {
+      "id": "cut_04",
+      "last_before_pts": 21814793,
+      "first_after_pts": 21815794,
+      "time_s": 363.596567,
+      "observation": "Grass-side path changes abruptly to camper/fence frontage.",
+      "before": {
+        "pts": 21814793,
+        "decoded_time_s": 363.5798833333333,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_04/frame_02.png",
+        "sha256": "05e729200e67698cd4f10bdd1f31c340dbd30cba4f4e324a734c8133aa1b2cc5"
+      },
+      "after": {
+        "pts": 21815794,
+        "decoded_time_s": 363.59656666666666,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_04/frame_03.png",
+        "sha256": "87667d09253685f8886e95f14cc285496f28c1b68976907176053f5e769ec760"
+      }
+    },
+    {
+      "id": "cut_05",
+      "last_before_pts": 23203180,
+      "first_after_pts": 23204181,
+      "time_s": 386.73635,
+      "observation": "Path approach changes abruptly to bollard/plaza scene.",
+      "before": {
+        "pts": 23203180,
+        "decoded_time_s": 386.7196666666667,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_05/frame_02.png",
+        "sha256": "486380c7531c0306b7905cce6344dd189f260ebba1eeb926abcd95b97982ffba"
+      },
+      "after": {
+        "pts": 23204181,
+        "decoded_time_s": 386.73635,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_05/frame_03.png",
+        "sha256": "a6d1d48179cef652b17430c093172ac04b17447537faae0f4c72afb5191d5278"
+      }
+    },
+    {
+      "id": "cut_06",
+      "last_before_pts": 33273240,
+      "first_after_pts": 33274241,
+      "time_s": 554.570683,
+      "observation": "Plaza changes abruptly to shaded canal-side path.",
+      "before": {
+        "pts": 33273240,
+        "decoded_time_s": 554.554,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_06/frame_02.png",
+        "sha256": "b4cbb9b14d3a2177fd043b33b8662332917fbf1fb25a8e05d5b29c963e457212"
+      },
+      "after": {
+        "pts": 33274241,
+        "decoded_time_s": 554.5706833333334,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_06/frame_03.png",
+        "sha256": "0c599ea94f3c5f9d8e1146331c438168b5898d823a7087004e9d36393dbc277b"
+      }
+    },
+    {
+      "id": "cut_07",
+      "last_before_pts": 45150105,
+      "first_after_pts": 45151106,
+      "time_s": 752.518433,
+      "observation": "Straight city path changes abruptly to parking-entry approach.",
+      "before": {
+        "pts": 45150105,
+        "decoded_time_s": 752.50175,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_07/frame_02.png",
+        "sha256": "7300aa2bba819bba7b6c3b5f01f0645fc1e0388a8167ea9e4ade61458cc89ada"
+      },
+      "after": {
+        "pts": 45151106,
+        "decoded_time_s": 752.5184333333333,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_07/frame_03.png",
+        "sha256": "24bee5bed39b3e345879710c3d75587ab87f0073ff2d80b26bdc66aa84e59397"
+      }
+    },
+    {
+      "id": "cut_08",
+      "last_before_pts": 49829780,
+      "first_after_pts": 49830781,
+      "time_s": 830.513017,
+      "observation": "Street-edge path changes abruptly to marina promenade.",
+      "before": {
+        "pts": 49829780,
+        "decoded_time_s": 830.4963333333334,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_08/frame_02.png",
+        "sha256": "85fdbb7f52541cda3f92b1043ed95cf96743ad8adc4d0433befa1d6bc7c6742d"
+      },
+      "after": {
+        "pts": 49830781,
+        "decoded_time_s": 830.5130166666667,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_08/frame_03.png",
+        "sha256": "9e2963812d1c358493d7d04dc358f489a3b35e6e5d8d29772382732d9597cae8"
+      }
+    },
+    {
+      "id": "cut_09",
+      "last_before_pts": 53684631,
+      "first_after_pts": 53685632,
+      "time_s": 894.760533,
+      "observation": "Sidewalk changes abruptly to bridge approach.",
+      "before": {
+        "pts": 53684631,
+        "decoded_time_s": 894.74385,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_09/frame_02.png",
+        "sha256": "2724c1119ab7a361f66df7868a44d8bc429524687e41f4adfcac303f84f1f820"
+      },
+      "after": {
+        "pts": 53685632,
+        "decoded_time_s": 894.7605333333333,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_09/frame_03.png",
+        "sha256": "41c3de9af017930b5f0259ba6ace907ce34d3b4b8f072c998632fc8f7a690ae9"
+      }
+    },
+    {
+      "id": "cut_10",
+      "last_before_pts": 68847779,
+      "first_after_pts": 68848780,
+      "time_s": 1147.479667,
+      "observation": "Pavilion approach changes abruptly to waterfront park.",
+      "before": {
+        "pts": 68847779,
+        "decoded_time_s": 1147.4629833333333,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_10/frame_02.png",
+        "sha256": "5d07bec4c31a1ec7cb0303c4268fb06f9ada0ff29792885ca18f76bc59249c45"
+      },
+      "after": {
+        "pts": 68848780,
+        "decoded_time_s": 1147.4796666666666,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_10/frame_03.png",
+        "sha256": "4c2e1a77dc0e704ac890f34192238419dfef61913b9b5837be3feda4305a9131"
+      }
+    },
+    {
+      "id": "cut_11",
+      "last_before_pts": 78444366,
+      "first_after_pts": 78445367,
+      "time_s": 1307.422783,
+      "observation": "Chapel across lawn/parking changes abruptly to camera beside chapel wall/hedge.",
+      "before": {
+        "pts": 78444366,
+        "decoded_time_s": 1307.4061,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_11/frame_02.png",
+        "sha256": "05d2af94d05e08e3b207cae1335c76c960a9970e469e3c4fa00dcc6828607036"
+      },
+      "after": {
+        "pts": 78445367,
+        "decoded_time_s": 1307.4227833333334,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_11/frame_03.png",
+        "sha256": "edfa3734fab072b6b7f42ba0e57c343ff6c669b6ce52c1775ab460b8e0d8a42a"
+      }
+    },
+    {
+      "id": "cut_12",
+      "last_before_pts": 80991911,
+      "first_after_pts": 80992912,
+      "time_s": 1349.881867,
+      "observation": "Waterfront plaza changes abruptly to lawn-side path.",
+      "before": {
+        "pts": 80991911,
+        "decoded_time_s": 1349.8651833333333,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_12/frame_02.png",
+        "sha256": "0feeb12db6d80d49e1720df601a4f10d528e3e62adfeeb7e06e4495e5f31cb82"
+      },
+      "after": {
+        "pts": 80992912,
+        "decoded_time_s": 1349.8818666666666,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_12/frame_03.png",
+        "sha256": "62cd08b75193411c3e394083c869a0d41c78702153e32e838272ea7c2bc01fca"
+      }
+    },
+    {
+      "id": "cut_13",
+      "last_before_pts": 82672590,
+      "first_after_pts": 82673591,
+      "time_s": 1377.893183,
+      "observation": "Roadside chapel path changes abruptly to grass/road approach.",
+      "before": {
+        "pts": 82672590,
+        "decoded_time_s": 1377.8765,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_13/frame_02.png",
+        "sha256": "ecb22b9e7d6963858dc30b6f5f886c56740f1f96c0201feb0c57b2fd27e59291"
+      },
+      "after": {
+        "pts": 82673591,
+        "decoded_time_s": 1377.8931833333334,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_13/frame_03.png",
+        "sha256": "1a93bd5a81ae80d8e0746e95f37dadbc7763a173920e2eaa13f1c14b12c55f6f"
+      }
+    },
+    {
+      "id": "cut_14",
+      "last_before_pts": 83897814,
+      "first_after_pts": 83898815,
+      "time_s": 1398.313583,
+      "observation": "Pedestrian bridge changes abruptly to grass-side path.",
+      "before": {
+        "pts": 83897814,
+        "decoded_time_s": 1398.2969,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_14/frame_02.png",
+        "sha256": "514226b7b8319f03a2971075f1764e1ab36554f430314ed579cb311706f7ef20"
+      },
+      "after": {
+        "pts": 83898815,
+        "decoded_time_s": 1398.3135833333333,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_14/frame_03.png",
+        "sha256": "591ca2f4053373c9e6b0ce2dcbae4550ac96a4d4bc7d2d12a2d4743d2a9d4258"
+      }
+    },
+    {
+      "id": "cut_15",
+      "last_before_pts": 91884793,
+      "first_after_pts": 91885794,
+      "time_s": 1531.4299,
+      "observation": "Parked foreground vehicle and coastal parking/path arrangement change abruptly.",
+      "before": {
+        "pts": 91884793,
+        "decoded_time_s": 1531.4132166666666,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_15/frame_02.png",
+        "sha256": "096748aaa6a3f7d3e0666a5f058c44a3d2dbd24977e44f96f946d655b0938387"
+      },
+      "after": {
+        "pts": 91885794,
+        "decoded_time_s": 1531.4299,
+        "path": "export/gold_coast/review/global_shot_segmentation_sol/cut_15/frame_03.png",
+        "sha256": "b6873ef6d2a5710b767b1614fa07893b6406bab79ad8e505864a5e8acb1cc8c2"
+      }
+    }
+  ],
+  "shots": [
+    {
+      "id": "shot_01",
+      "start_pts_inclusive": 0,
+      "end_pts_exclusive": 10810800,
+      "start_time_s": 0.0,
+      "end_time_s": 180.18,
+      "checklist_frames": [
+        {
+          "section": "S01",
+          "requested_time_s": 80,
+          "reference_path": "video/gold_coast_ref/S01.png",
+          "time_precision": "checklist rounded second; not exact decoded frame PTS"
+        }
+      ],
+      "world_mapping_status": "unresolved; do not infer constant speed or interpolate across edit boundaries"
+    },
+    {
+      "id": "shot_02",
+      "start_pts_inclusive": 10810800,
+      "end_pts_exclusive": 14472458,
+      "start_time_s": 180.18,
+      "end_time_s": 241.207633,
+      "checklist_frames": [
+        {
+          "section": "S02",
+          "requested_time_s": 210,
+          "reference_path": "video/gold_coast_ref/S02.png",
+          "time_precision": "checklist rounded second; not exact decoded frame PTS"
+        }
+      ],
+      "world_mapping_status": "unresolved; do not infer constant speed or interpolate across edit boundaries"
+    },
+    {
+      "id": "shot_03",
+      "start_pts_inclusive": 14472458,
+      "end_pts_exclusive": 15154139,
+      "start_time_s": 241.207633,
+      "end_time_s": 252.568983,
+      "checklist_frames": [],
+      "world_mapping_status": "unresolved; do not infer constant speed or interpolate across edit boundaries"
+    },
+    {
+      "id": "shot_04",
+      "start_pts_inclusive": 15154139,
+      "end_pts_exclusive": 21815794,
+      "start_time_s": 252.568983,
+      "end_time_s": 363.596567,
+      "checklist_frames": [
+        {
+          "section": "S03",
+          "requested_time_s": 260,
+          "reference_path": "video/gold_coast_ref/S03.png",
+          "time_precision": "checklist rounded second; not exact decoded frame PTS"
+        },
+        {
+          "section": "S04",
+          "requested_time_s": 310,
+          "reference_path": "video/gold_coast_ref/S04.png",
+          "time_precision": "checklist rounded second; not exact decoded frame PTS"
+        }
+      ],
+      "world_mapping_status": "unresolved; do not infer constant speed or interpolate across edit boundaries"
+    },
+    {
+      "id": "shot_05",
+      "start_pts_inclusive": 21815794,
+      "end_pts_exclusive": 23204181,
+      "start_time_s": 363.596567,
+      "end_time_s": 386.73635,
+      "checklist_frames": [
+        {
+          "section": "S05",
+          "requested_time_s": 375,
+          "reference_path": "video/gold_coast_ref/S05.png",
+          "time_precision": "checklist rounded second; not exact decoded frame PTS"
+        }
+      ],
+      "world_mapping_status": "unresolved; do not infer constant speed or interpolate across edit boundaries"
+    },
+    {
+      "id": "shot_06",
+      "start_pts_inclusive": 23204181,
+      "end_pts_exclusive": 33274241,
+      "start_time_s": 386.73635,
+      "end_time_s": 554.570683,
+      "checklist_frames": [
+        {
+          "section": "S06",
+          "requested_time_s": 420,
+          "reference_path": "video/gold_coast_ref/S06.png",
+          "time_precision": "checklist rounded second; not exact decoded frame PTS"
+        },
+        {
+          "section": "S07",
+          "requested_time_s": 460,
+          "reference_path": "video/gold_coast_ref/S07.png",
+          "time_precision": "checklist rounded second; not exact decoded frame PTS"
+        },
+        {
+          "section": "S08",
+          "requested_time_s": 520,
+          "reference_path": "video/gold_coast_ref/S08.png",
+          "time_precision": "checklist rounded second; not exact decoded frame PTS"
+        }
+      ],
+      "world_mapping_status": "unresolved; do not infer constant speed or interpolate across edit boundaries"
+    },
+    {
+      "id": "shot_07",
+      "start_pts_inclusive": 33274241,
+      "end_pts_exclusive": 45151106,
+      "start_time_s": 554.570683,
+      "end_time_s": 752.518433,
+      "checklist_frames": [
+        {
+          "section": "S09",
+          "requested_time_s": 570,
+          "reference_path": "video/gold_coast_ref/S09.png",
+          "time_precision": "checklist rounded second; not exact decoded frame PTS"
+        },
+        {
+          "section": "S10",
+          "requested_time_s": 630,
+          "reference_path": "video/gold_coast_ref/S10.png",
+          "time_precision": "checklist rounded second; not exact decoded frame PTS"
+        },
+        {
+          "section": "S11",
+          "requested_time_s": 715,
+          "reference_path": "video/gold_coast_ref/S11.png",
+          "time_precision": "checklist rounded second; not exact decoded frame PTS"
+        }
+      ],
+      "world_mapping_status": "unresolved; do not infer constant speed or interpolate across edit boundaries"
+    },
+    {
+      "id": "shot_08",
+      "start_pts_inclusive": 45151106,
+      "end_pts_exclusive": 49830781,
+      "start_time_s": 752.518433,
+      "end_time_s": 830.513017,
+      "checklist_frames": [
+        {
+          "section": "S12",
+          "requested_time_s": 795,
+          "reference_path": "video/gold_coast_ref/S12.png",
+          "time_precision": "checklist rounded second; not exact decoded frame PTS"
+        }
+      ],
+      "world_mapping_status": "unresolved; do not infer constant speed or interpolate across edit boundaries"
+    },
+    {
+      "id": "shot_09",
+      "start_pts_inclusive": 49830781,
+      "end_pts_exclusive": 53685632,
+      "start_time_s": 830.513017,
+      "end_time_s": 894.760533,
+      "checklist_frames": [
+        {
+          "section": "S13",
+          "requested_time_s": 870,
+          "reference_path": "video/gold_coast_ref/S13.png",
+          "time_precision": "checklist rounded second; not exact decoded frame PTS"
+        }
+      ],
+      "world_mapping_status": "unresolved; do not infer constant speed or interpolate across edit boundaries"
+    },
+    {
+      "id": "shot_10",
+      "start_pts_inclusive": 53685632,
+      "end_pts_exclusive": 68848780,
+      "start_time_s": 894.760533,
+      "end_time_s": 1147.479667,
+      "checklist_frames": [
+        {
+          "section": "S14",
+          "requested_time_s": 935,
+          "reference_path": "video/gold_coast_ref/S14.png",
+          "time_precision": "checklist rounded second; not exact decoded frame PTS"
+        },
+        {
+          "section": "S15",
+          "requested_time_s": 1010,
+          "reference_path": "video/gold_coast_ref/S15.png",
+          "time_precision": "checklist rounded second; not exact decoded frame PTS"
+        },
+        {
+          "section": "S16",
+          "requested_time_s": 1090,
+          "reference_path": "video/gold_coast_ref/S16.png",
+          "time_precision": "checklist rounded second; not exact decoded frame PTS"
+        }
+      ],
+      "world_mapping_status": "unresolved; do not infer constant speed or interpolate across edit boundaries"
+    },
+    {
+      "id": "shot_11",
+      "start_pts_inclusive": 68848780,
+      "end_pts_exclusive": 78445367,
+      "start_time_s": 1147.479667,
+      "end_time_s": 1307.422783,
+      "checklist_frames": [
+        {
+          "section": "S17",
+          "requested_time_s": 1150,
+          "reference_path": "video/gold_coast_ref/S17.png",
+          "time_precision": "checklist rounded second; not exact decoded frame PTS"
+        },
+        {
+          "section": "S18",
+          "requested_time_s": 1220,
+          "reference_path": "video/gold_coast_ref/S18.png",
+          "time_precision": "checklist rounded second; not exact decoded frame PTS"
+        },
+        {
+          "section": "S19",
+          "requested_time_s": 1300,
+          "reference_path": "video/gold_coast_ref/S19.png",
+          "time_precision": "checklist rounded second; not exact decoded frame PTS"
+        }
+      ],
+      "world_mapping_status": "unresolved; do not infer constant speed or interpolate across edit boundaries"
+    },
+    {
+      "id": "shot_12",
+      "start_pts_inclusive": 78445367,
+      "end_pts_exclusive": 80992912,
+      "start_time_s": 1307.422783,
+      "end_time_s": 1349.881867,
+      "checklist_frames": [],
+      "world_mapping_status": "unresolved; do not infer constant speed or interpolate across edit boundaries"
+    },
+    {
+      "id": "shot_13",
+      "start_pts_inclusive": 80992912,
+      "end_pts_exclusive": 82673591,
+      "start_time_s": 1349.881867,
+      "end_time_s": 1377.893183,
+      "checklist_frames": [
+        {
+          "section": "S20",
+          "requested_time_s": 1375,
+          "reference_path": "video/gold_coast_ref/S20.png",
+          "time_precision": "checklist rounded second; not exact decoded frame PTS"
+        }
+      ],
+      "world_mapping_status": "unresolved; do not infer constant speed or interpolate across edit boundaries"
+    },
+    {
+      "id": "shot_14",
+      "start_pts_inclusive": 82673591,
+      "end_pts_exclusive": 83898815,
+      "start_time_s": 1377.893183,
+      "end_time_s": 1398.313583,
+      "checklist_frames": [],
+      "world_mapping_status": "unresolved; do not infer constant speed or interpolate across edit boundaries"
+    },
+    {
+      "id": "shot_15",
+      "start_pts_inclusive": 83898815,
+      "end_pts_exclusive": 91885794,
+      "start_time_s": 1398.313583,
+      "end_time_s": 1531.4299,
+      "checklist_frames": [
+        {
+          "section": "S21",
+          "requested_time_s": 1450,
+          "reference_path": "video/gold_coast_ref/S21.png",
+          "time_precision": "checklist rounded second; not exact decoded frame PTS"
+        }
+      ],
+      "world_mapping_status": "unresolved; do not infer constant speed or interpolate across edit boundaries"
+    },
+    {
+      "id": "shot_16",
+      "start_pts_inclusive": 91885794,
+      "end_pts_exclusive": 108969240,
+      "start_time_s": 1531.4299,
+      "end_time_s": 1816.154,
+      "checklist_frames": [
+        {
+          "section": "S22",
+          "requested_time_s": 1570,
+          "reference_path": "video/gold_coast_ref/S22.png",
+          "time_precision": "checklist rounded second; not exact decoded frame PTS"
+        },
+        {
+          "section": "S23",
+          "requested_time_s": 1680,
+          "reference_path": "video/gold_coast_ref/S23.png",
+          "time_precision": "checklist rounded second; not exact decoded frame PTS"
+        },
+        {
+          "section": "S24",
+          "requested_time_s": 1780,
+          "reference_path": "video/gold_coast_ref/S24.png",
+          "time_precision": "checklist rounded second; not exact decoded frame PTS"
+        }
+      ],
+      "world_mapping_status": "unresolved; do not infer constant speed or interpolate across edit boundaries"
+    }
+  ]
+}

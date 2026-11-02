@@ -1,0 +1,386 @@
+{
+ "hill_amplitude_m": 0,
+ "curvature_window_m": 3,
+ "coast_profiles": [
+  {
+   "from_s": 0.0,
+   "to_s": 1110.6485,
+   "side": "left",
+   "water_edge_m": 15,
+   "water_level_m": 0,
+   "bank_width_m": 6,
+   "sand_width_m": 2,
+   "source": {
+    "kind": "video",
+    "estimated": true,
+    "confidence": 0.55,
+    "ref": "Qu4vsKXiRtM S01; shore distance estimated"
+   }
+  },
+  {
+   "from_s": 1110.6485,
+   "to_s": 1758.5676,
+   "side": "left",
+   "water_edge_m": 2.4,
+   "water_level_m": 0,
+   "bank_width_m": 1.0,
+   "sand_width_m": 2,
+   "source": {
+    "kind": "video",
+    "estimated": true,
+    "confidence": 0.55,
+    "ref": "Qu4vsKXiRtM S02; shore distance estimated"
+   }
+  },
+  {
+   "from_s": 1758.5676,
+   "to_s": 1996.1729,
+   "side": "left",
+   "water_edge_m": 5,
+   "water_level_m": 0,
+   "bank_width_m": 3.5,
+   "sand_width_m": 2,
+   "source": {
+    "kind": "video",
+    "estimated": true,
+    "confidence": 0.55,
+    "ref": "Qu4vsKXiRtM S03; shore distance estimated"
+   }
+  },
+  {
+   "from_s": 1996.1729,
+   "to_s": 2797.2618,
+   "side": "left",
+   "water_edge_m": 18,
+   "water_level_m": 0,
+   "bank_width_m": 6,
+   "sand_width_m": 2,
+   "source": {
+    "kind": "video",
+    "estimated": true,
+    "confidence": 0.55,
+    "ref": "Qu4vsKXiRtM S04; shore distance estimated"
+   }
+  },
+  {
+   "from_s": 2797.2618,
+   "to_s": 3208.9542,
+   "side": "right",
+   "water_edge_m": 30,
+   "water_level_m": 0,
+   "bank_width_m": 6,
+   "sand_width_m": 2,
+   "source": {
+    "kind": "video",
+    "estimated": true,
+    "confidence": 0.55,
+    "ref": "Qu4vsKXiRtM S05; shore distance estimated"
+   }
+  },
+  {
+   "from_s": 3208.9542,
+   "to_s": 3530.7292,
+   "side": "left",
+   "water_edge_m": 35,
+   "water_level_m": 0,
+   "bank_width_m": 6,
+   "sand_width_m": 2,
+   "source": {
+    "kind": "video",
+    "estimated": true,
+    "confidence": 0.55,
+    "ref": "Qu4vsKXiRtM S06; shore distance estimated"
+   }
+  },
+  {
+   "from_s": 3530.7292,
+   "to_s": 3903.7854,
+   "side": "left",
+   "water_edge_m": 12,
+   "water_level_m": 0,
+   "bank_width_m": 6,
+   "sand_width_m": 2,
+   "source": {
+    "kind": "video",
+    "estimated": true,
+    "confidence": 0.55,
+    "ref": "Qu4vsKXiRtM S07; shore distance estimated"
+   }
+  },
+  {
+   "from_s": 3903.7854,
+   "to_s": 4080.5839,
+   "side": "left",
+   "water_edge_m": 20,
+   "water_level_m": 0,
+   "bank_width_m": 6,
+   "sand_width_m": 2,
+   "source": {
+    "kind": "video",
+    "estimated": true,
+    "confidence": 0.55,
+    "ref": "Qu4vsKXiRtM S08; shore distance estimated"
+   }
+  },
+  {
+   "from_s": 4080.5839,
+   "to_s": 4278.907,
+   "side": "left",
+   "water_edge_m": 45,
+   "water_level_m": 0,
+   "bank_width_m": 6,
+   "sand_width_m": 2,
+   "source": {
+    "kind": "video",
+    "estimated": true,
+    "confidence": 0.55,
+    "ref": "Qu4vsKXiRtM S09; shore distance estimated"
+   }
+  },
+  {
+   "from_s": 4278.907,
+   "to_s": 5095.5276,
+   "side": "left",
+   "water_edge_m": 80,
+   "water_level_m": 0,
+   "bank_width_m": 6,
+   "sand_width_m": 2,
+   "source": {
+    "kind": "video",
+    "estimated": true,
+    "confidence": 0.55,
+    "ref": "Qu4vsKXiRtM S10; shore distance estimated"
+   }
+  },
+  {
+   "from_s": 5095.5276,
+   "to_s": 5681.8576,
+   "side": "both",
+   "water_edge_m": 3,
+   "water_level_m": 0,
+   "bank_width_m": 1.1,
+   "sand_width_m": 2,
+   "source": {
+    "kind": "video",
+    "estimated": true,
+    "confidence": 0.55,
+    "ref": "Qu4vsKXiRtM S11; shore distance estimated"
+   }
+  },
+  {
+   "from_s": 5681.8576,
+   "to_s": 6287.1137,
+   "side": "left",
+   "water_edge_m": 18,
+   "water_level_m": 0,
+   "bank_width_m": 6,
+   "sand_width_m": 2,
+   "source": {
+    "kind": "video",
+    "estimated": true,
+    "confidence": 0.55,
+    "ref": "Qu4vsKXiRtM S12; shore distance estimated"
+   }
+  },
+  {
+   "from_s": 6287.1137,
+   "to_s": 6892.3699,
+   "side": "right",
+   "water_edge_m": 18,
+   "water_level_m": 0,
+   "bank_width_m": 6,
+   "sand_width_m": 2,
+   "source": {
+    "kind": "video",
+    "estimated": true,
+    "confidence": 0.55,
+    "ref": "Qu4vsKXiRtM S13; shore distance estimated"
+   }
+  },
+  {
+   "from_s": 6892.3699,
+   "to_s": 7478.6998,
+   "side": "both",
+   "water_edge_m": 3,
+   "water_level_m": 0,
+   "bank_width_m": 1.1,
+   "sand_width_m": 2,
+   "source": {
+    "kind": "video",
+    "estimated": true,
+    "confidence": 0.55,
+    "ref": "Qu4vsKXiRtM S14; shore distance estimated"
+   }
+  },
+  {
+   "from_s": 7478.6998,
+   "to_s": 8257.2747,
+   "side": "right",
+   "water_edge_m": 80,
+   "water_level_m": 0,
+   "bank_width_m": 6,
+   "sand_width_m": 2,
+   "source": {
+    "kind": "video",
+    "estimated": true,
+    "confidence": 0.55,
+    "ref": "Qu4vsKXiRtM S15; shore distance estimated"
+   }
+  },
+  {
+   "from_s": 8257.2747,
+   "to_s": 8572.0705,
+   "side": "right",
+   "water_edge_m": 45,
+   "water_level_m": 0,
+   "bank_width_m": 6,
+   "sand_width_m": 2,
+   "source": {
+    "kind": "video",
+    "estimated": true,
+    "confidence": 0.55,
+    "ref": "Qu4vsKXiRtM S16; shore distance estimated"
+   }
+  },
+  {
+   "from_s": 8572.0705,
+   "to_s": 8689.8348,
+   "side": "right",
+   "water_edge_m": 20,
+   "water_level_m": 0,
+   "bank_width_m": 6,
+   "sand_width_m": 2,
+   "source": {
+    "kind": "video",
+    "estimated": true,
+    "confidence": 0.55,
+    "ref": "Qu4vsKXiRtM S17; shore distance estimated"
+   }
+  },
+  {
+   "from_s": 8689.8348,
+   "to_s": 9013.4632,
+   "side": "right",
+   "water_edge_m": 7,
+   "water_level_m": 0,
+   "bank_width_m": 5.8,
+   "sand_width_m": 2,
+   "source": {
+    "kind": "video",
+    "estimated": true,
+    "confidence": 0.55,
+    "ref": "Qu4vsKXiRtM S18; shore distance estimated"
+   },
+   "overlap_priority": true,
+   "max_distance_m": 60.0,
+   "ownership_from_s": 8823.0,
+   "ownership_to_s": 8900.0,
+   "ownership_source": {
+    "kind": "video",
+    "estimated": true,
+    "confidence": 0.55,
+    "ref": "Qu4vsKXiRtM S18 at 1220.002117s / route s=8850.958079m",
+    "note": "Limited local ownership window around the fixed S18 view; source shoreline profile remains unchanged."
+   }
+  },
+  {
+   "from_s": 9013.4632,
+   "to_s": 9974.0468,
+   "side": "right",
+   "water_edge_m": 30,
+   "water_level_m": 0,
+   "bank_width_m": 6,
+   "sand_width_m": 2,
+   "source": {
+    "kind": "video",
+    "estimated": true,
+    "confidence": 0.55,
+    "ref": "Qu4vsKXiRtM S19; shore distance estimated"
+   }
+  },
+  {
+   "from_s": 9974.0468,
+   "to_s": 10385.0883,
+   "side": "right",
+   "water_edge_m": 30,
+   "water_level_m": 0,
+   "bank_width_m": 6,
+   "sand_width_m": 2,
+   "source": {
+    "kind": "video",
+    "estimated": true,
+    "confidence": 0.55,
+    "ref": "Qu4vsKXiRtM S20; shore distance estimated"
+   }
+  },
+  {
+   "from_s": 10385.0883,
+   "to_s": 11206.2812,
+   "side": "right",
+   "water_edge_m": 18,
+   "water_level_m": 0,
+   "bank_width_m": 6,
+   "sand_width_m": 2,
+   "source": {
+    "kind": "video",
+    "estimated": true,
+    "confidence": 0.55,
+    "ref": "Qu4vsKXiRtM S21; shore distance estimated"
+   }
+  },
+  {
+   "from_s": 11206.2812,
+   "to_s": 12091.8056,
+   "side": "right",
+   "water_edge_m": 2.4,
+   "water_level_m": 0,
+   "bank_width_m": 1.0,
+   "sand_width_m": 2,
+   "source": {
+    "kind": "video",
+    "estimated": true,
+    "confidence": 0.55,
+    "ref": "Qu4vsKXiRtM S22; shore distance estimated"
+   }
+  },
+  {
+   "from_s": 12091.8056,
+   "to_s": 12786.3325,
+   "side": "right",
+   "water_edge_m": 15,
+   "water_level_m": 0,
+   "bank_width_m": 6,
+   "sand_width_m": 2,
+   "source": {
+    "kind": "video",
+    "estimated": true,
+    "confidence": 0.55,
+    "ref": "Qu4vsKXiRtM S23; shore distance estimated"
+   }
+  },
+  {
+   "from_s": 12786.3325,
+   "to_s": 13104.7827,
+   "side": "right",
+   "water_edge_m": 15,
+   "water_level_m": 0,
+   "bank_width_m": 6,
+   "sand_width_m": 2,
+   "source": {
+    "kind": "video",
+    "estimated": true,
+    "confidence": 0.55,
+    "ref": "Qu4vsKXiRtM S24; shore distance estimated"
+   }
+  }
+ ],
+ "road_transition_m": 8.0,
+ "road_max_bank_grade": 0.25,
+ "bank_transition_source": {
+  "kind": "procedural",
+  "estimated": true,
+  "note": "Visual P1 safety transition around other road traversals. Canonical road heights / widths / physical grades are unchanged."
+ },
+ "coastal_road_clearance_m": 2.0,
+ "coastal_overlap_clearance_m": 0.02
+}

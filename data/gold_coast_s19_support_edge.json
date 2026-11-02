@@ -1,0 +1,30 @@
+{
+  "version": "1.0",
+  "change_id": "S19-r25-st0362-support-edge",
+  "target": {
+    "object_id": "st0362",
+    "tile_id": "39",
+    "existing_pad_polygon_xz_m": [
+      [574.8784018335914, 2896.245290904472],
+      [572.3420477638963, 2890.8740238774153],
+      [585.8515981664086, 2884.494709095528],
+      [588.3879522361037, 2889.8659761225845]
+    ],
+    "top_y_m": 3.379306451656128,
+    "building_base_y_m": 3.384306,
+    "s_center_m": 9883.0,
+    "grid_m": 1.0,
+    "margin_m": 0.0,
+    "max_drop_m": 1.0
+  },
+  "frozen_inputs": {
+    "top_geometry_package": "export/packages/gold_coast_broadwater_s19_ground_r16_luna6",
+    "bottom_ground_package": "export/packages/gold_coast_broadwater_s19_landmarks_r15_luna6"
+  },
+  "provenance": {
+    "kind": "video_and_OSM_anchored_estimated_support_edge",
+    "estimated": true,
+    "reference": "St0362 estimated footprint and visual landmark evidence; lower skirt edge sampled from frozen r15 P1 terrain triangles."
+  },
+  "scope": "Append perimeter side faces only. Preserve the r16 support top, church, road, route, slope, other structures, vegetation, and sky."
+}

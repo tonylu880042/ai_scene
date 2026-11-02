@@ -1,0 +1,115 @@
+{
+  "kind": "source_video_transition_observations",
+  "schema_version": 1,
+  "source": {
+    "path": "video/Virtual Bike Ride 30 Mins - Burn Fat To Music & Beach Views On Australia's Gold Coast [Qu4vsKXiRtM]_1080p.mp4",
+    "sha256": "eda2f4cbe90de013df93aad1f224a94dcd63430dd8ed563beb73aaf25ef66d6a",
+    "video_time_base": "1/60000",
+    "privacy": "Private reference evidence only; never package or use as generated assets"
+  },
+  "provenance": {
+    "reviewer": "Sol",
+    "review_date": "2026-10-26",
+    "method": "Full-resolution original decoded frames with showinfo PTS; bounded visual observations, not exhaustive adjacent-frame transition timing",
+    "evidence_manifest": "export/gold_coast/review/shore_profile_source_r37_sol/parent_decoded_frames.json",
+    "supplements": "data/gold_coast_shots.json",
+    "status": "Additional dissolve and outro observations; original15hardcuts unchanged"
+  },
+  "rules": [
+    "Hard-cut interval membership alone does not establish uninterrupted source footage.",
+    "Do not interpolate source-to-world station or camera mapping across the observed dissolve.",
+    "Observed frame bounds are not exact edit start/end times.",
+    "No canonical route, road, elevation or section profile change is adopted by this source evidence.",
+    "Source frame timing and edit classification do not establish omitted distance or branch identity."
+  ],
+  "transitions": [
+    {
+      "id": "transition_dissolve_s22_s23",
+      "type": "cross_dissolve",
+      "affected_hardcut_interval": "shot_16",
+      "before_observed": {
+        "requested_time_s": 1634,
+        "actual_pts": 98040943,
+        "actual_pts_time_s": 1634.015717,
+        "timebase": "1/60000",
+        "path": "export/gold_coast/review/shore_profile_source_r37_sol/source_1634.png",
+        "sha256": "ab3e57b8c98aee027a8805c0fdc7b276a93c747ee60d9cf2519678231ad10eca",
+        "actual_time_exact": {
+          "numerator": 98040943,
+          "denominator": 60000
+        }
+      },
+      "blended_observed": {
+        "requested_time_s": 1635,
+        "actual_pts": 98100002,
+        "actual_pts_time_s": 1635.000033,
+        "timebase": "1/60000",
+        "path": "export/gold_coast/review/shore_profile_source_r37_sol/source_1635.png",
+        "sha256": "09fe27e7859ef5566db72e59a7be157c737c7453c5742a891e3e058491654305",
+        "actual_time_exact": {
+          "numerator": 98100002,
+          "denominator": 60000
+        }
+      },
+      "after_observed": {
+        "requested_time_s": 1636,
+        "actual_pts": 98160062,
+        "actual_pts_time_s": 1636.001033,
+        "timebase": "1/60000",
+        "path": "export/gold_coast/review/shore_profile_source_r37_sol/source_1636.png",
+        "sha256": "666d3a75b9cfd1493da8b85e28c96fc149c87634ff73c2c74ea752e51a291824",
+        "actual_time_exact": {
+          "numerator": 98160062,
+          "denominator": 60000
+        }
+      },
+      "observation": "Beachside sidewalk beside traffic road and sand transitions into a park path beside a fenced playground and green roofs. Both scenes are visible in the1635sframe.",
+      "timing_status": "Bounded by sampled frames; exact start/end unknown.",
+      "mapping_status": "S22/S23 references lie on different filmed segments within oldshot16; no world correspondence adopted."
+    },
+    {
+      "id": "transition_terminal_fade",
+      "type": "fade_to_black",
+      "affected_hardcut_interval": "shot_16",
+      "before_observed": {
+        "requested_time_s": 1813,
+        "actual_pts": 108780672,
+        "actual_pts_time_s": 1813.0112,
+        "timebase": "1/60000",
+        "path": "export/gold_coast/review/shore_profile_source_r37_sol/source_1813.png",
+        "sha256": "88166ede9cb98be9cd0adca75a47e77924f76971c23effd3f91d5420f63d614a",
+        "actual_time_exact": {
+          "numerator": 108780672,
+          "denominator": 60000
+        }
+      },
+      "fading_observed": {
+        "requested_time_s": 1814,
+        "actual_pts": 108840732,
+        "actual_pts_time_s": 1814.0122,
+        "timebase": "1/60000",
+        "path": "export/gold_coast/review/shore_profile_source_r37_sol/source_1814.png",
+        "sha256": "a6d623855bc74e549d140b6e0f1b91fe6c17c57e1d9497df5cb006d418090f8d",
+        "actual_time_exact": {
+          "numerator": 108840732,
+          "denominator": 60000
+        }
+      },
+      "black_observed": {
+        "requested_time_s": 1815,
+        "actual_pts": 108900792,
+        "actual_pts_time_s": 1815.0132,
+        "timebase": "1/60000",
+        "path": "export/gold_coast/review/shore_profile_source_r37_sol/source_1815.png",
+        "sha256": "4a2f45ed82e64066cf78f2a61d9f53eb972c3618bd8b85bbabc11f2df7316dc4",
+        "actual_time_exact": {
+          "numerator": 108900792,
+          "denominator": 60000
+        }
+      },
+      "observation": "Last visible scene is a path with grass/water right and parallel road left;1814sample is darkened and1815sample is black.",
+      "timing_status": "Sampled evidence; exact fade onset/completion unknown.",
+      "mapping_status": "Video duration1816.154s includes outro; duration alone is not observed riding time or terminal route registration."
+    }
+  ]
+}

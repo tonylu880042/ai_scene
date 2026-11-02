@@ -1,0 +1,257 @@
+{
+  "schema": "gold_coast_s19_georeference/v1",
+  "status": "identified_landmark_pair; local_time_to_s_candidate_unadopted; r16_local_ground_and_tree_candidate_validated",
+  "adopted": false,
+  "baseline": {
+    "package": "gold_coast_broadwater_s19_buildings_r13_luna6",
+    "package_aggregate_sha256": "1758c45dcde66d843425cf1eebd5c3451e086043acb2bfe5c456f73036a3c26e",
+    "route_json_sha256": "a212931204556e6f8618b8bc6f636f0977412891efc83ca009746f6b1b69ab49",
+    "osm_extract": "export/gold_coast/review/s19_alignment_luna6/evidence/ai_scene_s19_osm_bbox.osm",
+    "osm_extract_sha256": "29f16925aea0f27ef8fe248da2cf4f3be555690f0b1a5c0a99acb16a1772aa8a",
+    "source_frame_manifest": "export/gold_coast/review/s19_alignment_luna6/source_frames.json",
+    "source_frames_note": "Private review only; requested integer-second times and decoded PTS/timebase/hash are recorded in the referenced manifest."
+  },
+  "coordinate_system": {
+    "origin": {
+      "lat": -27.93465,
+      "lon": 153.40685
+    },
+    "formula": "x=(lon-origin.lon)*111195.08*cos(radians(origin.lat)); z=(origin.lat-lat)*111195.08",
+    "z_direction": "positive is south"
+  },
+  "landmarks": [
+    {
+      "source_object_id": "st0362",
+      "identity": "Rotary Broadwater Chapel (strong match; morphology supports; exact source-visible facade not resolved)",
+      "confidence": "high visual/geographic identity; exact source-visible facade not resolved",
+      "osm_way_id": 1310786945,
+      "osm_tags": {
+        "name": "Rotary Broadwater Chapel",
+        "building": "chapel",
+        "building:levels": "1",
+        "addr:housenumber": "95",
+        "addr:street": "Marine Parade"
+      },
+      "approximate_area_centroid_wgs84": {
+        "lat": -27.9606444,
+        "lon": 153.4127581
+      },
+      "approximate_route_local_area_centroid_m": {
+        "x": 580.403,
+        "z": 2890.449
+      },
+      "r13_estimated_anchor_distance_m": 310.5,
+      "primary_visual_evidence": [
+        "https://rotarychapel.com.au/about-us/",
+        "https://goldcoastopenhouse.com.au/listing/rotary-broadwater-chapel-by-the-sea-2025/",
+        "https://palmerstontower.com.au/"
+      ],
+      "visual_basis": "White weatherboards, white corrugated gable roof, square cupola/cross, tall side windows, deck/ramp; public owner photo jointly shows chapel foreground with local towers behind.",
+      "public_evidence_record": "export/gold_coast/review/s19_alignment_luna6/evidence/public_visual_sources_review.json"
+    },
+    {
+      "source_object_id": "st0361",
+      "identity": "Sky Broadwater white balcony podium/end wall",
+      "confidence": "high complex identity; exact visible podium subpart/facade point unresolved",
+      "osm_way_ids": [
+        958537888,
+        1115393562,
+        1115393564
+      ],
+      "related_neighbor_osm_way_id": 958537887,
+      "related_neighbor_identity": "Palmerston Tower",
+      "approximate_sky_footprint_area_centroid_wgs84": {
+        "lat": -27.9609631,
+        "lon": 153.4115914
+      },
+      "approximate_route_local_area_centroid_m": {
+        "x": 465.793,
+        "z": 2925.891
+      },
+      "r13_estimated_anchor_distance_to_named_footprint_m": 334.4,
+      "primary_visual_evidence": [
+        "https://bdaarch.com.au/Sky-Broadwater",
+        "https://www.primesteel.com.au/projects-portfolio/skybroadwaterapts",
+        "https://palmerstontower.com.au/"
+      ],
+      "visual_basis": "BDA architect exterior shows a white podium balcony band and broad blank end wall with vertically spaced small windows beneath a blue-glass tower, matching the S19 apartment crop; architect and owner images jointly place Sky, Palmerston, chapel, road and waterfront.",
+      "public_evidence_record": "export/gold_coast/review/s19_alignment_luna6/evidence/public_visual_sources_review.json"
+    }
+  ],
+  "route_time_mapping": {
+    "current_frozen_relation": {
+      "from_time_s": 1265.0,
+      "from_s_m": 9013.463,
+      "to_time_s": 1340.0,
+      "to_s_m": 9974.047,
+      "status": "estimated; local S19 landmarks contradict source-time pass sequence"
+    },
+    "diagnostic_candidate": {
+      "kind": "constant local s offset",
+      "offset_m": 294.0,
+      "interval_decoded_time_s": [
+        1285.000383,
+        1315.0137
+      ],
+      "adopted": false,
+      "candidate_data": "data/gold_coast_s19_landmark_time_mapping_candidate.json",
+      "candidate_offset_local_m": 294.0,
+      "adoption_status": "not adopted; boundary rates/transition unresolved; do not use as global map"
+    },
+    "support": "At current mapping the 1305 station is 327m from the chapel and the chapel remains 226m away at 1315. A single +294m diagnostic shift places the chapel about 61m ahead at 1305, 16m away at 1310, then 72m behind at 1315; Sky/Palmerston are to route-left at 1300-1305. This matches the source approach/pass/clear order without changing canonical route geometry.",
+    "conclusion": "Canonical route geometry is plausible near both independently identified landmarks; there are two opposing-direction passes. The later northwest pass is better supported by source image-side/order and rough travel-direction clues, but the route-time assignment remains unvalidated. Do not change canonical route or apply either local offset globally.",
+    "alternate_diagnostic_candidate": {
+      "kind": "constant local s offset aligned to the other close route pass",
+      "offset_m": -6321.925,
+      "interval_decoded_time_s": [
+        1285.000383,
+        1315.0137
+      ],
+      "aligned_pass_s_m": 3268.0,
+      "adopted": false,
+      "assessment": "At 1305/1310/1315, chapel is 70.5m ahead / 16.4m route-right / 62.3m behind; Sky and Palmerston are route-right at 1300\u20131310. This needs substantial unknown camera yaw to match source left-side order. The later NW pass has lower conflict and fits the rough northbound/water-right cue, but camera yaw is not measured."
+    },
+    "two_physical_route_passes_near_pair": [
+      {
+        "s_m": 3268.0,
+        "nearest_chapel_distance_m": 16.4,
+        "route_heading_deg": 157.4,
+        "direction": "southeast"
+      },
+      {
+        "s_m": 9883.0,
+        "nearest_chapel_distance_m": 15.8,
+        "route_heading_deg": 334.7,
+        "direction": "northwest"
+      }
+    ],
+    "not_adopted_note": "The 1305 source frame shows the physical park-path marking \u201c1850\u201d; it is not treated as canonical route s/progress without independent evidence."
+  },
+  "next_bounded_task": "Review the fixed-camera native r13/r15/r16 source sequence and S18/S20 guards; then independently validate the local time-to-route candidate and adjacent-turn timing before adopting any mapping. Keep canonical route and default camera unchanged.",
+  "review": {
+    "report": "export/gold_coast/review/s19_landmarks_luna6/report.md",
+    "panel": "export/gold_coast/review/s19_landmarks_luna6/review.html",
+    "map": "export/gold_coast/review/s19_georeference_luna6/chapel_joint_alignment_map.svg",
+    "machine_readable": "export/gold_coast/review/s19_georeference_luna6/chapel_joint_alignment.json",
+    "projection_panels": "export/gold_coast/review/s19_georeference_luna6/projection_1300.png and projection_1305.png",
+    "projection_metadata": "export/gold_coast/review/s19_georeference_luna6/landmark_projection_probe.json",
+    "native_renders": "export/gold_coast/review/s19_landmarks_luna6/r13_native/ and r15_native/",
+    "root_independent_review": "export/gold_coast/review/s19_landmarks_luna6/root_review.md",
+    "root_world_space_ground_probe": "export/gold_coast/review/s19_landmarks_luna6/root_footprint_probe.json",
+    "r16_report": "export/gold_coast/review/s19_ground_r16_luna6/report.md",
+    "r16_panel": "export/gold_coast/review/s19_ground_r16_luna6/review.html",
+    "r16_native_renders": "export/gold_coast/review/s19_ground_r16_luna6/r16_native/"
+  },
+  "privacy": "Public visual photos are local review-only; private source frames remain in the source review and are not package assets, texture inputs, or image-generation inputs. The source/OSM projection panels contain derived private-frame pixels and are local review-only; never package or publish them. New S19 source-frame/render pairings under s19_landmarks_luna6 are review-only; the r15 package contains no source pixels.",
+  "not_identified": {
+    "candidate": "Southport Bathing Pavilion QHR 601514",
+    "status": "not_supported_by_compared_exterior_morphology",
+    "note": "2015 public reference shows cream roughcast and ornate parapet unlike the source plain white gable/cupola. Roof-color difference alone is not decisive because the photo predates the video."
+  },
+  "package_candidate": {
+    "package": "gold_coast_broadwater_s19_landmarks_r15_luna6",
+    "derived_from": "gold_coast_broadwater_s19_buildings_r13_luna6",
+    "status": "blocked_review_candidate_not_promoted",
+    "adopted": false,
+    "replacement_objects": [
+      {
+        "object_id": "st0362",
+        "identity": "Rotary Broadwater Chapel",
+        "osm_way_id": 1310786945,
+        "candidate_s_m": 9883.925,
+        "candidate_lateral_offset_m": 15.786,
+        "dimensions_m": [
+          5.9,
+          8.0,
+          14.9
+        ],
+        "validation": [
+          "one P3 norfolk_pine instance is inside the actual OSM polygon: tile39 group index4, zone indices0..8; route s/u 9884.391/15.223, local XZ 580.158/2888.571, radius0.408m",
+          "route-parameter rectangular footprint check reports one no-terrain corner; direct actual OSM polygon vertex sampling finds terrain at all 4 vertices, so this is a polygon/frame proxy mismatch requiring validation audit"
+        ]
+      },
+      {
+        "object_id": "st0361",
+        "identity": "Sky Broadwater estimated white podium crop",
+        "osm_way_id": 1115393562,
+        "candidate_s_m": 9857.0,
+        "candidate_lateral_offset_m": 137.941,
+        "dimensions_m": [
+          46.1,
+          40.16,
+          62.3
+        ],
+        "height_interpretation": "complete estimated ground-to-top P4 proxy; OSM part min_height=10, height=40 is not summed",
+        "validation": [
+          "actual OSM polygon has 4 of 8 vertices outside P1 terrain triangle coverage; selected subpart remains unsupported by terrain at the same sourced footprint"
+        ]
+      }
+    ],
+    "other_structure_records_preserved": 360,
+    "old_prototype_records_and_assets_preserved": true,
+    "route_road_terrain_vegetation_unchanged": true,
+    "native_review_views": "export/gold_coast/review/s19_landmarks_luna6/native_views.json",
+    "report": "export/gold_coast/review/s19_landmarks_luna6/report.md",
+    "final_native_capture": "export/gold_coast/review/s19_landmarks_luna6/r15_native",
+    "final_visual_revision": 2,
+    "next_bounded_task": "Resolve polygon-aware P4 footprint/ground validation versus route-param rectangular proxies; audit the chapel tree exclusion without moving P3; and source-backed P1 coverage for the Sky podium polygon. Keep canonical P0 route unchanged.",
+    "aggregate_sha256": "09c2b1b1f826d4b8bcb573c75acfa62b09d9f0a7110beea5ea7d98f308740a9e",
+    "file_count": 279
+  },
+  "r16_candidate": {
+    "package": "gold_coast_broadwater_s19_ground_r16_luna6",
+    "derived_from": "gold_coast_broadwater_s19_landmarks_r15_luna6",
+    "aggregate_sha256": "36337b5a0b7164bbf981522e3993c439a3f59118fdaa08f26f39c6f3db086a61",
+    "file_count": 280,
+    "adopted": false,
+    "status": "local P1/P3 support candidate; all data-layer validators pass; global frozen visual acceptance remains blocked",
+    "route_and_time_mapping_changed": false,
+    "road_geometry_changed": false,
+    "prototype_meshes_changed": false,
+    "support_pads": [
+      {
+        "object_id": "st0361",
+        "tile": "39",
+        "kind": "estimated local level support surface",
+        "margin_m": 0.02,
+        "terrain_y_range_before_m": [
+          2.1686845,
+          3.4486414
+        ],
+        "pad_y_m": 3.4536414,
+        "object_base_y_m": 3.458641,
+        "dense_grid_before": "2441 hit / 631 missing of 3072",
+        "post_validation": "13/13 actual mesh/grid supports covered; max gap 0.005m; max penetration 0m"
+      },
+      {
+        "object_id": "st0362",
+        "tile": "39",
+        "kind": "estimated local level support surface",
+        "margin_m": 0.02,
+        "terrain_y_range_before_m": [
+          3.059196,
+          3.3743065
+        ],
+        "pad_y_m": 3.3793065,
+        "object_base_y_m": 3.384306,
+        "dense_grid_before": "112 hit / 0 missing",
+        "post_validation": "15/15 actual mesh/grid supports covered; max gap 0.005m; max penetration 0m"
+      }
+    ],
+    "vegetation_exclusion": {
+      "tile": "39",
+      "proto": "norfolk_pine",
+      "group_index_before_removal": 4,
+      "s_m": 9884.391,
+      "lateral_offset_m": 15.223,
+      "world_xz_m": [
+        580.159,
+        2888.572
+      ],
+      "only_instance_removed": true,
+      "provenance": "OSM way 1310786945 + identified source landmark; export/packages/gold_coast_broadwater_s19_ground_r16_luna6/vegetation_exclusions.json"
+    },
+    "structures_validation": "valid:true, 362 objects, 64 building support reports, zero errors",
+    "package_validation": "all route/P1/P2/P3/P4/P5/P6 and package-integrity stages valid; acceptance stage blocked by frozen 0/24 visual checklist"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "candidate_id": "gold_coast_broadwater_s19_chapel_orientation_r28_luna6",
+  "baseline_package": "export/packages/gold_coast_broadwater_s19_support_edge_r26_luna6",
+  "package": "export/packages/gold_coast_broadwater_s19_chapel_orientation_r28_luna6",
+  "change": {
+    "prototype": "rotary_chapel_gable",
+    "asset_parameter": "cupola_end",
+    "value": "negative_z",
+    "baseline_default": "positive_z"
+  },
+  "evidence": [
+    {
+      "path": "export/gold_coast/review/s19_alignment_luna6/evidence/palmerston_owner_4.jpg",
+      "observation": "Cupola appears at the far roof end while the covered porch is at the opposite near end.",
+      "status": "visual estimate from cached public photo"
+    },
+    {
+      "path": "export/gold_coast/review/s19_alignment_luna6/evidence/rotary_chapel_open_house_reference.png",
+      "observation": "Cupola/gabled facade and wraparound deck/ramp occupy opposite ends.",
+      "status": "visual estimate from cached public photo"
+    },
+    {
+      "path": "export/gold_coast/review/s19_alignment_luna6/source_frames.json",
+      "observation": "Pre-cut 1300/1305 source frames place the visible cupola near the left roof end; private source pixels remain review-only.",
+      "status": "video visual estimate; frame provenance in source manifest"
+    }
+  ],
+  "invariants": [
+    "Canonical route, road meshes, terrain/elevation/grade, object anchor and transform remain unchanged.",
+    "The chapel body, base, deck, porch proxy and ramp remain in their original local coordinates.",
+    "Only the cupola assembly is relocated to the opposite local Z gable."
+  ],
+  "acceptance": "candidate only; requires native visual review and does not imply whole-scene acceptance"
+}
