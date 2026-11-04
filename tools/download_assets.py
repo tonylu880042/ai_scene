@@ -20,7 +20,7 @@ HDRIS = [("kloofendal_48d_partly_cloudy_puresky", "8k"),  # alpine scene sky (hd
          ("kloofendal_43d_clear_puresky", "4k"),          # garda scene sky (clear autumn day)
          ("kloppenheim_06_puresky", "4k")]                # winter scene sky (low sun, scattered cloud)
 TEXTURES = ["asphalt_02", "coast_sand_01", "aerial_grass_rock", "brown_planks_09",
-            "beige_wall_001", "clay_roof_tiles", "rock_boulder_dry", "rocky_trail",
+            "beige_wall_001", "clay_roof_tiles", "rock_boulder_dry", "rocky_trail", "marble_cliff_05",
             "wood_planks_grey", "stacked_stone_wall",  # garda boardwalk deck / dry-stone walls
             "patterned_cobblestone", "clay_plaster", "concrete_pavement",
             "painted_plaster_wall", "clay_roof_tiles_02",

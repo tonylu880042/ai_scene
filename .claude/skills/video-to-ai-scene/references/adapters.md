@@ -40,7 +40,9 @@ Engine-free data producers that stay: `tools/fetch_real_terrain.py` (DEM + ortho
 
 Validators prove geometry and data. Checklist layers L1–L4 still need eyes on a picture of the same place:
 
-- Render **at each section's midpoint s** (`(from_s + to_s) / 2` from route.json sections) at runner height.
+- Render at each section's registered entry / middle / exit s, at the estimated reference camera height and pose.
+  A section midpoint alone is insufficient for temporal acceptance. The precise procedure is in
+  [camera and temporal review](camera-temporal-review.md).
   Today the renderable target is the Godot source scene or the legacy Unity export rebuilt in Godot:
   `godot --path . --script tools/verify_unity_export.gd -- export_unity/<name> <scratch>/S05.png <s>` (windowed,
   not headless). A package renderer is planned (MIGRATION_PLAN phase 4).
@@ -55,8 +57,8 @@ Validators prove geometry and data. Checklist layers L1–L4 still need eyes on 
 
 ## Camera alignment
 
-- Camera: 1.65 m above the route surface, vertical FOV 75° (adjust only with evidence from the video), no head-bob
-  (only tiny `wander_amp` / `breathe_amp`).
+- Camera: 1.65 m above the route surface and vertical FOV 75° are initial estimates only, not calibrated defaults;
+  test and adjust with video evidence. Record uncertainty, motion and stabilization as applicable.
 - Time → distance: real roads use the registration anchors
   ([reference-analysis.md](reference-analysis.md#time--route-registration-real-roads)); synthetic routes map
   time to `s` through the section boundaries (`video_km` share of the route). Moving one anchor moves the

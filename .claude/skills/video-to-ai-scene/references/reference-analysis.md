@@ -23,7 +23,9 @@ requested time, zero-based frame index, decoded PTS + time base, size, path, SHA
 ffmpeg -i input.mp4 -vf 'select=eq(n\,120),showinfo' -frames:v 1 S01.png
 ```
 
-Keep the showinfo log. Never crop / repaint / recolour the reference in place; derived crops are separate files.
+Keep the showinfo log. Also plan entry, middle and exit checkpoints for each section's continuous sequence; retain
+their decoded PTS, hashes and time → s confidence as described in [camera and temporal review](camera-temporal-review.md).
+Never crop / repaint / recolour the reference in place; derived crops are separate files.
 Frames never go into the package or into generators.
 
 ## What to extract (per section)
@@ -76,8 +78,9 @@ afterwards it is frozen: no deleting or softening items to pass a gate. Scoring 
 
 ## Evidence records per review round
 
-One `review.json` per round, next to one comparison sheet — nothing else is kept. Version = git commit hash
-(commit before the round) + package id + SHA-256 of the package files; never a copied source / project / package
+One `review.json` per round, next to one comparison sheet — nothing else is kept. Version = existing git commit hash,
+dirty state and hashes of relevant changed source / input files + package id + SHA-256 of the package files; commit
+only when asked. Never keep a copied source / project / package
 snapshot. Camera settings, renderer; per ID the reference SHA, render SHA, sizes, outputs and errors; technical and visual verdicts kept separately (not_reviewed, needs_revision,
 accepted); who reviewed (an agent review is not human approval); rejected candidates and failed measurements with
 reasons. A partial success is not a pass.

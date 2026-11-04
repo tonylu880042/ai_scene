@@ -153,3 +153,7 @@ physical climb is 113 m and the grade is the program's 0 / 1 / 5 %.
 ## 7. Not in 0.1
 
 Corridor (shoulder) widths, road camber/banking, lanes, junction graphs, timing-gate widths. Add when a runtime needs them.
+
+### Preview-only artistic bends
+
+`tools/reshape_preview_route.py` can create an explicitly estimated preview route from authored lateral bend spans. It recalculates horizontal arc length, resamples at one metre, samples South Tyrol DTM at the new geographic positions, applies the declared 7 m elevation measurement filter, and derives grade from the resulting distance/elevation without grade clamping. It remaps markers and sections and records the original-to-new station mapping in `reshape_report.json`. The DTM is not a surveyed road surface, its vertical datum is unverified, and the resulting preview is not approved training data. Road/terrain generation, clearance checks and stage validation must be repeated; a valid route JSON alone is not a passed P1 gate.

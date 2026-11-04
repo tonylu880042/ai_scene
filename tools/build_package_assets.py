@@ -337,8 +337,25 @@ def structure(proto,dims,asset_parameters=None):
 
 
 def copy_gltf_asset(pkg, spec):
-    """Copy a static CC0 library asset once, retaining its external shared images at original quality."""
-    src=Path(spec['file']); data=json.loads(src.read_text())
+    """Copy a static glTF or self-contained GLB library asset into the package."""
+    src=Path(spec['file'])
+    if src.suffix.lower() == '.glb':
+        if spec.get('scale',1) != 1:
+            raise ValueError('GLB library scale must be 1; export it at the desired size')
+        raw=src.read_bytes()
+        if len(raw)<20:
+            raise ValueError('Invalid GLB header')
+        magic,version,total=struct.unpack_from('<4sII',raw)
+        size,kind=struct.unpack_from('<II',raw,12)
+        if magic!=b'glTF' or version!=2 or total!=len(raw) or kind!=0x4e4f534a or size>len(raw)-20:
+            raise ValueError('Invalid GLB header or JSON chunk')
+        data=json.loads(raw[20:20+size])
+        if any(item.get('uri') and not item['uri'].startswith('data:') for item in data.get('buffers',[])+data.get('images',[])):
+            raise ValueError('GLB library assets must embed all buffers and images')
+        dst=pkg/'assets/library'/src.parent.name;dst.mkdir(parents=True,exist_ok=True)
+        output=dst/src.name;shutil.copyfile(src,output)
+        return output.relative_to(pkg).as_posix()
+    data=json.loads(src.read_text())
     dst=pkg/'assets/library'/src.parent.name;dst.mkdir(parents=True,exist_ok=True)
     for item in data.get('buffers',[])+data.get('images',[]):
         uri=item.get('uri')
@@ -368,6 +385,24 @@ def copy_gltf_asset(pkg, spec):
             buffer.write_bytes(raw)
     output=dst/src.name;output.write_text(json.dumps(data,separators=(',',':'))+'\n')
     return output.relative_to(pkg).as_posix()
+
+
+def build_library_source(pkg, spec, src):
+    """Record the declared licence and carry non-CC0 notices alongside the asset."""
+    license_name=spec.get('license','CC0')
+    source={'kind':'library','ref':spec['attribution'],'license':license_name,
+            'note':'Original image bytes retained; static model dimensions estimated'}
+    if license_name != 'CC0':
+        if not spec.get('license_file'):
+            raise ValueError('Non-CC0 library asset requires license_file')
+        notice=Path(spec['license_file'])
+        if not notice.is_file():
+            raise ValueError('library license_file does not exist')
+        dst=pkg/'assets/library'/src.parent.name;dst.mkdir(parents=True,exist_ok=True)
+        output=dst/notice.name
+        shutil.copyfile(notice,output)
+        source['license_file']=output.relative_to(pkg).as_posix()
+    return source
 
 
 def build_material_assets(pkg, library):
@@ -416,10 +451,11 @@ def build(pkg, library=None, only=None):
             if p['id'] not in used: continue
             proto=p['id']
             if library and proto in library:
-                p['mesh_file']=copy_gltf_asset(pkg,library[proto])
+                spec=library[proto]
+                source=build_library_source(pkg,spec,Path(spec['file']))
+                p['mesh_file']=copy_gltf_asset(pkg,spec)
                 (out/(proto+'.glb')).unlink(missing_ok=True)
-                p['source']={'kind':'library','ref':library[proto]['attribution'],'license':'CC0',
-                             'note':'Original image bytes retained; static model dimensions estimated'}
+                p['source']=source
                 count+=1
                 continue
             mesh=vegetation(proto) if layer=='vegetation' else structure(
@@ -439,7 +475,7 @@ def build(pkg, library=None, only=None):
         print(f'{count} structure prototype mesh updated; all other package assets unchanged')
         return
     man=json.loads((pkg/'manifest.json').read_text())
-    man['prototype_assets']={'files':['assets/prototypes/*.glb']+['assets/library/'+p.relative_to(pkg/'assets/library').as_posix() for p in sorted((pkg/'assets/library').rglob('*')) if p.is_file()], 'source':'Procedural estimated geometry + CC0 library assets; see prototype sources'}
+    man['prototype_assets']={'files':['assets/prototypes/*.glb']+['assets/library/'+p.relative_to(pkg/'assets/library').as_posix() for p in sorted((pkg/'assets/library').rglob('*')) if p.is_file()], 'source':'Procedural estimated geometry + declared library assets; see prototype sources'}
     (pkg/'manifest.json').write_text(json.dumps(man,indent=1)+'\n')
     print(f'{count} reusable prototype meshes; external textures retained once per library asset; reference images: 0')
 

@@ -1,0 +1,3 @@
+# Optional terrain-footprint processing; Shapely bundles an appropriate GEOS wheel on supported platforms.
+shapely>=2.1,<3
+Pillow>=10

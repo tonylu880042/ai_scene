@@ -39,6 +39,8 @@ var manifest: Dictionary
 var package_dir := ""
 var progress := 0.0
 var speed := 6.0
+var camera_height_m := 1.65
+var stop_at_finish := false
 var automatic := true
 var camera := Camera3D.new()
 var tiles := Node3D.new()
@@ -54,7 +56,12 @@ var capture_dir := ""
 var views_file := ""
 var surface_visual_overrides_file := ""
 var surface_visual_overrides: Array = []
+var preview_config: Dictionary = {}
+var prototype_parts := {}
 var checking := false
+var checking_traversal := false
+var traversal_frames := 0
+var traversal_started_usec := 0
 var batch := false
 var geometry_only := false
 var prototypes := {}
@@ -81,6 +88,7 @@ func _load_surface_visual_overrides() -> void:
 	surface_visual_overrides_file = source_path
 	var config: Variant = _read(source_path)
 	if not config is Dictionary: return
+	preview_config = config
 	var overrides_value: Variant = config.get("overrides", [])
 	if not overrides_value is Array: return
 	surface_visual_overrides = overrides_value
@@ -99,6 +107,10 @@ func _ready() -> void:
 		if arg.begins_with("--package="): package_dir = arg.trim_prefix("--package=")
 		elif arg.begins_with("--start-s="): progress = float(arg.trim_prefix("--start-s="))
 		elif arg.begins_with("--speed-kmh="): speed = float(arg.trim_prefix("--speed-kmh=")) / 3.6
+		elif arg.begins_with("--camera-height-m="):
+			var height := float(arg.trim_prefix("--camera-height-m="))
+			if is_finite(height): camera_height_m = clampf(height, 0.5, 3.0)
+		elif arg == "--stop-at-finish": stop_at_finish = true
 		elif arg.begins_with("--capture-dir="): capture_dir = arg.trim_prefix("--capture-dir=")
 		elif arg.begins_with("--views="): views_file = arg.trim_prefix("--views=")
 		elif arg.begins_with("--surface-visual-overrides="): surface_visual_overrides_file = arg.trim_prefix("--surface-visual-overrides=")
@@ -106,7 +118,10 @@ func _ready() -> void:
 			var radius := float(arg.trim_prefix("--spatial-geometry-radius-m="))
 			spatial_geometry_radius_m = maxf(0.0, radius) if is_finite(radius) else 0.0
 		elif arg == "--check": checking = true
+		elif arg == "--traversal-check": checking_traversal = true
 		elif arg == "--geometry-only": geometry_only = true
+	if package_dir.is_empty() and FileAccess.file_exists("res://package/manifest.json"):
+		package_dir = ProjectSettings.globalize_path("res://package")  # standalone bundle: package beside the project
 	if package_dir.is_empty() or not FileAccess.file_exists(package_dir.path_join("manifest.json")):
 		push_error("Pass --package=<directory containing manifest.json>")
 		get_tree().quit(2)
@@ -131,6 +146,7 @@ func _ready() -> void:
 	label.add_theme_constant_override("shadow_offset_x", 2)
 	label.add_theme_constant_override("shadow_offset_y", 2)
 	_jump(progress)
+	if checking_traversal: traversal_started_usec = Time.get_ticks_usec()
 	if checking:
 		assert(route.length > 0.0 and loaded.size() > 0)
 		assert(camera.position.distance_to(route.position_at(progress)) < 3.0)
@@ -160,14 +176,14 @@ static func _gltf_import_flags_for_path(path: String) -> int:
 	# Road/terrain world coordinates are gameplay-adjacent geometry; mesh compression
 	# can move vertices by millimetres at Gold Coast world offsets. Keep props default.
 	var basename := path.get_file().to_lower()
-	if basename == "road.glb" or basename == "terrain.glb":
+	if basename == "road.glb" or basename == "terrain.glb" or "/preview_road/" in path or "/preview_ground/" in path:
 		return GLTFDocument.IMPORT_FLAG_FORCE_DISABLE_MESH_COMPRESSION
 	return 0
 
 func _stream() -> void:
 	for tile in manifest.tiles:
 		var id: String = tile.id
-		var near: bool = float(tile.to_s) >= progress - 350.0 and float(tile.from_s) <= progress + 800.0
+		var near: bool = bool(preview_config.get("load_all_tiles", false)) or (float(tile.to_s) >= progress - 350.0 and float(tile.from_s) <= progress + 800.0)
 		if near and not loaded.has(id):
 			var holder := Node3D.new()
 			tiles.add_child(holder)
@@ -197,7 +213,7 @@ func _load_tile_geometry(holder: Node3D, tile: Dictionary) -> void:
 		layer_nodes[layer] = node
 		if layer == "road": logical_road_nodes[String(tile.id)] = node
 	if not geometry_only:
-		var tufts := PreviewGroundDetail.add_terrain_grass(holder, layer_nodes.terrain, route, float(tile.from_s), float(tile.to_s), String(tile.id).hash(), layer_nodes.get("roadside"))
+		var tufts := PreviewGroundDetail.add_terrain_grass(holder, layer_nodes.terrain, route, float(tile.from_s), float(tile.to_s), String(tile.id).hash(), layer_nodes.get("roadside"), float(preview_config.get("grass_density_factor", 1.0)))
 		print("PREVIEW_GRASS ", String(tile.id), " ", tufts)
 	for candidate in surface_visual_overrides:
 		if candidate.get("appearance", "") != "procedural_short_grass": continue
@@ -282,14 +298,14 @@ func _stream_adjacent_geometry() -> void:
 func _pose() -> void:
 	# Reset capture-only projection before rebuilding the unchanged automatic pose.
 	camera.fov = 75.0
-	camera.position = route.position_at(progress) + Vector3.UP * 1.65
+	camera.position = route.position_at(progress) + Vector3.UP * camera_height_m
 	var bend := 0.0
 	for ds in [0.0, 2.0, 4.0, 6.0, 8.0]:
 		bend = maxf(bend,absf(float(route.sample(minf(progress+ds,route.length)).curvature)))
 	# Avoid aiming the camera along a long chord through the terrain inside a tight bend.
 	var lookahead := clampf(0.25 / maxf(bend,0.001),0.75,8.0)
 	var ahead: float = minf(progress + lookahead, route.length)
-	var target: Vector3 = route.position_at(ahead) + Vector3.UP * 1.65
+	var target: Vector3 = route.position_at(ahead) + Vector3.UP * camera_height_m
 	if ahead - progress < 0.1:
 		target = camera.position + (route.position_at(progress) - route.position_at(maxf(0.0, progress - 3.0)))
 	if camera.position.distance_to(target) > 0.01:
@@ -328,9 +344,14 @@ func _jump(s: float) -> void:
 func _process(delta: float) -> void:
 	if route == null or batch: return
 	if automatic:
-		progress = minf(route.length, progress + speed * delta)
+		traversal_frames += 1
+		var destination: float = float(route.data.finish.s) if stop_at_finish else route.length
+		progress = minf(destination, progress + speed * delta)
 		_stream()
 		_pose()
+		if checking_traversal and progress >= destination:
+			print("PACKAGE_PREVIEW_TRAVERSAL_OK ", traversal_frames, " frames, ", destination, " m, elapsed_s=", float(Time.get_ticks_usec() - traversal_started_usec) / 1000000.0)
+			get_tree().quit()
 	else:
 		var direction := Vector3.ZERO
 		if Input.is_physical_key_pressed(KEY_W): direction.z -= 1
@@ -378,7 +399,7 @@ func _capture_views() -> void:
 		assert(not image.is_empty() and image.get_width() == 1920 and image.get_height() == 1080)
 		assert(image.save_png(file) == OK)
 		var camera_y_offset: float = camera.position.y - route.position_at(progress).y
-		records.append({"id": view.id, "s": view.s, "image": file, "baseline_camera_height_m": 1.65, "camera_height_m": camera_y_offset, "camera_y_offset_m": camera_y_offset - 1.65, "vertical_fov": camera.fov, "camera_override": view.get("camera_override", {})})
+		records.append({"id": view.id, "s": view.s, "image": file, "baseline_camera_height_m": camera_height_m, "camera_height_m": camera_y_offset, "camera_y_offset_m": camera_y_offset - camera_height_m, "vertical_fov": camera.fov, "camera_override": view.get("camera_override", {})})
 	var output := FileAccess.open(capture_dir.path_join("captures.json"), FileAccess.WRITE)
 	output.store_string(JSON.stringify({"package": package_dir, "scope": "P0–P6 reconstructed world; estimated layout, visual acceptance pending", "surface_visual_overrides": surface_visual_overrides_file, "spatial_geometry_radius_m": spatial_geometry_radius_m, "views": records}, "\t"))
 	print("PACKAGE_PREVIEW_CAPTURE_OK ", records.size())
@@ -391,6 +412,13 @@ func _first_mesh(node: Node) -> Mesh:
 		if mesh != null: return mesh
 	return null
 
+func _collect_mesh_parts(node: Node, parent_transform: Transform3D, parts: Array) -> void:
+	var transform := parent_transform
+	if node is Node3D: transform = parent_transform * node.transform
+	if node is MeshInstance3D and node.mesh != null:
+		parts.append({"mesh": node.mesh, "fit": transform})
+	for child in node.get_children(): _collect_mesh_parts(child, transform, parts)
+
 func _load_prototypes() -> void:
 	for layer in ["vegetation", "structures"]:
 		var path := package_dir.path_join(layer + "/prototypes.json")
@@ -400,6 +428,9 @@ func _load_prototypes() -> void:
 			if proto.has("mesh_file"):
 				var node := _load_glb(package_dir.path_join(proto.mesh_file))
 				prototype_meshes[proto.id] = _first_mesh(node)
+				var parts: Array = []
+				_collect_mesh_parts(node, Transform3D.IDENTITY, parts)
+				prototype_parts[proto.id] = parts
 				node.free()
 				var variants := _library_variants(String(proto.id), prototype_meshes[proto.id])
 				if not variants.is_empty(): prototype_variants[proto.id] = variants
@@ -426,7 +457,13 @@ func _library_variants(proto_id: String, package_mesh: Mesh) -> Array:
 func _scatter(holder: Node3D, data: Dictionary) -> void:
 	for group in data.groups:
 		if not prototype_meshes.has(group.proto): continue
-		var variants: Array = prototype_variants.get(group.proto, [{"mesh": prototype_meshes[group.proto], "fit": Transform3D.IDENTITY}])
+		var variants: Array = prototype_variants.get(group.proto, [])
+		if variants.is_empty() and bool(preview_config.get("complete_prototype_meshes", false)):
+			# Each part shares the same instance transforms, including imported node transforms.
+			for part in prototype_parts.get(group.proto, []):
+				_scatter_part(holder, group, part)
+			continue
+		if variants.is_empty(): variants = [{"mesh": prototype_meshes[group.proto], "fit": Transform3D.IDENTITY}]
 		for v in range(variants.size()):
 			var indices := range(v, int(group.count), variants.size())
 			if indices.is_empty(): continue
@@ -445,6 +482,20 @@ func _scatter(holder: Node3D, data: Dictionary) -> void:
 			instance.visibility_range_end = 1000.0
 			holder.add_child(instance)
 	for line in data.get("linear", []): _barrier(holder, line)
+
+func _scatter_part(holder: Node3D, group: Dictionary, part: Dictionary) -> void:
+	var multimesh := MultiMesh.new()
+	multimesh.transform_format = MultiMesh.TRANSFORM_3D
+	multimesh.mesh = part.mesh
+	multimesh.instance_count = int(group.count)
+	for i in range(int(group.count)):
+		var a: Array = group.data.slice(i * 10, i * 10 + 10)
+		multimesh.set_instance_transform(i, PackageInstanceTransform.from_package(
+			Vector3(a[0], a[1], a[2]), Quaternion(a[3], a[4], a[5], a[6]), Vector3(a[7], a[8], a[9])) * part.fit)
+	var instance := MultiMeshInstance3D.new()
+	instance.multimesh = multimesh
+	instance.visibility_range_end = 1000.0
+	holder.add_child(instance)
 
 func _beam(holder: Node3D, a: Vector3, b: Vector3, thickness: float, material: Material, mesh_name: String = "") -> void:
 	if a.distance_to(b) < 0.001: return
@@ -597,7 +648,15 @@ func _setup_environment() -> void:
 	var facts: Dictionary = _read(path) if FileAccess.file_exists(path) else {}
 	var atmosphere: Dictionary = facts.get("atmosphere", {})
 	var sky_facts: Dictionary = atmosphere.get("sky", {}) if atmosphere.get("sky") != null else {}
-	if sky_facts.has("file"):
+	if preview_config.has("sky_image"):
+		var sky_path := String(preview_config.sky_image)
+		if sky_path.begins_with("res://"): sky_path = ProjectSettings.globalize_path(sky_path)
+		var image := Image.load_from_file(sky_path)
+		if image != null and not image.is_empty():
+			var panorama := PanoramaSkyMaterial.new()
+			panorama.panorama = ImageTexture.create_from_image(image)
+			sky.sky_material = panorama
+	elif sky_facts.has("file"):
 		var image := Image.load_from_file(package_dir.path_join(sky_facts.file))
 		if image != null and not image.is_empty():
 			var panorama := PanoramaSkyMaterial.new()
@@ -606,9 +665,9 @@ func _setup_environment() -> void:
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 	# Package intensities are relative; these adapter scales map them to a clear-day exposure.
-	env.ambient_light_energy = PREVIEW_AMBIENT_SCALE * float(atmosphere.get("ambient", {}).get("intensity_relative", .35))
+	env.ambient_light_energy = float(preview_config.get("ambient_scale", PREVIEW_AMBIENT_SCALE)) * float(atmosphere.get("ambient", {}).get("intensity_relative", .35))
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
-	env.tonemap_exposure = PREVIEW_EXPOSURE
+	env.tonemap_exposure = float(preview_config.get("exposure", PREVIEW_EXPOSURE))
 	env.adjustment_enabled = true
 	env.adjustment_saturation = PREVIEW_SATURATION
 	env.ssao_enabled = true
@@ -626,13 +685,20 @@ func _setup_environment() -> void:
 	var sun_facts: Dictionary = atmosphere.get("sun", {})
 	var direction: Array = sun_facts.get("direction_to_sun", [-.4,.7,-.4])
 	sun.look_at(-Vector3(direction[0],direction[1],direction[2]),Vector3.UP)
-	sun.light_energy = PREVIEW_SUN_SCALE * float(sun_facts.get("intensity_relative", 1.3))
+	sun.light_energy = float(preview_config.get("sun_scale", PREVIEW_SUN_SCALE)) * float(sun_facts.get("intensity_relative", 1.3))
 	if sun_facts.has("color_linear"):
 		var c: Array = sun_facts.color_linear
 		sun.light_color = Color(c[0], c[1], c[2]).linear_to_srgb()
 	sun.shadow_enabled = true
+	sun.shadow_opacity = clampf(float(preview_config.get("shadow_opacity", 1.0)), 0.0, 1.0)
+	sun.shadow_blur = maxf(float(preview_config.get("shadow_blur", 1.0)), 0.0)
 	sun.directional_shadow_max_distance = 200.0
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
+	# Optional authoring-preview terrain; it is not an AI Scene Package layer.
+	for relative_path in preview_config.get("distant_preview_meshes", []):
+		var distant := _load_glb(package_dir.path_join(String(relative_path)))
+		_style_meshes(distant, "", "preview_far")
+		add_child(distant)
 	# P5 skyline towers: one static mesh for the whole route (never streamed).
 	var skyline_path := package_dir.path_join("environment/skyline_buildings.glb")
 	if FileAccess.file_exists(skyline_path):
@@ -715,6 +781,8 @@ func _style_meshes(node: Node, tile_id := "", layer := "", tile_from_s := 0.0, t
 				if not surface_override.is_empty(): break
 			if not lawn_overrides.is_empty(): surface_override = lawn_overrides[0]
 			var cache_key := key
+			if layer == "preview_far" and (preview_config.has("mountain_shape") or preview_config.has("mountain_material_v2")): cache_key += "|preview_far"
+			if layer == "terrain" and preview_config.has("shoulder_ground"): cache_key += "|preview_shoulder"
 			if not lawn_overrides.is_empty():
 				var override_keys: Array[String] = []
 				for candidate in lawn_overrides: override_keys.append(JSON.stringify(candidate))
@@ -730,6 +798,10 @@ func _style_meshes(node: Node, tile_id := "", layer := "", tile_from_s := 0.0, t
 				if key == "road_dirt": color = Vector3(.42,.33,.24)
 				elif key == "road_gravel": color = Vector3(.55,.50,.42)
 				elif key == "road_sand": color = Vector3(.76,.70,.50)
+				var color_config: Dictionary = preview_config.get("surface_colors", {})
+				if color_config.has(key):
+					var c: Array = color_config[key]
+					color = Vector3(float(c[0]), float(c[1]), float(c[2]))
 				if use_mown_lawn:
 					shader.code = _mown_lawn_terrain_shader(color, lawn_overrides)
 				elif use_sand_pbr:
@@ -738,6 +810,47 @@ func _style_meshes(node: Node, tile_id := "", layer := "", tile_from_s := 0.0, t
 					shader.code = _sand_road_shader(color, surface_override)
 				elif use_library:
 					shader.code = SURFACE_LIBRARY_SHADER
+					if grass and preview_config.has("mountain_rock"):
+						var rock: Dictionary = preview_config.mountain_rock
+						var rc: Array = rock.color
+						var base_line := "ALBEDO=base_color*clamp(detail,0.0,2.5)*(1.0+(variation-.5)*2.0*macro);"
+						shader.code = shader.code.replace("uniform vec3 base_color", "uniform sampler2D rock_tex : source_color, filter_linear_mipmap_anisotropic, repeat_enable;\nuniform vec3 base_color")
+						var rock_line := "float rock_amount=smoothstep(%f,%f,world.y)*smoothstep(.04,.32,1.0-abs(n.y)); vec3 rock_sample=texture(rock_tex,world.zy*.012).rgb*w.x+texture(rock_tex,world.xz*.012).rgb*w.y+texture(rock_tex,world.xy*.012).rgb*w.z; float rock_detail=clamp(dot(rock_sample,vec3(.2126,.7152,.0722))*4.0,.35,1.8); float stripe=.58+.42*abs(sin(world.x*.035+world.z*.055+value_noise(world.xz*.01)*5.0)); vec3 rock_tint=vec3(%f,%f,%f)*rock_detail*stripe; ALBEDO=mix(base_color*clamp(detail,0.0,2.0),rock_tint,rock_amount)*(1.0+(variation-.5)*2.0*macro);" % [float(rock.min_elevation),float(rock.max_elevation),float(rc[0]),float(rc[1]),float(rc[2])]
+						if layer == "preview_far" and preview_config.has("mountain_material_v2"):
+							shader.code = shader.code.replace("uniform vec3 base_color", "uniform sampler2D alpine_rock_tex : source_color, filter_linear_mipmap_anisotropic, repeat_enable;\nuniform vec3 base_color")
+							# Same baseline near the seam; far-only material, no vertex displacement.
+							rock_line += "float fade=smoothstep(1585.0,1750.0,world.y); float alpine=smoothstep(1650.0,2050.0,world.y)*smoothstep(.06,.36,1.0-abs(n.y)); vec3 fine=texture(alpine_rock_tex,world.zy*.012).rgb*w.x+texture(alpine_rock_tex,world.xz*.012).rgb*w.y+texture(alpine_rock_tex,world.xy*.012).rgb*w.z; float rock_luma=dot(fine,vec3(.2126,.7152,.0722)); float blocks=value_noise(vec2(world.x*.013+world.z*.011,world.y*.012)); float breaks=value_noise(vec2(world.x*.031-world.z*.019,world.y*.023)); float facet=clamp(.25+rock_luma*3.5,.38,1.6)*(.52+.95*blocks)*(.72+.55*breaks); vec3 alpine_rock=vec3(.066,.074,.084)*facet; vec3 vegetation=base_color*(.76+.38*variation); vec3 alpine_color=mix(vegetation,alpine_rock,alpine); float snow=smoothstep(2200.0,2450.0,world.y)*smoothstep(.66,.82,value_noise(world.xz*.012))*smoothstep(.32,.70,n.y)*.40; alpine_color=mix(alpine_color,vec3(.50,.53,.53),snow); ALBEDO=mix(ALBEDO,alpine_color,fade);"
+						if layer == "preview_far" and preview_config.has("snow_pockets") and preview_config.has("mountain_material_v2"):
+							var broad_snow := "float snow=smoothstep(2200.0,2450.0,world.y)*smoothstep(.66,.82,value_noise(world.xz*.012))*smoothstep(.32,.70,n.y)*.40;"
+							var pocket_snow := "float snow=clamp(UV2.x*smoothstep(2050.0,2300.0,world.y)*smoothstep(.18,.50,n.y)*smoothstep(.32,.70,value_noise(world.xz*.013))*.85,0.0,.85);"
+							rock_line = rock_line.replace(broad_snow,pocket_snow)
+						shader.code = shader.code.replace(base_line, rock_line)
+					if grass and layer == "terrain" and preview_config.has("shoulder_ground"):
+						shader.code = shader.code.replace("uniform vec3 base_color", "uniform sampler2D soil_tex : source_color, filter_linear_mipmap_anisotropic, repeat_enable;\nuniform vec3 base_color")
+						# UV2 carries physical route offset; appearance only, no vertex changes.
+						var tail := "ROUGHNESS=clamp(rough,rough_min,1.0);"
+						var soil := "float shoulder=(1.0-smoothstep(2.3,7.0,abs(UV2.x)))*(.56+.25*value_noise(world.xz*.35)); vec3 soil_sample=texture(soil_tex,world.xz*.42).rgb; vec3 soil_color=soil_sample*vec3(.65,.62,.50); ALBEDO=mix(ALBEDO,soil_color,clamp(shoulder,0.0,.72)); ROUGHNESS=clamp(rough,rough_min,1.0);"
+						if preview_config.has("road_edge_natural"):
+							soil = "float edge_var=value_noise(world.xz*.45); float shoulder=1.0-smoothstep(0.0,3.2,UV2.x+.7*(edge_var-.5)*smoothstep(0.0,.35,UV2.x)); vec3 soil_sample=texture(soil_tex,world.xz*.55).rgb; vec3 soil_color=soil_sample*vec3(.70,.68,.54); ALBEDO=mix(ALBEDO,soil_color,clamp(shoulder,0.0,1.0)); ROUGHNESS=clamp(rough,rough_min,1.0);"
+						shader.code = shader.code.replace(tail, soil)
+					if not grass and layer == "road" and key in ["road_dirt", "road_gravel"] and preview_config.has("road_natural"):
+						shader.code = shader.code.replace("uniform vec3 base_color", "uniform sampler2D trail_tex : source_color, filter_linear_mipmap_anisotropic, repeat_enable;\nuniform vec3 base_color")
+						var line := "ALBEDO=base_color*clamp(detail,0.0,2.5)*(1.0+(variation-.5)*2.0*macro);"
+						var trail := "vec3 stones=texture(trail_tex,world.xz*.65).rgb; float patch=value_noise(vec2(UV.y*.5,UV.x*.85)); float tracks=exp(-pow((abs(UV.x)-.62)*2.4,2.0)); vec3 gravel_tint=mix(base_color,stones*.72,.58); ALBEDO=gravel_tint*(.83+.25*patch-.12*tracks);"
+						if preview_config.has("road_edge"):
+							shader.code = shader.code.replace("uniform vec3 base_color", "uniform sampler2D edge_soil : source_color, filter_linear_mipmap_anisotropic, repeat_enable;\nuniform vec3 base_color")
+							if preview_config.has("road_edge_natural"):
+								trail = "vec3 stones=texture(trail_tex,world.xz*.65).rgb; float patch=value_noise(vec2(UV.y*.4,UV.x*.85)); float drift=.62+.12*sin(UV.y*.13)+.16*(value_noise(vec2(UV.y*.08,2.0))-.5); float tracks=exp(-pow((abs(UV.x)-drift)*2.4,2.0))*(.4+.6*value_noise(vec2(UV.y*.31,UV.x))); vec3 gravel_tint=mix(base_color,stones*.72,.58); ALBEDO=gravel_tint*(.83+.25*patch-.10*tracks);"
+								trail += "float edge_var=value_noise(world.xz*.45); float edge_width=clamp(UV2.y*.45,.15,1.25); float edge=1.0-smoothstep(0.0,edge_width,UV2.x+.7*(edge_var-.5)*smoothstep(0.0,.35,UV2.x)); vec3 edge_color=texture(edge_soil,world.xz*.55).rgb*vec3(.70,.68,.54); ALBEDO=mix(ALBEDO,edge_color,clamp(edge,0.0,1.0));"
+							else:
+								trail += "float edge_noise=value_noise(world.xz*2.0); float edge=(1.0-smoothstep(.03,.68,UV2.x+.32*(edge_noise-.5)))*(.65+.25*edge_noise); vec3 edge_color=texture(edge_soil,world.xz*.55).rgb*vec3(.70,.68,.54); ALBEDO=mix(ALBEDO,edge_color,edge);"
+						shader.code = shader.code.replace(line,trail)
+					if grass and layer == "preview_far" and preview_config.has("mountain_shape"):
+						# Artistic distant-only displacement, fading to zero below the near-terrain seam.
+						var shape: Dictionary = preview_config.mountain_shape
+						var vertex_line := "void vertex(){world=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz;world_normal=normalize((MODEL_MATRIX*vec4(NORMAL,0.0)).xyz);}"
+						var displaced := "void vertex(){vec3 p=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz; float fade=smoothstep(%f,%f,p.y); float peaks=abs(sin(p.x*.014+p.z*.007)*sin(p.z*.019-p.x*.005)); float ridges=abs(sin(p.x*.046+p.z*.031)); VERTEX.y+=fade*(peaks*.75+ridges*.25)*%f; world=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz; world_normal=normalize((MODEL_MATRIX*vec4(NORMAL,0.0)).xyz);}" % [float(shape.min_elevation),float(shape.max_elevation),float(shape.amplitude_m)]
+						shader.code = shader.code.replace(vertex_line, displaced)
 				else:
 					shader.code = """shader_type spatial;
 varying vec3 world;
@@ -754,6 +867,17 @@ ALBEDO=vec3(%f,%f,%f)*(0.92+grain*.16+patch);ROUGHNESS=.95;
 					var maps: Array = _surface_library_textures(key)
 					var mean: Color = maps[0].get_meta("mean_linear")
 					material.set_shader_parameter("albedo_tex", maps[0])
+					if grass and layer == "terrain" and preview_config.has("shoulder_ground"):
+						material.set_shader_parameter("soil_tex", _load_sand_pbr_texture("res://assets/textures/brown_mud_leaves_01_diff.jpg", false))
+					if not grass and layer == "road" and key in ["road_dirt", "road_gravel"] and preview_config.has("road_natural"):
+						material.set_shader_parameter("trail_tex", _load_sand_pbr_texture("res://assets/textures/rocky_trail_diff.jpg", false))
+						if preview_config.has("road_edge"):
+							material.set_shader_parameter("edge_soil", _load_sand_pbr_texture("res://assets/textures/brown_mud_leaves_01_diff.jpg", false))
+					if grass and preview_config.has("mountain_rock"):
+						material.set_shader_parameter("rock_tex", _load_sand_pbr_texture("res://assets/textures/rock_boulder_dry_diff.jpg", false))
+						if layer == "preview_far" and preview_config.has("mountain_material_v2"):
+							var rock_texture := String(preview_config.get("mountain_rock_texture", "res://assets/textures/rock_boulder_dry_diff.jpg"))
+							material.set_shader_parameter("alpine_rock_tex", _load_sand_pbr_texture(rock_texture, false))
 					material.set_shader_parameter("normal_tex", maps[1])
 					material.set_shader_parameter("rough_tex", maps[2])
 					material.set_shader_parameter("base_color", color)

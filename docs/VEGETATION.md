@@ -35,6 +35,17 @@ scale components independently; it does not change the package transform contrac
 resulting component inside the alias prototype's existing `scale` range, which is the authored bounds for the local
 proxy. The runtime applies those three components directly to the mesh basis.
 
+### External prototype libraries
+
+`tools/build_package_assets.py` accepts `.gltf` libraries with external local files and self-contained `.glb`
+files. A GLB is copied byte-for-byte and must embed its buffers and images; export it at its intended dimensions
+and set `scale` to `1`. Consumers must apply its glTF node transforms. For non-CC0 assets, specify `license`,
+`license_file`, and `attribution` in the library entry. The license file is copied into the package and referenced
+by the prototype source. Entries without a license retain the historical CC0 default; verify an asset's texture
+licenses before registering it. EZ-Tree prototypes may use MIT with the upstream license notice. Its source
+materials and generated geometry must be checked separately; an exported model does not itself establish
+visual fit, LOD support, wind animation compatibility, or an asset's provenance.
+
 ## 1. Order and inputs
 
 `route.json` → road/terrain tiles → `semantics.json` → **vegetation**. `build` refuses to run unless all three exist

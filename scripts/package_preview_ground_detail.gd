@@ -286,8 +286,8 @@ const GRASS_FAR_DENSITY := 4.0
 static var _tuft_mesh: ArrayMesh
 static var _tuft_material: StandardMaterial3D
 
-static func add_terrain_grass(holder: Node3D, terrain_root: Node, route: RefCounted, from_s: float, to_s: float, seed: int, exclude_root: Node = null) -> int:
-	var cells := sample_terrain_grass(terrain_root, route, from_s, to_s, seed, exclude_root)
+static func add_terrain_grass(holder: Node3D, terrain_root: Node, route: RefCounted, from_s: float, to_s: float, seed: int, exclude_root: Node = null, density_factor: float = 1.0) -> int:
+	var cells := sample_terrain_grass(terrain_root, route, from_s, to_s, seed, exclude_root, density_factor)
 	var total := 0
 	for key in cells.keys():
 		var buffer: PackedFloat32Array = cells[key]
@@ -309,7 +309,7 @@ static func add_terrain_grass(holder: Node3D, terrain_root: Node, route: RefCoun
 	return total
 
 ## {Vector2i cell: PackedFloat32Array of 12-float MultiMesh transforms} in terrain_root space.
-static func sample_terrain_grass(terrain_root: Node, route: RefCounted, from_s: float, to_s: float, seed: int, exclude_root: Node = null) -> Dictionary:
+static func sample_terrain_grass(terrain_root: Node, route: RefCounted, from_s: float, to_s: float, seed: int, exclude_root: Node = null, density_factor: float = 1.0) -> Dictionary:
 	var excluded := _xz_triangle_grid(exclude_root) if exclude_root != null else {}
 	var route_cells := {}
 	var s := maxf(0.0, from_s - GRASS_MAX_LATERAL_M - 10.0)
@@ -342,7 +342,7 @@ static func sample_terrain_grass(terrain_root: Node, route: RefCounted, from_s: 
 				var distance := _nearest_route_distance(route_cells, Vector2(centroid.x, centroid.z))
 				if distance > GRASS_MAX_LATERAL_M: continue
 				var density := lerpf(GRASS_NEAR_DENSITY, GRASS_FAR_DENSITY, clampf((distance - 4.0) / (GRASS_MAX_LATERAL_M - 4.0), 0.0, 1.0))
-				var expected := area * density
+				var expected := area * density * maxf(density_factor, 0.0)
 				var count := int(expected) + (1 if rng.randf() < expected - floorf(expected) else 0)
 				for k in range(count):
 					var r1 := rng.randf()

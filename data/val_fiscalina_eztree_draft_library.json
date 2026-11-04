@@ -1,0 +1,16 @@
+{
+  "grass_clump": {
+    "file": "assets/models/ez_tree_grass_cc0_draft/grass.glb",
+    "scale": 1,
+    "license": "MIT",
+    "license_file": "assets/models/ez_tree_grass_cc0_draft/LICENSE",
+    "attribution": "Grass geometry EZ-Tree by Daniel Greenheck, MIT; grass texture Poly Haven Grass Medium 01, CC0; https://github.com/dgreenheck/ez-tree ; https://polyhaven.com/a/grass_medium_01"
+  },
+  "conifer_pine": {
+    "file": "assets/models/ez_tree_pine_textured_draft/pine.glb",
+    "scale": 1,
+    "license": "MIT",
+    "license_file": "assets/models/ez_tree_pine_textured_draft/LICENSE",
+    "attribution": "Pine prototype and needle texture EZ-Tree by Daniel Greenheck, MIT; https://github.com/dgreenheck/ez-tree"
+  }
+}

@@ -40,6 +40,47 @@ relief(x, z) · smoothstep(flat_band, blend_to, d)`. Relief depends only on worl
 agree on their shared row. On the inside of a bend the terrain reach is limited to
 `max_inner_reach_of_radius` (0.7) × radius so offset rows never cross (fold).
 
+### Optional DEM-derived near terrain
+
+For a georeferenced route, `--terrain=<json>` can opt into cached Terrarium tiles:
+
+```json
+{"dem":{"tile_dir":"export/<scene>/dem","zoom":13,"source":"Terrarium DEM source and attribution","estimated":true},
+ "vertical_exaggeration":1.0}
+```
+
+Tiles must be available at `<tile_dir>/<zoom>/<x>/<y>.png`; the optional mode uses Pillow and strict
+cross-tile bilinear sampling. The route's origin and elevation datum map ground heights into package coordinates.
+The road edge remains at route height; the verge blends from the road to DEM ground between `flat_band_m` and
+`blend_to_m`. Where a tight bend limits terrain reach before the blend ends, the outer boundary does not necessarily
+reach the DEM. This is estimated ground at the estimated route, not a measured road profile. Missing DEM coverage
+fails rather than using invented heights. DEM mode rejects vertical exaggeration and coastal overrides; it neither
+alters the route nor establishes a stitched distant terrain. Retain source attribution and checksums with the
+scene's authoring data.
+
+### Joining a distant DEM candidate
+
+`tools/stitch_dem_terrain.py` builds a separate world-anchored DEM candidate around the actual serialized
+road and near-terrain footprint. It requires the optional packages in `tools/requirements-terrain-stitch.txt`.
+The output is an authoring candidate and does not change the near package or publish an environment layer:
+
+```bash
+python3 tools/stitch_dem_terrain.py <near-package> <empty-output-dir> --bounds MIN_X MAX_X MIN_Z MAX_Z --step-m 40 --tile-m 800
+python3 tools/validate_stitched_dem.py <near-package> <output-dir>
+```
+
+Both bounds extents and tile size must be multiples of the grid step. The far surface follows the same DEM,
+keeps road and near terrain as the boundary owner, retains height breakpoints along straight edges, and records
+input/output hashes. Tiny faces that cannot survive float32 world coordinates are omitted only when their
+projected width is at most 0.25 mm; their count and source area are recorded. The separate validator checks
+serialized triangle winding, projected coverage within 1 mm, road probes, and samples the near/far seam at up to
+2 m intervals. Near-only internal overlap boundaries are reported separately and are not certified by this check.
+A passing join does not establish valid road grade, full package validity, visual similarity, or skyline alignment.
+
+`max_reach_change_per_m` is an optional positive ratio limiting changes in neighboring near-terrain reach.
+It only reduces existing reach limits and leaves road geometry intact. Its use can reduce near coverage and
+must be validated together with the adjoining far terrain.
+
 ## 3. Package layout written
 
 ```
@@ -355,3 +396,13 @@ only the P3 zones derived from replaced semantic zones (new zone ids appended; a
 `structures.resettle` also drops low / medium point objects now in P2 water, and `vegetation.remove_in_boxes` clears
 P3 instances under P4 footprints. Gold Coast r50 applies this to s 2260–2740, 5090–5690, 6890–7485 and 10260–10990
 (tiles 09, 10, 20–22, 27–29, 41–43; every road.glb identical); evidence `export/gold_coast/review/osm_shoreline_r50/`.
+
+### Optional South Tyrol high-ground DEM for authoring previews
+
+`stitch_dem_terrain.py --dtm-dir <directory>` can use cached 2.5 m South Tyrol WCS GeoTIFFs on high distant ground. The existing Terrarium sample is retained below 1600 m and blended smoothly into the DTM by 1800 m; absent DTM cells fall back to Terrarium. It preserves the near mesh at the seam and does not alter route, road, or physical elevation. The 1600–1800 m transition is a preview-specific approximation; verify that all near boundaries lie below it before relying on this method. Raster sampling uses nearest cell and approximates ETRS89 with WGS84 UTM zone 32N. No vertical-datum harmonization is asserted. The 2.5 m source is resampled onto the chosen far-mesh spacing, so it does not imply the mesh has 2.5 m geometry. Coverage, road probes and serialized seams still require `validate_stitched_dem.py`, and visual similarity and route elevation remain separate gates.
+
+For Godot preview shoulders only, `add_preview_route_uv.py` copies near terrain and adds UV2 from the already-authored route lateral/station attributes. It checks that positions, normals, topology and original attributes are unchanged. The original package and road meshes remain untouched; UV2 and the material override are not an engine-independent P1 update.
+
+The preview UV utility can additionally encode distance from the road edge into UV2 of copied road meshes (`--include-roads`). Road positions, indices, normals and original attributes are checked against the source. This permits material-only edge blending while leaving the physical road surface untouched. The copies are preview artifacts and are not the canonical package geometry.
+
+For a preview with `road_edge_natural`, copied terrain UV2 stores distance outside the road and station; copied road UV2 stores distance inside the road and local half-width. The two preview shaders blend with a shared soil texture at the boundary, with the inside blend capped by half-width so narrow paths remain visible. These UVs do not change the route or surface mesh and are not measured material boundaries.

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Road + terrain stage of the AI Scene Package: route.json -> distance tiles of road.glb / terrain.glb. Stdlib only.
+"""Road + terrain stage of the AI Scene Package: route.json -> distance tiles of road.glb / terrain.glb.
+Default generation uses the standard library; optional DEM terrain requires Pillow.
 
   python3 tools/road_terrain.py build <package_dir> [--tile-m=500] [--hill-amplitude-m=18] [--seed=7]
   python3 tools/road_terrain.py validate <package_dir>
@@ -160,6 +161,48 @@ def relief(x, z, tp):
     return tp["hill_amplitude_m"] * tp["vertical_exaggeration"] * n
 
 
+def make_dem_height_sampler(route, config):
+    """Sample cached Terrarium ground in route coordinates; fail on missing tile coverage."""
+    origin = route.get("coordinate_system", {}).get("origin")
+    if not isinstance(origin, dict) or "lat" not in origin or "lon" not in origin:
+        raise ValueError("DEM terrain requires a geographic route origin")
+    if not isinstance(config.get("source"), str) or not config["source"].strip():
+        raise ValueError("DEM terrain requires source attribution")
+    from pathlib import Path
+    from PIL import Image
+    from terrarium_sampling import TerrariumAtlas
+    zoom = config.get("zoom")
+    if not isinstance(zoom, int):
+        raise ValueError("DEM zoom must be an integer")
+    root = Path(config["tile_dir"]) / str(zoom)
+    tiles = {}
+    for file in root.glob("*/*.png"):
+        try:
+            key = (int(file.parent.name), int(file.stem))
+        except ValueError:
+            continue
+        with Image.open(file) as image:
+            tiles[key] = image.convert("RGB")
+    if not tiles:
+        raise ValueError("DEM terrain has no source tiles")
+    atlas = TerrariumAtlas(zoom, tiles)
+    lat0, lon0 = float(origin["lat"]), float(origin["lon"])
+    datum = float(route["coordinate_system"].get("elevation_datum_m", 0.0))
+    east_m_per_degree = 111195.08 * math.cos(math.radians(lat0))
+    if abs(east_m_per_degree) < 1e-6:
+        raise ValueError("DEM route origin is too close to a pole")
+    return lambda x, z: atlas.height(lon0 + x / east_m_per_degree, lat0 - z / 111195.08) - datum
+
+
+def dem_terrain_height(road_y, edge_distance_m, x, z, params, dem_height):
+    """Blend physical road edge to sampled ground, without changing the route."""
+    shoulder = road_y - params["shoulder_drop_m"] * smoothstep(0.0, params["columns_m"][1], edge_distance_m)
+    weight = smoothstep(params["flat_band_m"], params["blend_to_m"], edge_distance_m)
+    if weight == 0.0:
+        return shoulder
+    return shoulder * (1.0-weight) + dem_height(x, z) * weight
+
+
 def _normals(pos, idx):
     acc = [[0.0, 0.0, 0.0] for _ in pos]
     for t in range(0, len(idx), 3):
@@ -218,6 +261,23 @@ def _terrain_reach_limits(smp, side, candidates, margin):
             limits[i] = min(limits[i],ta*margin)
             limits[i+1] = min(limits[i+1],tb*margin)
     return limits
+
+
+def limit_reach_change(stations, reaches, max_change_per_m):
+    """Limit adjacent terrain reach change by reducing reach only; road edges stay fixed."""
+    if not math.isfinite(max_change_per_m) or max_change_per_m <= 0:
+        raise ValueError("max reach change per metre must be positive and finite")
+    if len(stations) != len(reaches) or not stations:
+        raise ValueError("reach and station arrays must be equal and nonempty")
+    result = list(reaches)
+    for i in range(1, len(result)):
+        step = stations[i] - stations[i-1]
+        if step <= 0:
+            raise ValueError("reach stations must be strictly increasing")
+        result[i] = min(result[i], result[i-1] + max_change_per_m * step)
+    for i in range(len(result)-2, -1, -1):
+        result[i] = min(result[i], result[i+1] + max_change_per_m * (stations[i+1]-stations[i]))
+    return result
 
 
 def _cross_section(smp, i, us, heights):
@@ -553,6 +613,13 @@ def coastal_sand(profile, u, y=None):
 
 def _terrain_grid_with_coastal_anchors(smp, rows, D, reaches, tp):
     """Build bounded waterline roots plus seam/transition splits that preserve sampled cross-sections."""
+    dem_sampler = None
+    if tp.get("dem") is not None:
+        if tp.get("coastal_waterline_anchors") or tp.get("coast_profiles"):
+            raise ValueError("DEM terrain cannot be combined with coastal profiles or anchors")
+        if tp.get("vertical_exaggeration") != 1.0:
+            raise ValueError("DEM terrain requires vertical_exaggeration 1.0")
+        dem_sampler = make_dem_height_sampler(route, tp["dem"])
     anchor_range,seam_mode=_coastal_anchor_config(tp)
     capped_exit=bool(tp.get("coastal_waterline_capped_exit",False))
     positions, stations, lateral, indices = [], [], [], []
@@ -1218,6 +1285,13 @@ def build(pkg, tile_m=500.0, terrain=None):
         raise ValueError("route.json is invalid, not building geometry:\n  " + "\n  ".join(errs))
     tp = dict(DEFAULT_TERRAIN, vertical_exaggeration=route.get("visual", {}).get("vertical_exaggeration", 1.0))
     tp.update(terrain or {})
+    dem_sampler = None
+    if tp.get("dem") is not None:
+        if tp.get("coastal_waterline_anchors") or tp.get("coast_profiles"):
+            raise ValueError("DEM terrain cannot be combined with coastal profiles or anchors")
+        if tp.get("vertical_exaggeration") != 1.0:
+            raise ValueError("DEM terrain requires vertical_exaggeration 1.0")
+        dem_sampler = make_dem_height_sampler(route, tp["dem"])
     anchor_range,seam_mode=_coastal_anchor_config(tp)
     route_stations=route["samples"]["s"]
     if anchor_range is not None and (anchor_range[0]<float(route_stations[0]) or
@@ -1252,6 +1326,8 @@ def build(pkg, tile_m=500.0, terrain=None):
     for side,ks,key in [(1,kl,"width_left_m"),(-1,kr,"width_right_m")]:
         proposed = [D[-1]*reach(k,w) for k,w in zip(ks,smp[key])]
         limits = _terrain_reach_limits(smp,side,proposed,tp["max_inner_reach_of_radius"])
+        if tp.get("max_reach_change_per_m") is not None:
+            limits = limit_reach_change(s, limits, tp["max_reach_change_per_m"])
         reaches[side] = limits
 
     envelopes = bank_envelopes(smp,reaches,tp["road_transition_m"],tp.get("road_max_bank_grade",.25)) if tp.get("road_transition_m",0)>0 else None
@@ -1302,8 +1378,11 @@ def build(pkg, tile_m=500.0, terrain=None):
                     for u, d in zip(us, ds):
                         x, z = smp["x"][i] + lx * u, smp["z"][i] + lz * u
                         dd = d * sc
-                        height = (smp["y"][i] - tp["shoulder_drop_m"] * smoothstep(0.0, D[1], dd)
-                                  + relief(x, z, tp) * smoothstep(tp["flat_band_m"], tp["blend_to_m"], dd))
+                        if dem_sampler is not None:
+                            height = dem_terrain_height(smp["y"][i], dd, x, z, tp, dem_sampler)
+                        else:
+                            height = (smp["y"][i] - tp["shoulder_drop_m"] * smoothstep(0.0, D[1], dd)
+                                      + relief(x, z, tp) * smoothstep(tp["flat_band_m"], tp["blend_to_m"], dd))
                         profile = coast_profile(tp.get("coast_profiles", []), s[i], "left" if side > 0 else "right")
                         hs.append(coastal_height(height, smp["y"][i], w, u, profile))
                     for u, p in zip(us, _cross_section(smp, i, us, hs)):
@@ -1367,7 +1446,7 @@ def build(pkg, tile_m=500.0, terrain=None):
         "schema_version": "0.1", "package_id": route["route_id"], "route": "route/route.json",
         "total_length_m": route["total_length_m"], "tile_m": tile_m,
         "layers": {"P0_route": {"status": "complete", "files": ["route/route.json", "tiles/*/road.glb"]},
-                   "P1_terrain": {"status": "procedural", "files": ["tiles/*/terrain.glb"]},
+                   "P1_terrain": {"status": "dem_estimated" if dem_sampler is not None else "procedural", "files": ["tiles/*/terrain.glb"]},
                    "P2_corridor": {"status": "absent"}, "P3_vegetation": {"status": "absent"},
                    "P4_structures": {"status": "absent"}, "P5_distant": {"status": "absent"},
                    "P6_atmosphere": {"status": "absent"}},

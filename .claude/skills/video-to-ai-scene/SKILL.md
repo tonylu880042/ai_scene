@@ -1,6 +1,6 @@
 ---
 name: video-to-ai-scene
-description: Turn a reference running / riding / hiking video (plus any map, GPS or elevation data) into an engine-independent AI Scene Package - canonical route, road + terrain tiles, near-route semantics, vegetation, buildings / landmarks, distant environment and atmosphere - validated stage by stage. Location, measured data (OSM / DEM) and an external asset library first, then time → route registration, route and terrain (playable, physical grade), decoration last; stops when every section meets its gate. Unity / Godot / Web are consumers, not the output. Use when the user gives a video or route and asks for a virtual-run / ride scene, an AI scene package, or a scene "like this video". Trigger words - "video to ai scene", "AI scene package", "/video-to-ai-scene", "用這個影片建立場景包", "影片轉AI場景".
+description: Turn a reference running / riding / hiking video (plus any map, GPS or elevation data) into an engine-independent AI Scene Package with high video similarity verified across time - canonical route, road + terrain tiles, near-route semantics, vegetation, buildings / landmarks, distant environment and atmosphere - validated stage by stage. Location, measured data (OSM / DEM) and an external asset library first, then time → route registration, route and terrain (playable, physical grade), decoration last; distinguish explicitly authorized previews from validated scene packages. Unity / Godot / Web are consumers, not the package contract. Use when the user gives a video or route and asks for a virtual-run / ride scene, an AI scene package, or a scene "like this video". Trigger words - "video to ai scene", "AI scene package", "/video-to-ai-scene", "用這個影片建立場景包", "影片轉AI場景".
 ---
 
 # Video → AI Scene Package
@@ -10,25 +10,45 @@ Project: `/Users/tunghunglu/projects/ai_scene`. Architecture: `AGENTS.md`, `docs
 
 **The output is an AI Scene Package** (`export/packages/<id>/`): route.json, road / terrain GLB tiles, semantics,
 vegetation, structures, environment, manifest — engine-independent, validated. Not a Godot scene, not a Unity scene,
-not a rendered video. Runtimes (Unity, owned by another team; Godot; Web) consume it; rendering, recording, runners
-and Unity import are not part of this skill unless the user asks.
+not a rendered video. Runtimes (Unity, owned by another team; Godot; Web) consume it. Rendered captures for the
+required visual gates are review evidence; a recorded video, application integration or Unity import is separate
+work unless the user asks for it.
 
-**Done** = every stage validator passes and every section meets its checklist gate (route / terrain 90 %, the rest
-80 % — not an average over the video). Then stop and hand the per-section sheet to the user for sign-off.
+**Goal:** a usable AI Scene Package whose rendered traversal is highly similar to the reference video, not merely a
+plausible or technically valid environment. Reproduce road projection, terrain silhouette, landmark placement,
+occlusion and vegetation openings across time while keeping route geometry and grade physically grounded.
+
+**Delivery mode:** agree on the intended output before applying gates. A user-authorized **preview / handoff
+candidate** may continue past a failed or unverified stage when its scope, source, unresolved failures and intended use
+are recorded prominently. Acknowledging a failure never marks it passed, alters a validator or makes estimated grade
+safe for a trainer/treadmill. A candidate may include engine-specific previews but must identify what other runtimes
+must implement. A **validated AI Scene Package** requires all applicable stage validators and declared visual gates;
+otherwise deliver it only as an explicitly provisional handoff, not a completed package.
+
+**Visual acceptance:** agree on the user's desired similarity and route fidelity, including whether estimated or artistic
+geometry is acceptable. The previous 90% route/terrain and 80% other visual criteria are defaults, not mandatory
+user-independent scores. Assess sections and continuous sequences rather than an average; do not infer a numerical
+similarity from a single image. User visual preferences do not waive physical data invariants or misstate validation.
 
 ## Rules
 
 - **Priority is fixed:** route → terrain → near-route semantics → vegetation → structures → distant + atmosphere.
-  Never start a phase before the previous one validates; a later phase that breaks an earlier one is reverted.
+  For validated packages, complete earlier gates first. An explicitly authorized provisional preview can proceed with
+  recorded failures, but later work must not degrade road geometry or change physical elevation/grade for appearance.
 - **The route is physical.** Distance, elevation and grade drive cycling physics, trainer resistance, treadmill
   incline and race progress. Grade = rise / horizontal run from the published elevation. Visual exaggeration goes in
   route.json `visual`, never into elevation or grade.
 - **Structure, not pixels.** Extract bends, sides, distances, densities, landmarks from the video. Frames are private
   references: never copied into the package, never fed to generators, no brand elements.
-- **Coarse to fine, 2 rounds max.** A gate failing after 2 revision rounds: stop, list the blocked sections and items,
-  ask the user. Do not loosen a frozen checklist to pass.
+- **Coarse to fine.** For a formal gate, after two unsuccessful focused rounds report the remaining failures and
+  obtain the user's direction; do not loosen criteria merely to pass. When the user already authorized continued
+  preview iteration or a specific next step, carry it out and retain the failed status.
 - **Check layout, not looks, first.** Compare section layout (sides, order, distances) against the frames; render
   only what a gate needs; no recordings unless asked.
+- **Solve projection, then assess sequences.** Keep camera, time → distance and route hypotheses separate; use
+  several consecutive source/render checkpoints per section to expose drift. Camera settings cannot falsify physical
+  route data, and matching one view cannot establish a match over time. See
+  [camera and temporal review](references/camera-temporal-review.md).
 - **Adapters are temporary.** Godot scripts below are *implementation adapters* (producers of facts during the
   migration, or consumers for rendered checks). The package must never depend on them; any producer that writes the
   same JSON is equally valid. Shared generators get new parameters; no per-scene `<name>_*.gd` pipelines.
@@ -38,17 +58,19 @@ and Unity import are not part of this skill unless the user asks.
 - **External assets, not drawn ones.** Trees, shrubs, grass, rocks and furniture use existing or downloaded models /
   textures (Phase 0 library). Writing a mesh generator for a plant is the last resort and needs a written reason
   (nothing usable found, licence, triangle budget).
-- **Whole route before any section.** No per-section refinement (one section's sand, a chapel's orientation,
-  a paved edge) until every section passes the Phase 3 grey-box layout check. Gold Coast spent r5–r30 on S18/S19
+- **Whole route before isolated polish.** For formal acceptance, cover the whole route before detailed per-section
+  refinement. A user-authorized provisional preview may prioritize visible sections with gaps explicitly recorded. Gold Coast spent r5–r30 on S18/S19
   while the shoreline and the time → s registration under them were still wrong.
-- **Time boxes.** Phase 0 + 1 ≤ half a day; each later gate ≤ 2 rounds. Over budget: stop and ask the user.
+- **Time boxes.** Aim for Phase 0 + 1 within half a day and two focused rounds per formal gate; report remaining
+  issues when that budget is exceeded. Follow any existing user authorization to continue a provisional preview.
 - **Stop at valid.** Once a stage validator passes, do not chase sub-mm / float32 / triangulation polish unless a
   validator fails or a gate item depends on it.
 - **One package per milestone.** At most two package dirs per scene: the working one and the last that passed a
   gate. Copy to a new `<id>_rNN` only when a gate passes. Delete diagnostic / failed candidates once their finding
   is written down (Gold Coast left 58 package dirs).
-- **Reviews keep evidence, not copies.** Freeze a version by committing and recording the commit hash + package
-  file SHA-256 — never by copying source, the Godot project, packages, SDKs or toolchains into a review folder.
+- **Reviews keep evidence, not copies.** Record the commit hash when available, the dirty state and hashes of
+  relevant changed source / input files plus package file SHA-256; commit only when the user asks. Never copy
+  source, the Godot project, packages, SDKs or toolchains into a review folder.
   A round keeps `review.json` + one comparison sheet; raw shots live in the scratchpad. When a gate passes or the
   scene is delivered, delete that scene's earlier rounds and keep only the final sheet and acceptance JSON.
   Review folders get a `.gdignore` (Godot otherwise imports them: Gold Coast reached 30 GB of review copies and a
@@ -82,8 +104,8 @@ Skim the contact sheet (Phase 1 step 1) only far enough to answer these, then fe
    `assets/models/` → Poly Haven (CC0, `tools/download_assets.py`) → OpenGameArt / Quaternius / Kenney (CC0) →
    CC-BY with attribution → procedural (with reason). Grass: Poly Haven grass models or texture cards, not
    generated tufts. Check per model: licence, triangles (tree ≤ ~3k, grass card ≤ ~200), PBR textures, size;
-   convert non-glTF with Blender. `build_package_assets.py` labels every library entry `CC0` — add a `license`
-   field there before using a CC-BY asset.
+   convert non-glTF with Blender. `build_package_assets.py` records a supplied `license` and requires a valid
+   `license_file` for non-CC0 assets. Never rely on the CC0 default for an asset whose licence is not verified.
 5. **Gate:** location decided; data cached; every vegetation / furniture type has a library entry or a written
    "procedural because …"; repeated spans listed. Tell the user the location and the asset list in a few lines.
 
@@ -108,6 +130,10 @@ Read [references/reference-analysis.md](references/reference-analysis.md) first.
 6. Write `data/<name>_sections.json` (authoring input: `video_km`, `types`, `sections`, `landmarks`, as
    `data/weissensee_sections.json`) and `data/<name>_checklist.json` (per section, per layer, only items visible in
    that frame). **Show the checklist and the section → s table to the user once; then both are frozen.**
+7. Plan entry / middle / exit review checkpoints within each section, with neighbouring frames when needed to
+   diagnose continuity. Record decoded PTS, reference hash, associated s and confidence; unknown mappings remain
+   unknown. Estimate the reference camera and choose explicit, resolution-aware visual criteria before review as
+   described in [camera and temporal review](references/camera-temporal-review.md).
 
 Checklist layers (keys kept for `tools/section_sheet.py`): `L0` route (bend order, width, surface; grade only if the
 video gives it) → Phase 2 · `L1` terrain + distant (valley / water side, slopes, mountains, sky opening) → Phases 3, 7
@@ -141,6 +167,10 @@ heading, curvature, widths, surface, start / finish / checkpoints. **It must be 
   mapped hairpin to a generic 150 m radius. The full-width offset corridor must validate; widths / surfaces per section plausible; start,
   finish, checkpoints placed. Per-section heading change from route.json alone:
 
+  Also use a route-only camera probe on representative consecutive bends before adding detailed scenery: compare
+  road edges / exit and horizon over time, independently review camera and time registration, then check all sections
+  at the Phase 3 grey-box gate. A probe is diagnostic and does not override measured geometry or replace validation.
+
 ```bash
 python3 -c "import json,sys; r=json.load(open(sys.argv[1])); s=r['samples']; f=lambda v: min(range(len(s['s'])), key=lambda i: abs(s['s'][i]-v)); [print(x['id'], round(-(((s['heading_deg'][f(x['to_s'])]-s['heading_deg'][f(x['from_s'])]+180)%360-180)), 1), 'deg (+ left)') for x in r.get('sections', [])]" export/packages/<id>/route/route.json
 ```
@@ -168,11 +198,15 @@ narrow creek mouth: that needs a 2D water mask (not built yet — note the span,
 Extra gates before Phase 4:
 - **Buildings on land:** run `osm_context.py buildings` on a scratch copy; every OSM building it drops for standing
   on P1 water marks a P1 shore error (Gold Coast lost 53 real buildings this way at r48). Fix P1, not P4.
-- **Grey-box layout check:** route + terrain + water + OSM building blocks only, one shot per section at its
-  registered `s` (adapter, [references/adapters.md](references/adapters.md)), against the reference frame:
+- **Grey-box layout check:** route + terrain + water + OSM building blocks only, registered views at each section's
+  entry, middle and exit (adapter, [references/adapters.md](references/adapters.md)), against the reference frames:
   water side, road / street side, building side and order, bend direction. All sections must pass L0 + the L1
   side items here. A section that fails is a registration, route or P1 problem — fix it now, never later with
   vegetation or props.
+- Review entry / middle / exit checkpoints for each section, with matched reference camera and time → s; compare
+  road projection and terrain continuity across the sequence. Where reference coverage or registration is missing,
+  report that window as unverified, not passed. Camera estimation and review criteria are recorded separately from
+  the canonical route; see [camera and temporal review](references/camera-temporal-review.md).
 - Then **freeze P0 + P1** (record the route / road / terrain file hashes). A later phase that needs them changed
   reopens Phase 2 / 3 explicitly and reruns Phases 4–7 on the result.
 
@@ -220,7 +254,11 @@ hint or the upstream layer. Gate: VALID + L3 ≥ 80 % (each landmark present, co
 
 ## Phase 7 — Distant environment and atmosphere
 
-Use what Phase 0 fetched. Real mountains: `python3 tools/fetch_real_terrain.py <name> <lat> <lon> <km>` (DEM +
+Use what Phase 0 fetched. For terrain stitched around a route, use the shared `tools/stitch_dem_terrain.py` and
+`tools/validate_stitched_dem.py` when applicable; record source DEM resolution, output mesh spacing, vertical datum,
+seam and road-clearance checks. Estimated snow or material masks are visual estimates, not measurements, and must not
+move physical ground. Compare representative and continuous views and evaluate 3D/vegetation cost on the target device.
+Real mountains: `python3 tools/fetch_real_terrain.py <name> <lat> <lon> <km>` (DEM +
 orthophoto, attribution required); HDRI: Poly Haven CC0 via `tools/download_assets.py`, chosen to match the
 video's sky (clear midday ≠ overcast). Scene facts as `environment/hints.json`
 (`docs/ENVIRONMENT.md`). *Engine-free (default):*
@@ -234,6 +272,10 @@ sky reference, cloud coverage …), never shader code. Gate: VALID + L1 distant 
 opening, sun side) ≥ 90 %.
 
 ## Phase 8 — AI Scene Package
+
+For a user-requested handoff before full validation, state the delivery status and unresolved gates, include source,
+license, coordinate and rendering limitations, and identify precisely what the consuming team must still implement.
+Do not label a Godot-specific sidecar as the engine-neutral contract or claim an untested Unity import succeeded.
 
 Before packaging, inspect GLBs for repeated embedded images. Prefer byte-identical shared textures when the
 delivery format and consumer support them; preserve geometry, physical route data and image quality. Read
@@ -257,7 +299,13 @@ manifest lists exists. Plus the engine-free tests: `python3 -m unittest tools/te
 Then the per-section sheet: scores per checklist item (1 / 0.5 / 0) in `<scratch>/scores.json`, shots from a
 rendering adapter ([references/adapters.md](references/adapters.md) — rendered verification, camera alignment):
 `python3 tools/section_sheet.py data/<name>_checklist.json <shots_dir> <scratch>/scores.json <out_dir>`.
-All sections PASS → hand `sheet_*.png` and the package path to the user and stop.
+Use the resulting `sheet_*.png` in the final hand-off after the temporal review below.
+
+In addition, complete the temporal similarity review in
+[camera and temporal review](references/camera-temporal-review.md) for every section. Record per-window evidence,
+visual verdicts and adjacent-window regressions separately from package and runtime validation. Report high
+similarity only when the visual criteria pass across the full covered traversal; otherwise deliver any valid
+package as provisional with the unresolved intervals, and do not call visual acceptance complete.
 
 **Optional consumer checks** (adapters, not the workflow): Godot GLB import / render, the legacy Unity zip
 (`tools/export_unity.gd` + `tools/verify_unity_export.gd`) until Unity reads packages, Web player. See
